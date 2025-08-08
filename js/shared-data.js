@@ -14,8 +14,8 @@ function clearAppointmentData() {
     }
 }
 
-// Clear appointment data immediately
-clearAppointmentData();
+// Clear appointment data immediately - DISABLED to allow appointments to persist
+// clearAppointmentData(); // This was clearing appointments on every page load!
 
 // Initialize shared users array
 window.sharedUsers = [

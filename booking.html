@@ -591,6 +591,7 @@
                         
                         <button type="submit" class="book-button" onclick="handleBookingSubmit(event)">Book & Pay Now</button>
                         <button type="button" onclick="debugSharedDataStatus()" style="background: #17a2b8; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-top: 10px; cursor: pointer;">🔍 Debug Shared Data</button>
+                        <button type="button" onclick="createTestAppointment()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-top: 10px; cursor: pointer;">🧪 Create Test Appointment</button>
                     </form>
                     
                     <div class="availability-calendar">
@@ -1344,6 +1345,22 @@
                 // Complete booking data and show payment modal instead of direct confirmation
                 console.log('📋 Booking data:', window.pendingBookingData);
                 
+                // Debug: Check if booking data has required fields
+                if (!window.pendingBookingData) {
+                    console.error('❌ window.pendingBookingData is null/undefined!');
+                    alert('Error: No booking data found. Please try submitting the form again.');
+                    return false;
+                }
+                
+                if (!window.pendingBookingData.date || !window.pendingBookingData.time) {
+                    console.error('❌ Missing date/time in booking data:', {
+                        date: window.pendingBookingData.date,
+                        time: window.pendingBookingData.time
+                    });
+                    alert('Error: Missing appointment date or time. Please select a date and time.');
+                    return false;
+                }
+                
                 // Create the appointment data (but don't save it yet - save after payment)
                 const newAppointment = {
                     userId: user.id,
@@ -1752,6 +1769,38 @@
             }
             
             alert('Check console for shared data debug information');
+        }
+        
+        // Test function to create a test appointment
+        function createTestAppointment() {
+            console.log('🧪 Creating test appointment...');
+            
+            const testAppointment = {
+                userId: 2, // John Doe's ID
+                clientName: 'Test User',
+                email: 'test@example.com',
+                phone: '(555) 123-4567',
+                service: 'Swedish Massage',
+                date: '2025-08-10',
+                time: '2:00 PM',
+                price: 120,
+                status: 'confirmed',
+                notes: 'Test appointment',
+                paymentStatus: 'paid',
+                paymentMethod: 'Test',
+                transactionId: 'test_123'
+            };
+            
+            console.log('Test appointment data:', testAppointment);
+            
+            try {
+                const savedAppointment = saveAppointment(testAppointment);
+                console.log('✅ Test appointment saved:', savedAppointment);
+                alert('Test appointment created! Check admin panel and console.');
+            } catch (error) {
+                console.error('❌ Failed to create test appointment:', error);
+                alert('Failed to create test appointment: ' + error.message);
+            }
         }
         
         // Function to clean up duplicate appointments
