@@ -1142,7 +1142,7 @@
                 if (window.getAppointments) {
                     const allAppointments = window.getAppointments();
                     console.log('📊 Total appointments after save:', allAppointments.length);
-                    const justSaved = allAppointments.find(apt => apt.id === savedAppointment.id);
+                    const justSaved = allAppointments.find(apt => apt.id === (savedAppointment && savedAppointment.id));
                     if (justSaved) {
                         console.log('✅ Verification: Appointment found in shared data:', justSaved);
                     } else {
@@ -1379,6 +1379,10 @@
                 };
                 
                 console.log('💳 Proceeding to payment for logged-in user...');
+                
+                // Store the appointment data but DON'T save it yet - save after payment
+                window.pendingAppointment = newAppointment;
+                console.log('📋 Appointment stored as pending, will save after payment');
                 
                 // Show payment modal instead of directly confirming
                 showBookingPaymentModal(newAppointment);
@@ -1977,7 +1981,8 @@
                     transactionId: `txn_${Date.now()}`
                 };
                 
-                const savedAppointment = saveAppointment(newAppointment);
+                // Don't save appointment yet - will save after payment
+                // const savedAppointment = saveAppointment(newAppointment);
                 
                 localStorage.setItem('currentUser', JSON.stringify(userSession));
                 localStorage.setItem('isLoggedIn', 'true');
@@ -2056,7 +2061,8 @@
                     transactionId: `txn_${Date.now()}`
                 };
                 
-                const savedAppointment = saveAppointment(newAppointment);
+                // Don't save appointment yet - will save after payment
+                // const savedAppointment = saveAppointment(newAppointment);
                 
                 localStorage.setItem('currentUser', JSON.stringify(userSession));
                 localStorage.setItem('isLoggedIn', 'true');
@@ -2067,7 +2073,7 @@
                       `• Date: ${newAppointment.date}\\n` +
                       `• Time: ${newAppointment.time}\\n` +
                       `• Total: $${newAppointment.price}\\n\\n` +
-                      `Appointment ID: ${savedAppointment.id}\\n\\n` +
+                      `Appointment will be confirmed after payment\\n\\n` +
                       '🎉 You are now logged in and can book future appointments instantly!\\n\\n' +
                       '📅 This time slot is now blocked for other users.');
                       
@@ -2113,7 +2119,8 @@
                     transactionId: `txn_${Date.now()}`
                 };
                 
-                const savedAppointment = saveAppointment(newAppointment);
+                // Don't save appointment yet - will save after payment
+                // const savedAppointment = saveAppointment(newAppointment);
                 
                 localStorage.setItem('currentUser', JSON.stringify(userSession));
                 localStorage.setItem('isLoggedIn', 'true');
@@ -2436,13 +2443,30 @@
             
             const appointment = window.pendingAppointment;
             
+            if (!appointment) {
+                console.error('❌ No pending appointment found for payment success!');
+                alert('Error: No appointment data found. Please try booking again.');
+                return;
+            }
+            
+            console.log('📋 Processing payment for appointment:', appointment);
+            
+            console.log('💾 Saving appointment with payment completed');
+            
             // Update appointment payment status
             appointment.paymentStatus = 'paid';
             appointment.paymentMethod = 'Stripe';
             appointment.transactionId = `stripe_${Date.now()}`;
+            appointment.status = 'confirmed';
             
-            // Save the final appointment
+            // Save the final appointment (first and only save)
             const finalAppointment = saveAppointment(appointment);
+            
+            if (!finalAppointment) {
+                console.error('❌ Failed to save appointment');
+                alert('Error saving appointment. Please contact support.');
+                return;
+            }
             
             // Create user session data from current user
             const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
