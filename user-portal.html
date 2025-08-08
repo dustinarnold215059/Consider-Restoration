@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Portal - Christopher's Massage Therapy</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/user-portal.css">
+    <script src="js/shared-data.js"></script>
+</head>
+<body>
+    <!-- Login/Register Screen -->
+    <div id="authScreen" class="auth-screen">
+        <div class="auth-container">
+            <div class="auth-header">
+                <a href="index.html" class="back-to-home">← Back to Home</a>
+            </div>
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">Login</button>
+                <button class="auth-tab" data-tab="register">Register</button>
+            </div>
+            
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form active">
+                <h2>Welcome Back</h2>
+                <div class="form-group">
+                    <label for="loginEmail">Email:</label>
+                    <input type="email" id="loginEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password:</label>
+                    <input type="password" id="loginPassword" name="password" required>
+                </div>
+                <button type="submit">Login</button>
+                <div id="loginError" class="error-message"></div>
+            </form>
+            
+            <!-- Register Form -->
+            <form id="registerForm" class="auth-form">
+                <h2>Create Account</h2>
+                <div class="form-group">
+                    <label for="registerName">Full Name:</label>
+                    <input type="text" id="registerName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">Email:</label>
+                    <input type="email" id="registerEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPhone">Phone:</label>
+                    <input type="tel" id="registerPhone" name="phone" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Password:</label>
+                    <input type="password" id="registerPassword" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password:</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                </div>
+                <button type="submit">Create Account</button>
+                <div id="registerError" class="error-message"></div>
+            </form>
+            
+            <div class="demo-credentials">
+                <h4>Demo User Accounts:</h4>
+                <p><strong>John Doe:</strong> john.doe@email.com / user123</p>
+                <p><strong>Jane Smith:</strong> jane.smith@email.com / user123</p>
+                <p><strong>Dustin:</strong> dustin@email.com / user123</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Portal -->
+    <div id="userPortal" class="user-portal" style="display: none;">
+        <header class="portal-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <a href="index.html" class="back-to-home">← Back to Home</a>
+                    <h1>Welcome, <span id="userNameDisplay"></span></h1>
+                </div>
+                <div class="header-actions">
+                    <a href="booking.html" class="btn-secondary">Book New Appointment</a>
+                    <button id="logoutBtn" class="logout-btn">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="portal-content">
+            <div class="portal-grid">
+                <!-- Upcoming Appointments -->
+                <section class="portal-section">
+                    <div class="section-header">
+                        <h2>Upcoming Appointments</h2>
+                    </div>
+                    <div id="upcomingAppointments" class="appointments-list">
+                        <!-- Upcoming appointments will be populated here -->
+                    </div>
+                </section>
+
+                <!-- Quick Actions -->
+                <section class="portal-section quick-actions">
+                    <div class="section-header">
+                        <h2>Quick Actions</h2>
+                    </div>
+                    <div class="actions-grid">
+                        <a href="booking.html" class="action-card">
+                            <div class="action-icon">📅</div>
+                            <h3>Book Appointment</h3>
+                            <p>Schedule your next massage</p>
+                        </a>
+                        <button class="action-card" onclick="showProfile()">
+                            <div class="action-icon">👤</div>
+                            <h3>View Profile</h3>
+                            <p>Update your information</p>
+                        </button>
+                        <button class="action-card" onclick="showHistory()">
+                            <div class="action-icon">📋</div>
+                            <h3>Appointment History</h3>
+                            <p>View past appointments</p>
+                        </button>
+                        <a href="reviews.html" class="action-card">
+                            <div class="action-icon">⭐</div>
+                            <h3>Add a Review</h3>
+                            <p>Share your experience</p>
+                        </a>
+                    </div>
+                </section>
+
+                <!-- Appointment History -->
+                <section class="portal-section">
+                    <div class="section-header">
+                        <h2>Recent Appointments</h2>
+                        <button id="viewAllHistory" class="btn-link">View All</button>
+                    </div>
+                    <div id="appointmentHistory" class="appointments-list">
+                        <!-- Recent appointments will be populated here -->
+                    </div>
+                </section>
+
+                <!-- Account Summary -->
+                <section class="portal-section account-summary">
+                    <div class="section-header">
+                        <h2>Account Summary</h2>
+                    </div>
+                    <div class="summary-stats">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalVisits">0</div>
+                            <div class="stat-label">Total Visits</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="favoriteService">-</div>
+                            <div class="stat-label">Favorite Service</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="nextAppointment">-</div>
+                            <div class="stat-label">Next Appointment</div>
+                        </div>
+                        <div class="stat-card membership-card">
+                            <div class="stat-number" id="membershipStatus">None</div>
+                            <div class="stat-label">Membership</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Your Profile</h3>
+            <form id="profileForm">
+                <div class="form-group">
+                    <label for="profileName">Name:</label>
+                    <input type="text" id="profileName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="profileEmail">Email:</label>
+                    <input type="email" id="profileEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="profilePhone">Phone:</label>
+                    <input type="tel" id="profilePhone" name="phone" required>
+                </div>
+                <div class="form-group">
+                    <label for="profilePreferences">Massage Preferences:</label>
+                    <textarea id="profilePreferences" name="preferences" rows="3" placeholder="Any special requests or preferences..."></textarea>
+                </div>
+                <button type="submit">Update Profile</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div id="historyModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Complete Appointment History</h3>
+            <div id="fullHistory" class="full-history">
+                <!-- Full history will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointment Details Modal -->
+    <div id="appointmentModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Appointment Details</h3>
+            <div id="appointmentDetails"></div>
+            <div class="modal-actions">
+                <button id="rescheduleBtn" class="btn-primary">Reschedule</button>
+                <button id="cancelBtn" class="btn-danger">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/user-portal.js"></script>
+</body>
+</html>

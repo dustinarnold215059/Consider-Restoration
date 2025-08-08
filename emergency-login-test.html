@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Login Test</title>
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        
+        .emergency-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.8);
+            z-index: 99999;
+            display: none;
+        }
+        
+        .emergency-modal.show {
+            display: block;
+        }
+        
+        .emergency-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 350px;
+            max-height: 70vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        
+        .emergency-header {
+            background: #3A7D99;
+            color: white;
+            padding: 10px 15px;
+            margin: -20px -20px 15px -20px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .emergency-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        .emergency-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        
+        .emergency-btn:hover {
+            background: #218838;
+        }
+        
+        .test-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 20px;
+        }
+        
+        .booking-summary {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            padding: 2px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .summary-row:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            color: #28a745;
+        }
+        
+        .demo-login {
+            background: #fff3cd;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .demo-login button {
+            background: #ffc107;
+            color: #212529;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div style="padding: 20px; max-width: 600px; margin: 0 auto;">
+        <h1>🚨 Emergency Login Modal Test</h1>
+        
+        <p><strong>This is a minimal, guaranteed-to-work login modal.</strong></p>
+        
+        <button class="test-btn" onclick="showEmergencyModal()">🚀 Test Emergency Modal</button>
+        
+        <h3>Features of this emergency modal:</h3>
+        <ul>
+            <li>✅ Absolute positioning - always visible</li>
+            <li>✅ Small size - fits any screen</li>
+            <li>✅ Scrollable content - never cuts off</li>
+            <li>✅ Simple styling - no complex CSS</li>
+            <li>✅ One-button demo login</li>
+        </ul>
+        
+        <p><strong>If this works, we can use this approach for the main booking page!</strong></p>
+    </div>
+
+    <!-- Emergency Modal -->
+    <div id="emergencyModal" class="emergency-modal">
+        <div class="emergency-content">
+            <div class="emergency-header">
+                <h3 style="margin: 0;">Login Required</h3>
+                <button class="emergency-close" onclick="closeEmergencyModal()">&times;</button>
+            </div>
+            
+            <div class="booking-summary">
+                <h4 style="margin: 0 0 8px 0;">Your Booking:</h4>
+                <div class="summary-row">
+                    <span>Service:</span>
+                    <span>Mindful Start</span>
+                </div>
+                <div class="summary-row">
+                    <span>Date:</span>
+                    <span>Aug 8, 2025</span>
+                </div>
+                <div class="summary-row">
+                    <span>Time:</span>
+                    <span>10:00 AM</span>
+                </div>
+                <div class="summary-row">
+                    <span>Total:</span>
+                    <span>$70</span>
+                </div>
+            </div>
+            
+            <form onsubmit="handleEmergencyLogin(event)">
+                <div class="form-group">
+                    <label for="emergencyEmail">Email:</label>
+                    <input type="email" id="emergencyEmail" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="emergencyPassword">Password:</label>
+                    <input type="password" id="emergencyPassword" required>
+                </div>
+                
+                <button type="submit" class="emergency-btn">✅ Login & Complete Booking</button>
+            </form>
+            
+            <div class="demo-login">
+                <strong>Demo Account:</strong><br>
+                john.doe@email.com / user123
+                <br>
+                <button onclick="fillEmergencyDemo()">Use Demo Account</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showEmergencyModal() {
+            const modal = document.getElementById('emergencyModal');
+            modal.classList.add('show');
+            
+            // Prevent background scrolling
+            document.body.style.overflow = 'hidden';
+            
+            console.log('Emergency modal shown');
+        }
+        
+        function closeEmergencyModal() {
+            const modal = document.getElementById('emergencyModal');
+            modal.classList.remove('show');
+            
+            // Restore background scrolling
+            document.body.style.overflow = '';
+            
+            console.log('Emergency modal closed');
+        }
+        
+        function fillEmergencyDemo() {
+            document.getElementById('emergencyEmail').value = 'john.doe@email.com';
+            document.getElementById('emergencyPassword').value = 'user123';
+        }
+        
+        function handleEmergencyLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('emergencyEmail').value;
+            const password = document.getElementById('emergencyPassword').value;
+            
+            console.log('Login attempt:', email);
+            
+            // Simple validation
+            if (email === 'john.doe@email.com' && password === 'user123') {
+                alert('✅ Login successful!\n\nBooking confirmed:\n• Service: Mindful Start\n• Date: Aug 8, 2025\n• Time: 10:00 AM\n• Total: $70\n\nAppointment ID: 12345');
+                closeEmergencyModal();
+            } else {
+                alert('❌ Invalid credentials. Try the demo account.');
+            }
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('emergencyModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEmergencyModal();
+            }
+        });
+    </script>
+</body>
+</html>

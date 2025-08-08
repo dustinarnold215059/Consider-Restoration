@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Reviews - Consider Restoration</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/shared-data.js"></script>
+    <style>
+        /* Reviews Page Specific Styles */
+        .reviews-hero {
+            background: linear-gradient(135deg, #3A7D99 0%, #27ae60 100%);
+            color: white;
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+        
+        .reviews-hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .reviews-hero p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .rating-overview {
+            background: white;
+            padding: 3rem 2rem;
+            margin: -2rem auto 3rem;
+            max-width: 800px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .overall-rating {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .rating-score {
+            text-align: center;
+        }
+        
+        .rating-number {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #27ae60;
+            line-height: 1;
+        }
+        
+        .rating-stars {
+            font-size: 2rem;
+            color: #ffd700;
+            margin: 0.5rem 0;
+        }
+        
+        .rating-text {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .rating-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .category-item {
+            text-align: center;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .category-name {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .category-percentage {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #27ae60;
+        }
+        
+        .rating-breakdown {
+            display: grid;
+            gap: 0.75rem;
+        }
+        
+        .rating-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .star-label {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            min-width: 80px;
+        }
+        
+        .rating-bar {
+            flex: 1;
+            height: 12px;
+            background: #e9ecef;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .rating-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ffed4e);
+            transition: width 0.8s ease;
+        }
+        
+        .rating-count {
+            min-width: 30px;
+            text-align: right;
+            font-weight: 500;
+            color: #666;
+        }
+        
+        .reviews-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .reviews-grid {
+            display: grid;
+            gap: 2rem;
+        }
+        
+        .review-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .review-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .reviewer-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .reviewer-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3A7D99, #27ae60);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .reviewer-details h4 {
+            margin: 0 0 0.25rem 0;
+            color: #2c3e50;
+        }
+        
+        .review-date {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .review-meta {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.25rem;
+        }
+        
+        .review-stars {
+            color: #ffd700;
+            font-size: 1.2rem;
+        }
+        
+        .verified-badge {
+            background: #27ae60;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .service-received {
+            background: #e8f4f8;
+            color: #3A7D99;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin: 1rem 0;
+            display: inline-block;
+        }
+        
+        .review-text {
+            color: #444;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+        
+        .cta-section {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+        
+        .cta-section h2 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        
+        .cta-section p {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* Add Review Section Styles */
+        .add-review-section, .login-prompt-section {
+            margin-bottom: 3rem;
+        }
+        
+        .add-review-card, .login-prompt-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .add-review-card h3, .login-prompt-card h3 {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        .review-form .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .review-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .star-rating {
+            display: flex;
+            gap: 0.25rem;
+            margin-bottom: 1rem;
+        }
+        
+        .star {
+            font-size: 2rem;
+            color: #ddd;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            user-select: none;
+        }
+        
+        .star:hover,
+        .star.active {
+            color: #ffd700;
+        }
+        
+        .review-form select,
+        .review-form textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        
+        .review-form textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        .review-form select:focus,
+        .review-form textarea:focus {
+            outline: none;
+            border-color: #3A7D99;
+            box-shadow: 0 0 0 2px rgba(58, 125, 153, 0.1);
+        }
+        
+        .submit-review-btn {
+            background: #3A7D99;
+            color: white;
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+        
+        .submit-review-btn:hover {
+            background: #2a5f75;
+        }
+        
+        .login-prompt-card {
+            text-align: center;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        }
+        
+        .login-prompt-card p {
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+        
+        .login-btn {
+            display: inline-block;
+            background: #3A7D99;
+            color: white;
+            padding: 0.75rem 2rem;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+        
+        .login-btn:hover {
+            background: #2a5f75;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .review-form input[type="checkbox"] {
+            margin-right: 0.5rem;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .reviews-hero h1 {
+                font-size: 2rem;
+            }
+            
+            .overall-rating {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .rating-number {
+                font-size: 3rem;
+            }
+            
+            .rating-categories {
+                grid-template-columns: 1fr;
+            }
+            
+            .review-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .review-meta {
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-container">
+                <h1 class="logo">Consider Restoration</h1>
+                <ul class="nav-menu">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="services.html">Services</a></li>
+                    <li><a href="membership.html">Membership</a></li>
+                    <li><a href="booking.html">Book Appointment</a></li>
+                    <li><a href="reviews.html" class="active">Reviews</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                    <li><a href="user-portal.html" id="accountNavLink">Login</a></li>
+                    <li id="adminNavLink" style="display: none;"><a href="admin.html">Admin</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="reviews-hero">
+            <div class="container">
+                <h1>What Our Clients Say</h1>
+                <p>Real experiences from real clients who have transformed their wellness journey with Consider Restoration</p>
+            </div>
+        </section>
+
+        <!-- Rating Overview -->
+        <div class="container">
+            <div class="rating-overview">
+                <div class="overall-rating">
+                    <div class="rating-score">
+                        <div class="rating-number" id="overallRating">5.0</div>
+                        <div class="rating-stars" id="overallStars">★★★★★</div>
+                        <div class="rating-text" id="reviewCount">Based on 26 reviews</div>
+                    </div>
+                    
+                    <div class="rating-breakdown">
+                        <div class="rating-row">
+                            <div class="star-label">
+                                <span>5</span> ★
+                            </div>
+                            <div class="rating-bar">
+                                <div class="rating-fill" id="rating5Fill" style="width: 100%"></div>
+                            </div>
+                            <div class="rating-count" id="rating5Count">26</div>
+                        </div>
+                        <div class="rating-row">
+                            <div class="star-label">
+                                <span>4</span> ★
+                            </div>
+                            <div class="rating-bar">
+                                <div class="rating-fill" id="rating4Fill" style="width: 0%"></div>
+                            </div>
+                            <div class="rating-count" id="rating4Count">0</div>
+                        </div>
+                        <div class="rating-row">
+                            <div class="star-label">
+                                <span>3</span> ★
+                            </div>
+                            <div class="rating-bar">
+                                <div class="rating-fill" id="rating3Fill" style="width: 0%"></div>
+                            </div>
+                            <div class="rating-count" id="rating3Count">0</div>
+                        </div>
+                        <div class="rating-row">
+                            <div class="star-label">
+                                <span>2</span> ★
+                            </div>
+                            <div class="rating-bar">
+                                <div class="rating-fill" id="rating2Fill" style="width: 0%"></div>
+                            </div>
+                            <div class="rating-count" id="rating2Count">0</div>
+                        </div>
+                        <div class="rating-row">
+                            <div class="star-label">
+                                <span>1</span> ★
+                            </div>
+                            <div class="rating-bar">
+                                <div class="rating-fill" id="rating1Fill" style="width: 0%"></div>
+                            </div>
+                            <div class="rating-count" id="rating1Count">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rating-categories">
+                    <div class="category-item">
+                        <div class="category-name">Ambiance</div>
+                        <div class="category-percentage">99%</div>
+                    </div>
+                    <div class="category-item">
+                        <div class="category-name">Professionalism</div>
+                        <div class="category-percentage">100%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reviews Section -->
+        <section class="reviews-section">
+            
+            <!-- Add Review Section for Logged-in Users -->
+            <div class="add-review-section" id="addReviewSection" style="display: none;">
+                <div class="add-review-card">
+                    <h3>Share Your Experience</h3>
+                    <form id="reviewForm" class="review-form">
+                        <div class="form-group">
+                            <label for="reviewRating">Your Rating:</label>
+                            <div class="star-rating" id="starRating">
+                                <span class="star" data-rating="1">★</span>
+                                <span class="star" data-rating="2">★</span>
+                                <span class="star" data-rating="3">★</span>
+                                <span class="star" data-rating="4">★</span>
+                                <span class="star" data-rating="5">★</span>
+                            </div>
+                            <input type="hidden" id="reviewRating" name="rating" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="reviewService">Service Received:</label>
+                            <select id="reviewService" name="service" required>
+                                <option value="">Select a service</option>
+                                <option value="Mindful Start">Mindful Start</option>
+                                <option value="Integrated Massage">Integrated Massage</option>
+                                <option value="Thai-Stretch Fusion">Thai-Stretch Fusion</option>
+                                <option value="Applied Neurology Consultation">Applied Neurology Consultation</option>
+                                <option value="Prenatal Massage">Prenatal Massage</option>
+                                <option value="Applied Neurology Training">Applied Neurology Training</option>
+                                <option value="Structural Integration">Structural Integration</option>
+                                <option value="Gift Certificate">Gift Certificate</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="reviewText">Your Review:</label>
+                            <textarea id="reviewText" name="reviewText" rows="4" placeholder="Share your experience with Christopher and Consider Restoration..." required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="reviewAnonymous" name="anonymous">
+                                Submit anonymously
+                            </label>
+                        </div>
+                        <button type="submit" class="submit-review-btn">Submit Review</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Login Prompt for Non-logged Users -->
+            <div class="login-prompt-section" id="loginPromptSection">
+                <div class="login-prompt-card">
+                    <h3>Want to Leave a Review?</h3>
+                    <p>Please log in to share your experience with Consider Restoration</p>
+                    <a href="user-portal.html" class="login-btn">Login to Review</a>
+                </div>
+            </div>
+
+            <div class="reviews-grid" id="reviewsGrid">
+                
+                <!-- Review 1 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">A</div>
+                            <div class="reviewer-details">
+                                <h4>Anonymous</h4>
+                                <div class="review-date">July 2025</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Thai-Stretch Fusion with Christopher R.</div>
+                    <div class="review-text">He is great!</div>
+                </div>
+
+                <!-- Review 2 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">M</div>
+                            <div class="reviewer-details">
+                                <h4>Michael A.</h4>
+                                <div class="review-date">July 2025</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Integrative Massage with Christopher R.</div>
+                    <div class="review-text">Extremely skilled LMT! Focuses on your areas of need and delivers the right amount of pressure. Highly recommend Chris.</div>
+                </div>
+
+                <!-- Review 3 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">A</div>
+                            <div class="reviewer-details">
+                                <h4>Anonymous</h4>
+                                <div class="review-date">July 2025</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Integrative Massage with Christopher R.</div>
+                    <div class="review-text">One of the best massage therapists I have ever experienced. I felt comfortable the whole time which is important as a woman. Furthermore, I felt the environment very relaxing and therapeutic.</div>
+                </div>
+
+                <!-- Review 4 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">D</div>
+                            <div class="reviewer-details">
+                                <h4>Deborah M.</h4>
+                                <div class="review-date">June 2025</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Integrative Massage with Christopher R.</div>
+                    <div class="review-text">Christopher has great skill and knowledge.</div>
+                </div>
+
+                <!-- Review 5 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">H</div>
+                            <div class="reviewer-details">
+                                <h4>Hannah G.</h4>
+                                <div class="review-date">June 2025</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Structural Integration with Christopher R.</div>
+                    <div class="review-text">Chris is very skilled and professional. He helped me with debilitating neck pain I've had for a few weeks. He he went the extra mile by offering new exercises to do at home in between my sessions, which I find a lot of practitioners don't off</div>
+                </div>
+
+                <!-- Review 6 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">R</div>
+                            <div class="reviewer-details">
+                                <h4>Reid N.</h4>
+                                <div class="review-date">May 2025</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Structural Integration with Christopher R.</div>
+                    <div class="review-text">Great experience, thankful for his expertise and kindness.</div>
+                </div>
+
+                <!-- Review 7 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">A</div>
+                            <div class="reviewer-details">
+                                <h4>Anonymous</h4>
+                                <div class="review-date">April 2025</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Structural Integration with Christopher R.</div>
+                    <div class="review-text">Informative and relaxing.</div>
+                </div>
+
+                <!-- Review 8 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">L</div>
+                            <div class="reviewer-details">
+                                <h4>Laura F.</h4>
+                                <div class="review-date">April 2025</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Structural Integration with Christopher R.</div>
+                    <div class="review-text">Terrific!!!!</div>
+                </div>
+
+                <!-- Review 9 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">R</div>
+                            <div class="reviewer-details">
+                                <h4>Renee B.</h4>
+                                <div class="review-date">March 2025</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Gift Certificate 30 Minute Massage with Christopher R.</div>
+                    <div class="review-text">Christopher is amazing! Always leave feeling relaxed and refreshed.</div>
+                </div>
+
+                <!-- Review 10 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">C</div>
+                            <div class="reviewer-details">
+                                <h4>Cindy K.</h4>
+                                <div class="review-date">January 2025</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Structural Integration with Christopher R.</div>
+                    <div class="review-text">I always get off the table feeling so relaxed, I'm going to bring my PJ's next time!</div>
+                </div>
+
+                <!-- Review 11 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">L</div>
+                            <div class="reviewer-details">
+                                <h4>Linda H.</h4>
+                                <div class="review-date">January 2025</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Structural Integration with Christopher R.</div>
+                    <div class="review-text">Christopher was fantastic</div>
+                </div>
+
+                <!-- Review 12 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">J</div>
+                            <div class="reviewer-details">
+                                <h4>Jennifer J.</h4>
+                                <div class="review-date">December 2024</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Structural Integration with Christopher R.</div>
+                    <div class="review-text">The space is warm and inviting. Christopher is very knowledgeable in his practice and always offers stretches and things I can do at home to combat my problem areas. I highly recommend him.</div>
+                </div>
+
+                <!-- Review 13 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">A</div>
+                            <div class="reviewer-details">
+                                <h4>Anonymous</h4>
+                                <div class="review-date">December 2024</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Structural Integration with Christopher R.</div>
+                    <div class="review-text">Christopher is a rockstar! I felt amazing when I woke up this morning!</div>
+                </div>
+
+                <!-- Review 14 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">A</div>
+                            <div class="reviewer-details">
+                                <h4>Anonymous</h4>
+                                <div class="review-date">November 2024</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Structural Integration with Christopher R.</div>
+                    <div class="review-text">Christopher is truly gifted in massage. He creates a safe, comfy space so you can fully submerge into the experience. Christopher is very compassionate, understanding and professional.</div>
+                </div>
+
+                <!-- Review 15 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">A</div>
+                            <div class="reviewer-details">
+                                <h4>Anonymous</h4>
+                                <div class="review-date">November 2024</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Structural Integration with Christopher R.</div>
+                    <div class="review-text">Excellent massage!!</div>
+                </div>
+
+                <!-- Review 16 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">R</div>
+                            <div class="reviewer-details">
+                                <h4>Rosemary D.</h4>
+                                <div class="review-date">November 2024</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Structural Integration with Christopher R.</div>
+                    <div class="review-text">Totally professional and relaxing experience. Would highly recommend a visit.</div>
+                </div>
+
+                <!-- Review 17 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">L</div>
+                            <div class="reviewer-details">
+                                <h4>Liz G.</h4>
+                                <div class="review-date">November 2024</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Gift Certificate 30 Minute Massage with Christopher R.</div>
+                    <div class="review-text">You should definitely make an appointment with Christopher. I felt very comfortable and he worked on my areas of need.</div>
+                </div>
+
+                <!-- Review 18 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">L</div>
+                            <div class="reviewer-details">
+                                <h4>Lisa S.</h4>
+                                <div class="review-date">October 2024</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Structural Integration with Christopher R.</div>
+                    <div class="review-text">Christopher is very knowledgeable and sensitive to areas of concern. He has helped my healing accelerate greatly with regular maintenance!</div>
+                </div>
+
+                <!-- Review 19 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">A</div>
+                            <div class="reviewer-details">
+                                <h4>Anonymous</h4>
+                                <div class="review-date">October 2024</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Structural Integration with Christopher R.</div>
+                    <div class="review-text">Relaxing and professional. Best massage I have had for a long time. I am booking every 2 weeks - the relaxation is wonderful.</div>
+                </div>
+
+                <!-- Review 20 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">A</div>
+                            <div class="reviewer-details">
+                                <h4>Anonymous</h4>
+                                <div class="review-date">October 2024</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Structural Integration with Christopher R.</div>
+                    <div class="review-text">First massage in a long time. Second time overall. Apprehensive going in but the calming and caring professionalism that Christopher provided dispelled my anxiety. Will definitely be a returning customer. Thank you Christopher.</div>
+                </div>
+
+                <!-- Review 21 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">A</div>
+                            <div class="reviewer-details">
+                                <h4>Anonymous</h4>
+                                <div class="review-date">October 2024</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Structural Integration with Christopher R.</div>
+                    <div class="review-text">Christopher really knows how to improve your health. I'm so grateful for finding his business.</div>
+                </div>
+
+                <!-- Review 22 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">C</div>
+                            <div class="reviewer-details">
+                                <h4>Christine S.</h4>
+                                <div class="review-date">October 2024</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Structural Integration with Christopher R.</div>
+                    <div class="review-text">Christopher is the absolute best!</div>
+                </div>
+
+                <!-- Review 23 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">M</div>
+                            <div class="reviewer-details">
+                                <h4>Meredith S.</h4>
+                                <div class="review-date">October 2024</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Structural Integration with Christopher R.</div>
+                    <div class="review-text">Christopher is always so patient and thorough! He listens to ALL of my issues and makes connections that I never could have imagined! He is truly a miracle worker!!</div>
+                </div>
+
+                <!-- Review 24 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">A</div>
+                            <div class="reviewer-details">
+                                <h4>Anonymous</h4>
+                                <div class="review-date">September 2024</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Structural Integration with Christopher R.</div>
+                    <div class="review-text">go often</div>
+                </div>
+
+                <!-- Review 25 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">R</div>
+                            <div class="reviewer-details">
+                                <h4>Ronald C H.</h4>
+                                <div class="review-date">September 2024</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Structural Integration with Christopher R.</div>
+                    <div class="review-text">Christopher is the best</div>
+                </div>
+
+                <!-- Review 26 -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">E</div>
+                            <div class="reviewer-details">
+                                <h4>Eric A.</h4>
+                                <div class="review-date">September 2024</div>
+                            </div>
+                        </div>
+                        <div class="review-meta">
+                            <div class="review-stars">★★★★★</div>
+                            <div class="verified-badge">✓ Verified</div>
+                        </div>
+                    </div>
+                    <div class="service-received">Service Received: Structural Integration with Christopher R.</div>
+                    <div class="review-text">Patient and pays attention</div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Call to Action -->
+        <section class="cta-section">
+            <div class="container">
+                <h2>Ready to Experience the Difference?</h2>
+                <p>Join the many satisfied clients who have transformed their wellness journey with Consider Restoration. Book your appointment today and discover why we maintain a perfect 5-star rating.</p>
+                <div class="cta-buttons">
+                    <a href="booking.html" class="cta-button primary">Book Your Appointment</a>
+                    <a href="contact.html" class="cta-button secondary">Ask Questions</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Consider Restoration - Christopher Rembisz, LMT. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+    <script>
+        // Global variables
+        let currentUser = null;
+        let selectedRating = 0;
+        
+        // Check if user is logged in
+        function checkLoginStatus() {
+            const storedUser = localStorage.getItem('currentUser');
+            if (storedUser) {
+                try {
+                    currentUser = JSON.parse(storedUser);
+                    if (currentUser && currentUser.role === 'user') {
+                        document.getElementById('addReviewSection').style.display = 'block';
+                        document.getElementById('loginPromptSection').style.display = 'none';
+                        return true;
+                    }
+                } catch (e) {
+                    console.warn('Error parsing stored user:', e);
+                }
+            }
+            document.getElementById('addReviewSection').style.display = 'none';
+            document.getElementById('loginPromptSection').style.display = 'block';
+            return false;
+        }
+        
+        // Star rating functionality
+        function setupStarRating() {
+            const stars = document.querySelectorAll('.star');
+            const ratingInput = document.getElementById('reviewRating');
+            
+            stars.forEach((star, index) => {
+                star.addEventListener('click', () => {
+                    selectedRating = index + 1;
+                    ratingInput.value = selectedRating;
+                    updateStarDisplay();
+                });
+                
+                star.addEventListener('mouseenter', () => {
+                    highlightStars(index + 1);
+                });
+            });
+            
+            document.getElementById('starRating').addEventListener('mouseleave', () => {
+                updateStarDisplay();
+            });
+        }
+        
+        function highlightStars(count) {
+            const stars = document.querySelectorAll('.star');
+            stars.forEach((star, index) => {
+                star.classList.toggle('active', index < count);
+            });
+        }
+        
+        function updateStarDisplay() {
+            highlightStars(selectedRating);
+        }
+        
+        // Handle review form submission
+        function setupReviewForm() {
+            const form = document.getElementById('reviewForm');
+            if (form) {
+                form.addEventListener('submit', handleReviewSubmission);
+            }
+        }
+        
+        function handleReviewSubmission(e) {
+            e.preventDefault();
+            
+            if (!currentUser) {
+                alert('Please log in to submit a review.');
+                return;
+            }
+            
+            const formData = new FormData(e.target);
+            const rating = parseInt(formData.get('rating'));
+            const service = formData.get('service');
+            const reviewText = formData.get('reviewText');
+            const anonymous = formData.get('anonymous') === 'on';
+            
+            if (!rating || rating < 1 || rating > 5) {
+                alert('Please select a rating.');
+                return;
+            }
+            
+            if (!service) {
+                alert('Please select a service.');
+                return;
+            }
+            
+            if (!reviewText.trim()) {
+                alert('Please write your review.');
+                return;
+            }
+            
+            const reviewData = {
+                userId: currentUser.id,
+                name: anonymous ? 'Anonymous' : currentUser.name,
+                userEmail: currentUser.email,
+                rating: rating,
+                service: service,
+                review: reviewText.trim(),
+                anonymous: anonymous,
+                date: new Date().toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    year: 'numeric' 
+                })
+            };
+            
+            // Add review using shared data system
+            if (window.addReview) {
+                const newReview = window.addReview(reviewData);
+                console.log('Review added:', newReview);
+                
+                // Reset form
+                e.target.reset();
+                selectedRating = 0;
+                updateStarDisplay();
+                
+                // Show success message
+                alert('Thank you for your review! Your feedback has been submitted successfully.');
+                
+                // Refresh reviews display
+                loadAndDisplayReviews();
+                // Statistics will be updated automatically in loadAndDisplayReviews
+            } else {
+                alert('Review system not available. Please try again later.');
+            }
+        }
+        
+        // Load and display reviews
+        function loadAndDisplayReviews() {
+            const reviewsGrid = document.getElementById('reviewsGrid');
+            if (!reviewsGrid) return;
+            
+            // Get reviews from shared data system (all 30 imported client reviews + any new submissions)
+            const allReviews = window.getReviews ? window.getReviews() : [];
+            
+            // Sort by date (newest first)
+            allReviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            
+            // Generate HTML for all reviews
+            const reviewsHTML = allReviews.map(review => {
+                const reviewDate = new Date(review.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                const stars = '★'.repeat(review.rating || 5);
+                const displayName = review.name || 'Anonymous';
+                const avatar = displayName[0].toUpperCase();
+                
+                return `
+                    <div class="review-card">
+                        <div class="review-header">
+                            <div class="reviewer-info">
+                                <div class="reviewer-avatar">${avatar}</div>
+                                <div class="reviewer-details">
+                                    <h4>${displayName}</h4>
+                                    <div class="review-date">${reviewDate}</div>
+                                </div>
+                            </div>
+                            <div class="review-meta">
+                                <div class="review-stars">${stars}</div>
+                                <div class="verified-badge">✓ Verified</div>
+                            </div>
+                        </div>
+                        <div class="service-received">Service Received: ${review.service || 'Massage Therapy'}</div>
+                        <div class="review-text">${review.review || 'Great experience!'}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            reviewsGrid.innerHTML = reviewsHTML;
+            
+            // Update rating statistics after loading reviews
+            updateRatingStatistics();
+        }
+        
+        // Calculate and update rating statistics dynamically
+        function updateRatingStatistics() {
+            const allReviews = window.getReviews ? window.getReviews() : [];
+            
+            if (allReviews.length === 0) {
+                // No reviews yet
+                document.getElementById('overallRating').textContent = '0.0';
+                document.getElementById('overallStars').textContent = '☆☆☆☆☆';
+                document.getElementById('reviewCount').textContent = 'No reviews yet';
+                return;
+            }
+            
+            // Calculate overall rating
+            const totalRating = allReviews.reduce((sum, review) => sum + (review.rating || 5), 0);
+            const averageRating = totalRating / allReviews.length;
+            const roundedRating = Math.round(averageRating * 10) / 10; // Round to 1 decimal
+            
+            // Update overall rating display
+            document.getElementById('overallRating').textContent = roundedRating.toFixed(1);
+            document.getElementById('overallStars').textContent = '★'.repeat(Math.round(averageRating)) + '☆'.repeat(5 - Math.round(averageRating));
+            document.getElementById('reviewCount').textContent = `Based on ${allReviews.length} reviews`;
+            
+            // Calculate rating breakdown
+            const ratingCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+            allReviews.forEach(review => {
+                const rating = review.rating || 5;
+                ratingCounts[rating]++;
+            });
+            
+            // Update rating breakdown display
+            for (let i = 1; i <= 5; i++) {
+                const count = ratingCounts[i];
+                const percentage = allReviews.length > 0 ? (count / allReviews.length) * 100 : 0;
+                
+                document.getElementById(`rating${i}Count`).textContent = count;
+                document.getElementById(`rating${i}Fill`).style.width = `${percentage}%`;
+            }
+        }
+        
+        // Animate rating bars on scroll
+        function animateRatingBars() {
+            const rateBars = document.querySelectorAll('.rating-fill');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.width = entry.target.style.width;
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            rateBars.forEach(bar => observer.observe(bar));
+        }
+
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            checkLoginStatus();
+            setupStarRating();
+            setupReviewForm();
+            loadAndDisplayReviews();
+            animateRatingBars();
+        });
+    </script>
+</body>
+</html>

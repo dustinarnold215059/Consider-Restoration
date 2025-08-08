@@ -1,0 +1,326 @@
+/* Professional CSS-based image placeholders for Consider Restoration Website */
+/* These provide elegant fallbacks while actual images are being sourced */
+
+/* Hero section placeholder */
+.hero {
+    background: linear-gradient(135deg, 
+        rgba(58, 125, 153, 0.9) 0%, 
+        rgba(42, 93, 117, 0.9) 50%,
+        rgba(58, 125, 153, 0.9) 100%
+    ),
+    linear-gradient(45deg, 
+        #f8f9fa 25%, 
+        transparent 25%, 
+        transparent 75%, 
+        #f8f9fa 75%, 
+        #f8f9fa
+    ),
+    linear-gradient(45deg, 
+        #f8f9fa 25%, 
+        transparent 25%, 
+        transparent 75%, 
+        #f8f9fa 75%, 
+        #f8f9fa
+    );
+    background-size: cover, 20px 20px, 20px 20px;
+    background-position: center, 0 0, 10px 10px;
+    position: relative;
+}
+
+/* Add subtle animation to hero background */
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.1) 0%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.1) 100%
+    );
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% { transform: translateX(-100%); opacity: 0; }
+    50% { transform: translateX(100%); opacity: 1; }
+}
+
+/* Service card image placeholders */
+.service-card::before {
+    content: '';
+    display: block;
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3A7D99, #27ae60);
+    position: relative;
+}
+
+/* Specific service icons using CSS */
+.service-card[data-service="integrated-massage"]::before {
+    background: linear-gradient(135deg, #3A7D99, #2980b9);
+    box-shadow: 
+        inset -20px -20px 0 rgba(255,255,255,0.1),
+        0 0 20px rgba(58, 125, 153, 0.3);
+}
+
+.service-card[data-service="applied-neurology"]::before {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    box-shadow: 
+        inset -20px -20px 0 rgba(255,255,255,0.1),
+        0 0 20px rgba(39, 174, 96, 0.3);
+}
+
+.service-card[data-service="prenatal-massage"]::before {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    box-shadow: 
+        inset -20px -20px 0 rgba(255,255,255,0.1),
+        0 0 20px rgba(231, 76, 60, 0.3);
+}
+
+.service-card[data-service="thai-stretch"]::before {
+    background: linear-gradient(135deg, #f39c12, #d35400);
+    box-shadow: 
+        inset -20px -20px 0 rgba(255,255,255,0.1),
+        0 0 20px rgba(243, 156, 18, 0.3);
+}
+
+.service-card[data-service="sports-massage"]::before {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+    box-shadow: 
+        inset -20px -20px 0 rgba(255,255,255,0.1),
+        0 0 20px rgba(155, 89, 182, 0.3);
+}
+
+.service-card[data-service="craniosacral"]::before {
+    background: linear-gradient(135deg, #1abc9c, #16a085);
+    box-shadow: 
+        inset -20px -20px 0 rgba(255,255,255,0.1),
+        0 0 20px rgba(26, 188, 156, 0.3);
+}
+
+/* Add subtle icon overlay for service cards */
+.service-card[data-service="integrated-massage"]::after {
+    content: '🤲';
+    position: absolute;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2rem;
+    z-index: 1;
+}
+
+.service-card[data-service="applied-neurology"]::after {
+    content: '🧠';
+    position: absolute;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2rem;
+    z-index: 1;
+}
+
+.service-card[data-service="prenatal-massage"]::after {
+    content: '🤱';
+    position: absolute;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2rem;
+    z-index: 1;
+}
+
+.service-card[data-service="thai-stretch"]::after {
+    content: '🧘';
+    position: absolute;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2rem;
+    z-index: 1;
+}
+
+.service-card[data-service="sports-massage"]::after {
+    content: '💪';
+    position: absolute;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2rem;
+    z-index: 1;
+}
+
+.service-card[data-service="craniosacral"]::after {
+    content: '✨';
+    position: absolute;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2rem;
+    z-index: 1;
+}
+
+/* Professional image placeholder for missing images */
+.image-placeholder {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px dashed #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    font-size: 1rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.image-placeholder::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.4),
+        transparent
+    );
+    animation: loading-sweep 2s infinite;
+}
+
+@keyframes loading-sweep {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* Testimonial avatar placeholders */
+.testimonial-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3A7D99, #27ae60);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0 auto 1rem;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* About page professional headshot placeholder */
+.professional-headshot-placeholder {
+    width: 200px;
+    height: 200px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #3A7D99 0%, #2c5530 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 3rem;
+    margin: 0 auto 2rem;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.professional-headshot-placeholder::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(
+        circle,
+        rgba(255,255,255,0.1) 0%,
+        transparent 70%
+    );
+    animation: rotate 6s linear infinite;
+}
+
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.professional-headshot-placeholder::after {
+    content: '👨‍⚕️';
+    position: relative;
+    z-index: 1;
+}
+
+/* Facility image placeholders */
+.facility-placeholder {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+    padding: 3rem;
+    text-align: center;
+    color: #6c757d;
+    border: 2px solid #dee2e6;
+    position: relative;
+    overflow: hidden;
+}
+
+.facility-placeholder::before {
+    content: '🏢';
+    font-size: 4rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.facility-placeholder::after {
+    content: 'Professional Treatment Facility';
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .service-card::before {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .professional-headshot-placeholder {
+        width: 150px;
+        height: 150px;
+        font-size: 2rem;
+    }
+    
+    .service-card[data-service]::after {
+        font-size: 1.5rem;
+        top: 1.5rem;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .image-placeholder {
+        border: 3px solid #000;
+        background: #fff;
+        color: #000;
+    }
+    
+    .service-card::before {
+        box-shadow: 0 0 0 2px #000;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .hero::before,
+    .image-placeholder::before,
+    .professional-headshot-placeholder::before {
+        animation: none;
+    }
+}

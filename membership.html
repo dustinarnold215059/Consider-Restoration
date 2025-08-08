@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Membership Programs - Consider Restoration</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="js/shared-data.js"></script>
+    <style>
+        /* Membership Modal Specific Styles */
+        .modal {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.show {
+            display: flex !important;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-content {
+            max-height: 85vh;
+            overflow-y: auto;
+            max-width: 500px;
+            margin: 2vh auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            color: #2c3e50;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #aaa;
+            padding: 0;
+            width: auto;
+            height: auto;
+        }
+        
+        .close-modal:hover {
+            color: #000;
+        }
+        
+        .membership-preview {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin: 0.75rem 0;
+        }
+        
+        .membership-detail {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .plan-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #3A7D99;
+        }
+        
+        .plan-pricing {
+            font-weight: bold;
+            color: #27ae60;
+        }
+        
+        .features-summary ul {
+            margin: 0.5rem 0;
+            padding-left: 1.2rem;
+        }
+        
+        .features-summary li {
+            margin: 0.25rem 0;
+            font-size: 0.9em;
+        }
+        
+        .auth-tabs {
+            display: flex;
+            margin: 1rem 0;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-btn.active {
+            color: #3A7D99;
+            border-bottom-color: #3A7D99;
+        }
+        
+        .auth-form {
+            display: none;
+            margin: 1rem 0;
+        }
+        
+        .auth-form .form-group {
+            margin: 0.75rem 0;
+        }
+        
+        .auth-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .auth-form input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+        
+        .auth-form input:focus {
+            outline: none;
+            border-color: #3A7D99;
+            box-shadow: 0 0 0 2px rgba(58, 125, 153, 0.1);
+        }
+        
+        .auth-btn {
+            width: 100%;
+            background: #3A7D99;
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 1rem;
+        }
+        
+        .auth-btn:hover {
+            background: #2a5f75;
+        }
+        
+        .demo-accounts {
+            margin: 1rem 0 0.5rem;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .demo-accounts h4 {
+            margin: 0 0 1rem 0;
+            color: #333;
+            font-size: 0.9em;
+        }
+        
+        .demo-account {
+            margin: 0.5rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85em;
+        }
+        
+        .demo-account button {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .demo-account button:hover {
+            background: #545b62;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Mobile and small screen adjustments */
+        @media (max-height: 700px) {
+            .modal-content {
+                max-height: 95vh;
+                margin: 1vh auto;
+                padding: 1.5rem;
+            }
+            
+            .membership-preview {
+                padding: 0.5rem;
+                margin: 0.5rem 0;
+            }
+            
+            .auth-form .form-group {
+                margin: 0.5rem 0;
+            }
+            
+            .demo-accounts {
+                margin: 0.75rem 0 0.25rem;
+                padding: 0.5rem;
+            }
+            
+            .demo-accounts h4 {
+                margin: 0 0 0.5rem 0;
+                font-size: 0.85em;
+            }
+        }
+        
+        @media (max-height: 600px) {
+            .demo-accounts {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-container">
+                <h1 class="logo">Consider Restoration</h1>
+                <ul class="nav-menu">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="services.html">Services</a></li>
+                    <li><a href="membership.html" class="active">Membership</a></li>
+                    <li><a href="booking.html">Book Appointment</a></li>
+                    <li><a href="reviews.html">Reviews</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                    <li><a href="user-portal.html" id="accountNavLink">Login</a></li>
+                    <li id="adminNavLink" style="display: none;"><a href="admin.html">Admin</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="membership page-section">
+            <div class="container">
+                <h1>Membership Programs</h1>
+                <div class="membership-intro">
+                    <p>Prioritize your wellness with our membership programs designed to provide consistent, affordable access to therapeutic bodywork. Members enjoy discounted rates, priority booking, and exclusive benefits.</p>
+                </div>
+                
+                <div class="membership-plans">
+                    <div class="plan-card featured">
+                        <div class="plan-badge">Most Popular</div>
+                        <h3>Wellness Member</h3>
+                        <div class="plan-price">
+                            <span class="price">$75</span>
+                            <span class="period">per month</span>
+                        </div>
+                        <div class="plan-features">
+                            <ul>
+                                <li>✓ One 60-minute session per month</li>
+                                <li>✓ 15% discount on additional services</li>
+                                <li>✓ Priority booking access</li>
+                                <li>✓ Rollover unused sessions (max 2)</li>
+                                <li>✓ Member-only wellness tips</li>
+                                <li>✓ No initiation fee</li>
+                            </ul>
+                        </div>
+                        <button class="membership-btn primary" onclick="showMembershipModal('wellness')">Join Now</button>
+                    </div>
+                    
+                    <div class="plan-card">
+                        <h3>Restoration Plus</h3>
+                        <div class="plan-price">
+                            <span class="price">$140</span>
+                            <span class="period">per month</span>
+                        </div>
+                        <div class="plan-features">
+                            <ul>
+                                <li>✓ Two 60-minute sessions per month</li>
+                                <li>✓ 20% discount on additional services</li>
+                                <li>✓ Priority booking access</li>
+                                <li>✓ Rollover unused sessions (max 3)</li>
+                                <li>✓ Complimentary upgrade to 75-min sessions</li>
+                                <li>✓ Quarterly wellness consultation</li>
+                                <li>✓ Guest passes (2 per year)</li>
+                            </ul>
+                        </div>
+                        <button class="membership-btn" onclick="showMembershipModal('restoration-plus')">Join Now</button>
+                    </div>
+                    
+                    <div class="plan-card">
+                        <h3>Therapeutic Elite</h3>
+                        <div class="plan-price">
+                            <span class="price">$200</span>
+                            <span class="period">per month</span>
+                        </div>
+                        <div class="plan-features">
+                            <ul>
+                                <li>✓ Three 60-minute sessions per month</li>
+                                <li>✓ 25% discount on additional services</li>
+                                <li>✓ VIP booking priority</li>
+                                <li>✓ Unlimited session rollover</li>
+                                <li>✓ All sessions can be 90-minute</li>
+                                <li>✓ Monthly wellness consultation</li>
+                                <li>✓ Guest passes (4 per year)</li>
+                                <li>✓ Exclusive workshops access</li>
+                            </ul>
+                        </div>
+                        <button class="membership-btn" onclick="showMembershipModal('therapeutic-elite')">Join Now</button>
+                    </div>
+                </div>
+                
+                <div class="membership-benefits">
+                    <h2>Why Choose Membership?</h2>
+                    <div class="benefits-grid">
+                        <div class="benefit-item">
+                            <div class="benefit-icon">💰</div>
+                            <h4>Save Money</h4>
+                            <p>Members save 15-25% compared to individual session rates, making regular wellness care more accessible.</p>
+                        </div>
+                        <div class="benefit-item">
+                            <div class="benefit-icon">📅</div>
+                            <h4>Priority Booking</h4>
+                            <p>Get first access to appointment slots, including popular times and last-minute availability.</p>
+                        </div>
+                        <div class="benefit-item">
+                            <div class="benefit-icon">🔄</div>
+                            <h4>Flexibility</h4>
+                            <p>Rollover unused sessions and pause your membership when needed (up to 3 months per year).</p>
+                        </div>
+                        <div class="benefit-item">
+                            <div class="benefit-icon">📈</div>
+                            <h4>Better Results</h4>
+                            <p>Regular sessions provide cumulative benefits and help maintain optimal physical wellness.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="membership-faq">
+                    <h2>Frequently Asked Questions</h2>
+                    <div class="faq-list">
+                        <div class="faq-item">
+                            <h4>Can I change my membership plan?</h4>
+                            <p>Yes, you can upgrade or downgrade your membership at any time. Changes take effect at your next billing cycle.</p>
+                        </div>
+                        <div class="faq-item">
+                            <h4>What happens to unused sessions?</h4>
+                            <p>Unused sessions roll over based on your plan limits. Wellness Members can roll over 2 sessions, Restoration Plus can roll over 3, and Elite members have unlimited rollover.</p>
+                        </div>
+                        <div class="faq-item">
+                            <h4>Can I pause my membership?</h4>
+                            <p>Yes, you can pause your membership for up to 3 months per year for medical reasons, travel, or other circumstances.</p>
+                        </div>
+                        <div class="faq-item">
+                            <h4>Is there a contract commitment?</h4>
+                            <p>No long-term contracts required. You can cancel anytime with 30 days notice. All unused prepaid sessions will be honored.</p>
+                        </div>
+                        <div class="faq-item">
+                            <h4>Can I share my membership?</h4>
+                            <p>Memberships are non-transferable, but Elite members receive guest passes that can be gifted to family or friends.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="membership-cta">
+                    <h2>Ready to Start Your Wellness Journey?</h2>
+                    <p>Join thousands of members who have made wellness a priority. Start feeling better today.</p>
+                    <div class="cta-buttons">
+                        <a href="booking.html" class="cta-button primary">Schedule Consultation</a>
+                        <a href="contact.html" class="cta-button secondary">Ask Questions</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Membership Login Modal -->
+        <div id="membershipModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Login Required</h2>
+                    <span class="close-modal" onclick="closeMembershipModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Login to join membership program</strong></p>
+                    
+                    <div class="membership-preview" id="membershipPreview">
+                        <!-- Membership details will be shown here -->
+                    </div>
+                    
+                    <div class="auth-tabs">
+                        <button class="tab-btn active" onclick="showLoginTab()">Login</button>
+                        <button class="tab-btn" onclick="showRegisterTab()">Register</button>
+                    </div>
+                    
+                    <!-- Login Form -->
+                    <form id="loginForm" class="auth-form" style="display: block;">
+                        <div class="form-group">
+                            <label for="loginEmail">Email:</label>
+                            <input type="email" id="loginEmail" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Password:</label>
+                            <input type="password" id="loginPassword" name="password" required>
+                        </div>
+                        <button type="submit" class="auth-btn">Login & Join Membership</button>
+                    </form>
+                    
+                    <!-- Register Form -->
+                    <form id="registerForm" class="auth-form" style="display: none;">
+                        <div class="form-group">
+                            <label for="registerName">Full Name:</label>
+                            <input type="text" id="registerName" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerEmail">Email:</label>
+                            <input type="email" id="registerEmail" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerPhone">Phone:</label>
+                            <input type="tel" id="registerPhone" name="phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerPassword">Password:</label>
+                            <input type="password" id="registerPassword" name="password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm Password:</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" required>
+                        </div>
+                        <button type="submit" class="auth-btn">Register & Join Membership</button>
+                    </form>
+                    
+                    <div class="demo-accounts">
+                        <h4>Demo Accounts (for testing):</h4>
+                        <div class="demo-account">
+                            <strong>User:</strong> john.doe@email.com / user123
+                            <button onclick="fillDemoLogin('john.doe@email.com', 'user123')">Use This Account</button>
+                        </div>
+                        <div class="demo-account">
+                            <strong>User:</strong> jane.smith@email.com / user123
+                            <button onclick="fillDemoLogin('jane.smith@email.com', 'user123')">Use This Account</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Consider Restoration - Christopher Rembisz, LMT. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+    <script>
+        // Global variables for membership
+        let selectedMembershipPlan = null;
+        let currentUser = null;
+        
+        // Membership plans data
+        const membershipPlans = {
+            'wellness': {
+                name: 'Wellness Member',
+                price: '$75',
+                period: 'per month',
+                features: ['One 60-minute session per month', '15% discount on additional services', 'Priority booking access', 'Rollover unused sessions (max 2)', 'Member-only wellness tips', 'No initiation fee']
+            },
+            'restoration-plus': {
+                name: 'Restoration Plus',
+                price: '$140',
+                period: 'per month',
+                features: ['Two 60-minute sessions per month', '20% discount on additional services', 'Priority booking access', 'Rollover unused sessions (max 3)', 'Complimentary upgrade to 75-min sessions', 'Quarterly wellness consultation', 'Guest passes (2 per year)']
+            },
+            'therapeutic-elite': {
+                name: 'Therapeutic Elite',
+                price: '$200',
+                period: 'per month',
+                features: ['Three 60-minute sessions per month', '25% discount on additional services', 'VIP booking priority', 'Unlimited session rollover', 'All sessions can be 90-minute', 'Monthly wellness consultation', 'Guest passes (4 per year)', 'Exclusive workshops access']
+            }
+        };
+        
+        // Show membership modal
+        function showMembershipModal(planType) {
+            console.log('🚀 showMembershipModal() called for plan:', planType);
+            selectedMembershipPlan = planType;
+            
+            // Debug: Check ALL localStorage content at this moment
+            console.log('🔍 DEBUGGING: All localStorage at button click:', Object.keys(localStorage));
+            localStorage.keys?.forEach?.((key, index) => {
+                console.log(`${index}: ${key} = ${localStorage.getItem(key)?.substring(0, 100)}...`);
+            });
+            
+            // Alternative way to check all localStorage
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                console.log(`🗂️ ${key}:`, value?.substring(0, 100) + '...');
+                
+                // If we find user data under any key, try to use it
+                if (key === 'currentUser' || (value && value.includes('john.doe@email.com'))) {
+                    console.log('🎯 Found user data under key:', key);
+                }
+            }
+            
+            // Check if user is already logged in
+            let currentUserData = localStorage.getItem('currentUser');
+            console.log('🔍 Checking localStorage for currentUser:', currentUserData);
+            
+            // Fallback: Check if user data is in massageUsers and isLoggedIn is true
+            if (!currentUserData && localStorage.getItem('isLoggedIn') === 'true') {
+                console.log('🔍 currentUser missing, checking massageUsers for logged in user...');
+                const massageUsersData = localStorage.getItem('massageUsers');
+                if (massageUsersData) {
+                    try {
+                        const users = JSON.parse(massageUsersData);
+                        // Look for john.doe user specifically, or the most recently active user
+                        const loggedInUser = users.find(u => u.email === 'john.doe@email.com' || u.username === 'john.doe@email.com');
+                        if (loggedInUser) {
+                            console.log('✅ Found user in massageUsers:', loggedInUser);
+                            currentUserData = JSON.stringify(loggedInUser);
+                            // Restore the currentUser in localStorage
+                            localStorage.setItem('currentUser', currentUserData);
+                        }
+                    } catch (error) {
+                        console.error('❌ Error parsing massageUsers:', error);
+                    }
+                }
+            }
+            
+            if (currentUserData) {
+                console.log('🔧 Raw localStorage data:', currentUserData);
+                console.log('🔧 Data type:', typeof currentUserData);
+                console.log('🔧 Data length:', currentUserData.length);
+                
+                try {
+                    const user = JSON.parse(currentUserData);
+                    console.log('✅ JSON parsing successful');
+                    console.log('✅ User found in localStorage:', user);
+                    console.log('👤 User details - Name:', user.name, 'Email:', user.email, 'Role:', user.role);
+                    
+                    // Check if it's a valid user (has required fields)
+                    if (user.name && user.email) {
+                        console.log('✅ User is valid, proceeding directly to payment');
+                        // User is logged in, go directly to payment
+                        proceedToMembershipPayment(planType, user);
+                        return;
+                    } else {
+                        console.warn('⚠️ User data incomplete:', user);
+                    }
+                } catch (error) {
+                    console.error('❌ Error parsing user data from localStorage:', error);
+                    console.error('❌ Raw data that caused error:', currentUserData);
+                    console.error('❌ Error details:', error.message);
+                    // DON'T clear the data automatically - let's see what's wrong first
+                    // localStorage.removeItem('currentUser');
+                }
+            } else {
+                console.log('❌ No user found in localStorage');
+            }
+            
+            const modal = document.getElementById('membershipModal');
+            console.log('Modal element:', modal);
+            if (!modal) {
+                console.error('❌ Membership modal element not found!');
+                alert('Membership modal not found. Please check the page setup.');
+                return;
+            }
+            
+            // Show membership preview
+            displayMembershipPreview(planType);
+            
+            // Show modal
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            
+            // Close modal when clicking outside
+            modal.onclick = function(event) {
+                if (event.target === modal) {
+                    closeMembershipModal();
+                }
+            };
+        }
+        
+        // Direct payment flow for already logged-in users
+        function proceedToMembershipPayment(planType, user) {
+            console.log('💳 Proceeding directly to membership payment for:', user.name);
+            
+            // Set the global variables that the completion function expects
+            selectedMembershipPlan = planType;
+            currentUser = user; // Set the global currentUser variable
+            
+            // Store current user in localStorage (in case it's not there)
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            
+            // Call the same completion function that login/register would call
+            completeMembershipSignup();
+        }
+        
+        // Close membership modal
+        function closeMembershipModal() {
+            console.log('🚪 Closing membership modal');
+            const modal = document.getElementById('membershipModal');
+            if (modal) {
+                modal.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+        }
+        
+        // Display membership preview
+        function displayMembershipPreview(planType) {
+            const preview = document.getElementById('membershipPreview');
+            if (!preview || !membershipPlans[planType]) return;
+            
+            const plan = membershipPlans[planType];
+            
+            preview.innerHTML = `
+                <h4>Selected Membership:</h4>
+                <div class="membership-detail">
+                    <span class="plan-name">${plan.name}</span>
+                    <span class="plan-pricing">${plan.price} ${plan.period}</span>
+                </div>
+                <div class="features-summary">
+                    <strong>Key Benefits:</strong>
+                    <ul>
+                        ${plan.features.slice(0, 3).map(feature => `<li>✓ ${feature}</li>`).join('')}
+                        ${plan.features.length > 3 ? '<li>... and more!</li>' : ''}
+                    </ul>
+                </div>
+            `;
+        }
+        
+        // Tab switching functions
+        function showLoginTab() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            tabs[0].classList.add('active');
+        }
+        
+        function showRegisterTab() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            tabs[1].classList.add('active');
+        }
+        
+        // Demo login function
+        function fillDemoLogin(email, password) {
+            document.getElementById('loginEmail').value = email;
+            document.getElementById('loginPassword').value = password;
+            showLoginTab();
+        }
+        
+        // Authentication functions
+        function authenticateUser(email, password) {
+            const users = window.sharedUsers || [];
+            const user = users.find(u => u.username === email && u.password === password);
+            
+            if (user) {
+                currentUser = user;
+                return { success: true, user: user };
+            }
+            
+            return { success: false, message: 'Invalid email or password.' };
+        }
+        
+        function registerUser(userData) {
+            const users = window.sharedUsers || [];
+            
+            // Check if user already exists
+            if (users.find(u => u.username === userData.email)) {
+                return { success: false, message: 'An account with this email already exists.' };
+            }
+            
+            // Create new user
+            const newUser = {
+                id: Math.max(...users.map(u => u.id), 0) + 1,
+                username: userData.email,
+                password: userData.password,
+                name: userData.name,
+                email: userData.email,
+                phone: userData.phone,
+                role: 'user',
+                totalAppointments: 0,
+                lastVisit: null,
+                membershipPlan: null
+            };
+            
+            // Add user using helper function or fallback
+            if (window.addUser) {
+                window.addUser(newUser);
+            } else {
+                users.push(newUser);
+                window.sharedUsers = users;
+            }
+            
+            currentUser = newUser;
+            return { success: true, user: newUser };
+        }
+        
+        // Complete membership signup after authentication - now shows payment form
+        function completeMembershipSignup() {
+            if (!selectedMembershipPlan || !currentUser) return;
+            
+            console.log('✅ Authentication successful, proceeding to payment...');
+            
+            // Close login modal first
+            closeMembershipModal();
+            
+            // Show payment modal
+            showPaymentModal();
+        }
+        
+        // Show Stripe payment modal
+        function showPaymentModal() {
+            const plan = membershipPlans[selectedMembershipPlan];
+            
+            // Create payment modal
+            const paymentModal = document.createElement('div');
+            paymentModal.id = 'paymentModal';
+            paymentModal.className = 'modal';
+            paymentModal.style.display = 'flex';
+            
+            paymentModal.innerHTML = `
+                <div class="modal-content" style="max-width: 500px;">
+                    <div class="modal-header">
+                        <h2>💳 Complete Your Membership</h2>
+                        <span class="close-modal" onclick="closePaymentModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <div class="membership-summary" style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #2c3e50;">Membership Summary</h4>
+                            <p style="margin: 0.25rem 0;"><strong>Plan:</strong> ${plan.name}</p>
+                            <p style="margin: 0.25rem 0;"><strong>Price:</strong> ${plan.price} ${plan.period}</p>
+                            <p style="margin: 0.25rem 0;"><strong>Member:</strong> ${currentUser.name}</p>
+                            <p style="margin: 0.25rem 0;"><strong>Email:</strong> ${currentUser.email}</p>
+                        </div>
+                        
+                        <div class="test-cards-info" style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #856404;">🧪 Test Mode - Use These Card Numbers:</h4>
+                            <div style="font-family: monospace; font-size: 0.9rem;">
+                                <p style="margin: 0.25rem 0;"><strong>Success:</strong> 4242 4242 4242 4242</p>
+                                <p style="margin: 0.25rem 0;"><strong>Decline:</strong> 4000 0000 0000 0002</p>
+                                <p style="margin: 0.25rem 0;"><strong>Any future date, any CVC</strong></p>
+                            </div>
+                        </div>
+                        
+                        <form id="payment-form">
+                            <div style="margin-bottom: 1rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Card Information:</label>
+                                <div id="card-element" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; background: white;">
+                                    <!-- Stripe Elements will create form elements here -->
+                                </div>
+                                <div id="card-errors" role="alert" style="color: #fa755a; margin-top: 0.5rem;"></div>
+                            </div>
+                            
+                            <button type="submit" id="submit-payment" style="
+                                width: 100%;
+                                background: #28a745;
+                                color: white;
+                                border: none;
+                                padding: 15px;
+                                border-radius: 5px;
+                                font-size: 1.1rem;
+                                cursor: pointer;
+                                transition: background 0.3s;
+                            ">
+                                <span id="button-text">💳 Subscribe for ${plan.price}/month</span>
+                                <span id="spinner" style="display: none;">Processing...</span>
+                            </button>
+                        </form>
+                        
+                        <p style="font-size: 0.85rem; color: #666; text-align: center; margin-top: 1rem;">
+                            🔒 Secure payment powered by Stripe<br>
+                            Cancel anytime • No setup fees
+                        </p>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(paymentModal);
+            document.body.style.overflow = 'hidden';
+            
+            // Initialize Stripe
+            initializeStripePayment();
+        }
+        
+        // Initialize demo payment form (no real Stripe connection)
+        function initializeStripePayment() {
+            console.log('🧪 Initializing demo payment form for membership...');
+            
+            // Create demo card input fields instead of using real Stripe Elements
+            const cardElementContainer = document.getElementById('card-element');
+            cardElementContainer.innerHTML = `
+                <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+                    <input type="text" id="demo-card-number" placeholder="1234 1234 1234 1234" 
+                           style="flex: 2; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px;" 
+                           maxlength="19">
+                    <input type="text" id="demo-expiry" placeholder="MM/YY" 
+                           style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px;" 
+                           maxlength="5">
+                    <input type="text" id="demo-cvc" placeholder="CVC" 
+                           style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px;" 
+                           maxlength="4">
+                </div>
+            `;
+            
+            // Add card number formatting
+            const cardNumberInput = document.getElementById('demo-card-number');
+            cardNumberInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+                let formattedValue = value.match(/.{1,4}/g)?.join(' ') || '';
+                e.target.value = formattedValue;
+            });
+            
+            // Add expiry formatting
+            const expiryInput = document.getElementById('demo-expiry');
+            expiryInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length >= 2) {
+                    value = value.substring(0,2) + '/' + value.substring(2,4);
+                }
+                e.target.value = value;
+            });
+            
+            // Handle form submission
+            const form = document.getElementById('payment-form');
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                
+                const submitButton = document.getElementById('submit-payment');
+                const buttonText = document.getElementById('button-text');
+                const spinner = document.getElementById('spinner');
+                const errorDisplay = document.getElementById('card-errors');
+                
+                // Clear any previous errors
+                errorDisplay.textContent = '';
+                
+                // Get form values
+                const cardNumber = document.getElementById('demo-card-number').value.replace(/\s/g, '');
+                const expiry = document.getElementById('demo-expiry').value;
+                const cvc = document.getElementById('demo-cvc').value;
+                
+                // Basic validation
+                if (!cardNumber || cardNumber.length < 13) {
+                    errorDisplay.textContent = 'Please enter a valid card number.';
+                    return;
+                }
+                if (!expiry || expiry.length < 5) {
+                    errorDisplay.textContent = 'Please enter a valid expiry date.';
+                    return;
+                }
+                if (!cvc || cvc.length < 3) {
+                    errorDisplay.textContent = 'Please enter a valid CVC.';
+                    return;
+                }
+                
+                // Show loading state
+                submitButton.disabled = true;
+                buttonText.style.display = 'none';
+                spinner.style.display = 'inline';
+                
+                // Demo payment processing
+                setTimeout(() => {
+                    // Check for test card numbers
+                    if (cardNumber === '4242424242424242') {
+                        console.log('💳 Demo payment successful with test card!');
+                        handlePaymentSuccess();
+                    } else if (cardNumber === '4000000000000002') {
+                        // Simulate declined card
+                        errorDisplay.textContent = 'Your card was declined. Please try again with a different payment method.';
+                        submitButton.disabled = false;
+                        buttonText.style.display = 'inline';
+                        spinner.style.display = 'none';
+                    } else {
+                        // For any other card number, simulate success for demo purposes
+                        console.log('💳 Demo payment successful with any card number!');
+                        handlePaymentSuccess();
+                    }
+                }, 2000);
+            });
+        }
+        
+        // Handle successful payment
+        function handlePaymentSuccess() {
+            console.log('🎉 Payment successful!');
+            
+            // Update user's membership
+            currentUser.membershipPlan = selectedMembershipPlan;
+            currentUser.membershipStartDate = new Date().toISOString();
+            currentUser.membershipStatus = 'active';
+            currentUser.paymentStatus = 'paid';
+            
+            // Store user data
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            // Update in shared data if available
+            if (window.updateUser) {
+                window.updateUser(currentUser.id, currentUser);
+            }
+            
+            // Close payment modal
+            closePaymentModal();
+            
+            // Show success message
+            const plan = membershipPlans[selectedMembershipPlan];
+            showPaymentSuccessModal(plan);
+        }
+        
+        // Show payment success modal
+        function showPaymentSuccessModal(plan) {
+            const successModal = document.createElement('div');
+            successModal.className = 'modal';
+            successModal.style.display = 'flex';
+            
+            successModal.innerHTML = `
+                <div class="modal-content" style="max-width: 400px; text-align: center;">
+                    <div style="padding: 2rem;">
+                        <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
+                        <h2 style="color: #28a745; margin-bottom: 1rem;">Membership Activated!</h2>
+                        <p style="margin-bottom: 1rem;">Welcome to <strong>${plan.name}</strong>, ${currentUser.name}!</p>
+                        
+                        <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 1rem; margin: 1rem 0;">
+                            <p style="margin: 0.5rem 0;"><strong>Plan:</strong> ${plan.name}</p>
+                            <p style="margin: 0.5rem 0;"><strong>Price:</strong> ${plan.price} ${plan.period}</p>
+                            <p style="margin: 0.5rem 0;"><strong>Status:</strong> Active ✅</p>
+                        </div>
+                        
+                        <p style="font-size: 0.9rem; color: #666; margin-bottom: 1.5rem;">
+                            Your first session credit is now available!<br>
+                            Check your email for membership details.
+                        </p>
+                        
+                        <div style="display: flex; gap: 1rem; justify-content: center;">
+                            <button onclick="closeSuccessModal(); window.location.href='booking.html'" style="
+                                background: #3A7D99;
+                                color: white;
+                                border: none;
+                                padding: 0.75rem 1.5rem;
+                                border-radius: 5px;
+                                cursor: pointer;
+                                font-size: 1rem;
+                            ">📅 Book First Session</button>
+                            <button onclick="closeSuccessModal(); window.location.href='user-portal.html'" style="
+                                background: #28a745;
+                                color: white;
+                                border: none;
+                                padding: 0.75rem 1.5rem;
+                                border-radius: 5px;
+                                cursor: pointer;
+                                font-size: 1rem;
+                            ">👤 View Portal</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(successModal);
+            
+            // Auto-close after 10 seconds
+            setTimeout(() => {
+                closeSuccessModal();
+            }, 10000);
+        }
+        
+        // Modal management functions
+        function closePaymentModal() {
+            const modal = document.getElementById('paymentModal');
+            if (modal) {
+                modal.remove();
+                document.body.style.overflow = '';
+            }
+        }
+        
+        function closeSuccessModal() {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => modal.remove());
+            document.body.style.overflow = '';
+        }
+        
+        // Update page for logged-in users
+        function updatePageForLoggedInUser() {
+            const currentUserData = localStorage.getItem('currentUser');
+            console.log('🔍 updatePageForLoggedInUser - localStorage data:', currentUserData);
+            
+            if (currentUserData) {
+                try {
+                    const user = JSON.parse(currentUserData);
+                    console.log('✅ User is logged in:', user.name, 'Role:', user.role);
+                    console.log('👤 Full user object:', user);
+                
+                // Update all "Join Now" buttons to show personalized text
+                const joinButtons = document.querySelectorAll('.membership-btn');
+                joinButtons.forEach(button => {
+                    button.innerHTML = `Join Now - ${user.name}`;
+                    button.style.background = '#27ae60'; // Green color to indicate ready to proceed
+                });
+                
+                // Add a welcome message at the top
+                const heroSection = document.querySelector('.membership-intro');
+                if (heroSection && !document.getElementById('logged-in-notice')) {
+                    const welcomeDiv = document.createElement('div');
+                    welcomeDiv.id = 'logged-in-notice';
+                    welcomeDiv.style.cssText = `
+                        background: #d4edda;
+                        border: 1px solid #c3e6cb;
+                        color: #155724;
+                        padding: 1rem;
+                        border-radius: 8px;
+                        margin-bottom: 2rem;
+                        text-align: center;
+                    `;
+                    welcomeDiv.innerHTML = `
+                        <strong>Welcome back, ${user.name}!</strong><br>
+                        You're already signed in. Click any "Join Now" button below to proceed directly to payment.
+                    `;
+                    heroSection.appendChild(welcomeDiv);
+                }
+                } catch (error) {
+                    console.error('❌ Error in updatePageForLoggedInUser:', error);
+                }
+            } else {
+                console.log('❌ No user data found for page updates');
+            }
+        }
+        
+        // Debug function to check all localStorage content
+        function debugLocalStorage() {
+            console.log('🔍 DEBUGGING LOCALSTORAGE CONTENT:');
+            console.log('📦 All localStorage keys:', Object.keys(localStorage));
+            
+            // Check for different possible user keys
+            const possibleKeys = ['currentUser', 'loggedInUser', 'user', 'userSession', 'massageUser'];
+            possibleKeys.forEach(key => {
+                const value = localStorage.getItem(key);
+                if (value) {
+                    console.log(`✅ Found ${key}:`, value);
+                    try {
+                        const parsed = JSON.parse(value);
+                        console.log(`📋 Parsed ${key}:`, parsed);
+                    } catch (e) {
+                        console.log(`❌ Could not parse ${key} as JSON`);
+                    }
+                } else {
+                    console.log(`❌ ${key}: null`);
+                }
+            });
+            
+            // Also check sessionStorage
+            console.log('📦 SessionStorage keys:', Object.keys(sessionStorage));
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Debug localStorage content first
+            debugLocalStorage();
+            
+            // Check if user is logged in and update the page accordingly
+            updatePageForLoggedInUser();
+            // Login form
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const email = document.getElementById('loginEmail').value;
+                    const password = document.getElementById('loginPassword').value;
+                    
+                    const result = authenticateUser(email, password);
+                    
+                    if (result.success) {
+                        completeMembershipSignup();
+                    } else {
+                        alert(result.message);
+                    }
+                });
+            }
+            
+            // Register form
+            const registerForm = document.getElementById('registerForm');
+            if (registerForm) {
+                registerForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const password = document.getElementById('registerPassword').value;
+                    const confirmPassword = document.getElementById('confirmPassword').value;
+                    
+                    if (password !== confirmPassword) {
+                        alert('Passwords do not match.');
+                        return;
+                    }
+                    
+                    const userData = {
+                        name: document.getElementById('registerName').value,
+                        email: document.getElementById('registerEmail').value,
+                        phone: document.getElementById('registerPhone').value,
+                        password: password
+                    };
+                    
+                    const result = registerUser(userData);
+                    
+                    if (result.success) {
+                        completeMembershipSignup();
+                    } else {
+                        alert(result.message);
+                    }
+                });
+            }
+        });
+        
+        // Make functions globally available
+        window.showMembershipModal = showMembershipModal;
+        window.closeMembershipModal = closeMembershipModal;
+        window.showLoginTab = showLoginTab;
+        window.showRegisterTab = showRegisterTab;
+        window.fillDemoLogin = fillDemoLogin;
+    </script>
+</body>
+</html>

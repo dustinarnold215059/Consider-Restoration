@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Consider Restoration</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <script src="js/error-handler.js"></script>
+    <script src="js/shared-data.js"></script>
+    <script>
+        // Admin page protection - redirect non-admin users
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is accessing admin page directly
+            const currentUser = localStorage.getItem('currentUser');
+            if (currentUser) {
+                const user = JSON.parse(currentUser);
+                if (user.role !== 'admin') {
+                    // Non-admin user trying to access admin page
+                    alert('Access denied. This page is for administrators only.');
+                    window.location.href = 'index.html';
+                    return;
+                }
+            }
+            
+            // If no user is logged in, show login screen normally
+            // The admin login will handle authentication
+        });
+    </script>
+</head>
+<body>
+    <div id="loginScreen" class="login-screen">
+        <div class="login-container">
+            <div class="login-header">
+                <a href="index.html" class="back-to-home">← Back to Home</a>
+                <h2>Admin Login</h2>
+            </div>
+            <form id="adminLoginForm">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit">Login</button>
+                <div id="loginError" class="error-message"></div>
+            </form>
+            <div class="demo-credentials">
+                <h4>Demo Credentials:</h4>
+                <p><strong>Admin:</strong> admin@test.com / admin123</p>
+                <p><strong>User 1:</strong> john.doe@email.com / user123</p>
+                <p><strong>User 2:</strong> jane.smith@email.com / user123</p>
+                <p><strong>User 3:</strong> dustin@email.com / user123</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminPanel" class="admin-panel" style="display: none;">
+        <header class="admin-header">
+            <div class="admin-header-left">
+                <a href="index.html" class="admin-back-to-home">← Back to Home</a>
+                <h1>Admin Dashboard - Consider Restoration</h1>
+            </div>
+            <div class="admin-nav">
+                <button class="nav-btn active" data-section="dashboard">Dashboard</button>
+                <button class="nav-btn" data-section="appointments">Appointments</button>
+                <button class="nav-btn" data-section="schedule">Schedule</button>
+                <button class="nav-btn" data-section="clients">Clients</button>
+                <button class="nav-btn" data-section="cash-register">Cash Register</button>
+                <button class="nav-btn" data-section="reviews">Reviews</button>
+                <button class="nav-btn" data-section="messages">Messages</button>
+                <button class="nav-btn" data-section="marketing">Marketing</button>
+                <button class="nav-btn" data-section="sales">Sales</button>
+                <button class="nav-btn" data-section="reports">Reports</button>
+                <button class="nav-btn" data-section="setup">Setup</button>
+                <button class="nav-btn" data-section="settings">Settings</button>
+                <button id="logoutBtn" class="logout-btn">Logout</button>
+            </div>
+        </header>
+
+        <main class="admin-content">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="admin-section active">
+                <div class="section-header">
+                    <h2>Dashboard Overview</h2>
+                </div>
+                
+                <!-- Monthly Revenue Chart -->
+                <div class="dashboard-chart-container">
+                    <div class="chart-header">
+                        <h3>Revenue Trend</h3>
+                        <div class="chart-controls">
+                            <select id="chartPeriod">
+                                <option value="week">Last Week</option>
+                                <option value="month" selected>Last Month</option>
+                                <option value="year">Last Year</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="revenue-chart" id="revenueChart">
+                        <canvas id="revenueCanvas" width="800" height="300"></canvas>
+                    </div>
+                </div>
+                
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3>Today's Appointments</h3>
+                            <span class="card-icon">📅</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="stat-number" id="todaysAppointments">0</div>
+                            <div class="stat-label">Scheduled Today</div>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3>Monthly Revenue</h3>
+                            <span class="card-icon">💰</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="stat-number" id="monthlyRevenue">$0</div>
+                            <div class="stat-label">This Month</div>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3>Active Clients</h3>
+                            <span class="card-icon">👥</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="stat-number" id="activeClients">0</div>
+                            <div class="stat-label">Total Clients</div>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3>Pending Reviews</h3>
+                            <span class="card-icon">⭐</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="stat-number" id="pendingReviews">0</div>
+                            <div class="stat-label">Awaiting Response</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-charts">
+                    <div class="chart-container">
+                        <h3>Recent Activity</h3>
+                        <div id="recentActivity" class="activity-feed">
+                            <!-- Recent activities will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Appointments Section -->
+            <section id="appointments" class="admin-section">
+                <div class="section-header">
+                    <h2>Appointment Management</h2>
+                    <div class="appointment-controls">
+                        <div class="date-filter">
+                            <label>Filter by month:</label>
+                            <input type="month" id="appointmentMonth">
+                            <button id="currentMonthBtn">This Month</button>
+                            <button id="nextMonthBtn">Next Month</button>
+                            <button id="showAllBtn">Show All</button>
+                        </div>
+                        <div class="sort-filter">
+                            <label>Sort by:</label>
+                            <select id="appointmentSort">
+                                <option value="date-asc">Date (Earliest First)</option>
+                                <option value="date-desc">Date (Latest First)</option>
+                                <option value="name-asc">Client Name (A-Z)</option>
+                                <option value="name-desc">Client Name (Z-A)</option>
+                                <option value="status">Status</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="appointments-grid">
+                    <div id="appointmentsList" class="appointments-list">
+                        <!-- Appointments will be populated here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Schedule Section -->
+            <section id="schedule" class="admin-section">
+                <div class="section-header">
+                    <h2>Schedule Management</h2>
+                    <button id="addAvailabilityBtn" class="btn-primary">Add Available Times</button>
+                </div>
+                
+                <div class="schedule-grid">
+                    <div class="schedule-calendar">
+                        <h3>Appointment Calendar</h3>
+                        <div class="calendar-navigation">
+                            <button id="prevMonth" class="calendar-nav-btn">‹</button>
+                            <h4 id="calendarTitle">January 2024</h4>
+                            <button id="nextMonth" class="calendar-nav-btn">›</button>
+                        </div>
+                        <div id="scheduleCalendar" class="admin-calendar">
+                            <!-- Calendar will be generated here -->
+                        </div>
+                        <div class="calendar-legend">
+                            <div class="legend-item">
+                                <span class="legend-color confirmed"></span>
+                                <span>Confirmed</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color pending"></span>
+                                <span>Pending</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color blocked"></span>
+                                <span>Blocked</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="availability-form">
+                        <h3>Manage Availability</h3>
+                        <form id="availabilityForm">
+                            <div class="form-group">
+                                <label for="availDate">Date:</label>
+                                <input type="date" id="availDate" name="availDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Available Times (varies by day):</label>
+                                <div class="time-slots">
+                                    <label><input type="checkbox" value="10:00 AM"> 10:00 AM</label>
+                                    <label><input type="checkbox" value="11:00 AM"> 11:00 AM</label>
+                                    <label><input type="checkbox" value="12:00 PM"> 12:00 PM</label>
+                                    <label><input type="checkbox" value="1:00 PM"> 1:00 PM</label>
+                                    <label><input type="checkbox" value="2:00 PM"> 2:00 PM</label>
+                                    <label><input type="checkbox" value="3:00 PM"> 3:00 PM</label>
+                                    <label><input type="checkbox" value="4:00 PM"> 4:00 PM</label>
+                                    <label><input type="checkbox" value="5:00 PM"> 5:00 PM</label>
+                                    <label><input type="checkbox" value="6:00 PM"> 6:00 PM</label>
+                                </div>
+                                <div class="hours-note">
+                                    <small><em>Note: Hours vary by day. Mon: 10-4, Tue: By appt only, Wed: 10-5, Thu: 12-7, Fri: 10-6, Weekends: Closed</em></small>
+                                </div>
+                            </div>
+                            <button type="submit">Update Availability</button>
+                        </form>
+                        
+                        <hr style="margin: 2rem 0;">
+                        
+                        <h3>Block Out Dates</h3>
+                        <form id="blockDateForm">
+                            <div class="form-group">
+                                <label for="blockDate">Date to Block:</label>
+                                <input type="date" id="blockDate" name="blockDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="blockReason">Reason:</label>
+                                <input type="text" id="blockReason" name="blockReason" placeholder="e.g., Vacation, Sick Day, Personal" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="blockType">Type:</label>
+                                <select id="blockType" name="blockType" required>
+                                    <option value="vacation">Vacation</option>
+                                    <option value="personal">Personal Day</option>
+                                    <option value="medical">Medical Appointment</option>
+                                    <option value="training">Training/Conference</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-danger">Block Date</button>
+                        </form>
+                        
+                        <div class="blocked-dates-list">
+                            <h4>Currently Blocked Dates</h4>
+                            <div id="blockedDatesList">
+                                <!-- Blocked dates will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Users Section -->
+            <section id="clients" class="admin-section">
+                <div class="section-header">
+                    <h2>Client Management</h2>
+                    <button id="addClientBtn" class="btn-primary">Add New Client</button>
+                </div>
+                
+                <div class="users-table">
+                    <table id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Total Appointments</th>
+                                <th>Last Visit</th>
+                                <th>Membership</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- Users will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Payments Section -->
+            <section id="cash-register" class="admin-section">
+                <div class="section-header">
+                    <h2>Cash Register</h2>
+                    <div class="payment-filters">
+                        <select id="paymentStatusFilter">
+                            <option value="">All Payments</option>
+                            <option value="paid">Paid</option>
+                            <option value="pending">Pending</option>
+                            <option value="refunded">Refunded</option>
+                        </select>
+                        <input type="month" id="paymentMonthFilter">
+                    </div>
+                </div>
+                
+                <div class="payments-overview">
+                    <div class="payment-stat-card">
+                        <h3>Today's Revenue</h3>
+                        <div class="payment-amount" id="todayRevenue">$0</div>
+                        <div class="payment-count" id="todayPayments">0 payments</div>
+                    </div>
+                    <div class="payment-stat-card">
+                        <h3>This Month</h3>
+                        <div class="payment-amount" id="monthRevenue">$0</div>
+                        <div class="payment-count" id="monthPayments">0 payments</div>
+                    </div>
+                    <div class="payment-stat-card">
+                        <h3>Pending Payments</h3>
+                        <div class="payment-amount pending" id="pendingRevenue">$0</div>
+                        <div class="payment-count" id="pendingPayments">0 payments</div>
+                    </div>
+                </div>
+                
+                <div class="payments-table">
+                    <table id="paymentsTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Client</th>
+                                <th>Service</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Payment Method</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentsTableBody">
+                            <!-- Payments will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Reports Section -->
+            <section id="reports" class="admin-section">
+                <div class="section-header">
+                    <h2>Reports & Analytics</h2>
+                </div>
+                
+                <div class="reports-grid">
+                    <div class="report-card">
+                        <h3>Today's Summary</h3>
+                        <div class="stats">
+                            <div class="stat">
+                                <span class="stat-number" id="todayAppointments">0</span>
+                                <span class="stat-label">Appointments Today</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-number" id="todayRevenue">$0</span>
+                                <span class="stat-label">Today's Revenue</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="report-card">
+                        <h3>This Week</h3>
+                        <div class="stats">
+                            <div class="stat">
+                                <span class="stat-number" id="weekAppointments">0</span>
+                                <span class="stat-label">Weekly Appointments</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-number" id="weekRevenue">$0</span>
+                                <span class="stat-label">Weekly Revenue</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="report-card">
+                        <h3>Popular Services</h3>
+                        <div id="popularServices">
+                            <!-- Popular services will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reviews Section -->
+            <section id="reviews" class="admin-section">
+                <div class="section-header">
+                    <h2>Client Reviews</h2>
+                    <button id="addReviewBtn" class="btn-primary">Add Review</button>
+                </div>
+                
+                <div class="reviews-container">
+                    <div class="reviews-stats">
+                        <div class="stat-card">
+                            <div class="stat-number" id="averageRating">0.0</div>
+                            <div class="stat-label">Average Rating</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalReviews">0</div>
+                            <div class="stat-label">Total Reviews</div>
+                        </div>
+                    </div>
+                    
+                    <div id="reviewsList" class="reviews-list">
+                        <!-- Reviews will be populated here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Messages Section -->
+            <section id="messages" class="admin-section">
+                <div class="section-header">
+                    <h2>Contact Messages</h2>
+                    <button id="clearMessagesBtn" class="btn-danger" style="margin-left: auto;">Clear All Messages</button>
+                </div>
+                
+                <div class="messages-container">
+                    <div class="messages-stats">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalMessages">0</div>
+                            <div class="stat-label">Total Messages</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="unreadMessages">0</div>
+                            <div class="stat-label">Today's Messages</div>
+                        </div>
+                    </div>
+                    
+                    <div class="messages-list" id="messagesList">
+                        <!-- Messages will be populated here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Marketing Section -->
+            <section id="marketing" class="admin-section">
+                <div class="section-header">
+                    <h2>Marketing Tools</h2>
+                </div>
+                
+                <div class="marketing-grid">
+                    <div class="marketing-card">
+                        <h3>Email Campaigns</h3>
+                        <p>Send promotional emails to clients</p>
+                        <button class="btn-primary">Create Campaign</button>
+                    </div>
+                    
+                    <div class="marketing-card">
+                        <h3>Social Media</h3>
+                        <p>Manage social media posts and engagement</p>
+                        <button class="btn-primary">Schedule Post</button>
+                    </div>
+                    
+                    <div class="marketing-card">
+                        <h3>Promotions</h3>
+                        <p>Create special offers and discount codes</p>
+                        <button class="btn-primary">New Promotion</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sales Section -->
+            <section id="sales" class="admin-section">
+                <div class="section-header">
+                    <h2>Sales Analytics</h2>
+                    <div class="date-range-picker">
+                        <input type="date" id="salesFromDate">
+                        <span>to</span>
+                        <input type="date" id="salesToDate">
+                        <button id="updateSalesBtn" class="btn-secondary">Update</button>
+                    </div>
+                </div>
+                
+                <div class="sales-dashboard">
+                    <div class="sales-metrics">
+                        <div class="metric-card">
+                            <div class="metric-number" id="totalSales">$0</div>
+                            <div class="metric-label">Total Sales</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-number" id="averageTransaction">$0</div>
+                            <div class="metric-label">Average Transaction</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-number" id="newClients">0</div>
+                            <div class="metric-label">New Clients</div>
+                        </div>
+                    </div>
+                    
+                    <div class="sales-chart">
+                        <h3>Sales Trend</h3>
+                        <div id="salesChartContainer">
+                            <!-- Sales chart will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Setup Section -->
+            <section id="setup" class="admin-section">
+                <div class="section-header">
+                    <h2>Business Setup</h2>
+                </div>
+                
+                <div class="setup-sections">
+                    <div class="setup-card">
+                        <h3>Business Information</h3>
+                        <form id="businessInfoForm">
+                            <div class="form-group">
+                                <label for="businessName">Business Name:</label>
+                                <input type="text" id="businessName" value="Christopher's Massage Therapy">
+                            </div>
+                            <div class="form-group">
+                                <label for="businessAddress">Address:</label>
+                                <textarea id="businessAddress" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="businessPhone">Phone:</label>
+                                <input type="tel" id="businessPhone">
+                            </div>
+                            <button type="submit" class="btn-primary">Save Changes</button>
+                        </form>
+                    </div>
+                    
+                    <div class="setup-card">
+                        <h3>Service Configuration</h3>
+                        <div class="services-setup">
+                            <button id="addServiceBtn" class="btn-primary">Add New Service</button>
+                            <div id="servicesList" class="services-list">
+                                <!-- Services will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="setup-card">
+                        <h3>Operating Hours</h3>
+                        <form id="operatingHoursForm">
+                            <div class="hours-grid">
+                                <!-- Operating hours will be populated here -->
+                            </div>
+                            <button type="submit" class="btn-primary">Update Hours</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="admin-section">
+                <div class="section-header">
+                    <h2>System Settings</h2>
+                </div>
+                
+                <div class="settings-grid">
+                    <div class="settings-card">
+                        <h3>Notifications</h3>
+                        <div class="setting-item">
+                            <label class="setting-label">
+                                <input type="checkbox" id="emailNotifications">
+                                Email Notifications
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label class="setting-label">
+                                <input type="checkbox" id="smsNotifications">
+                                SMS Notifications
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label class="setting-label">
+                                <input type="checkbox" id="appointmentReminders">
+                                Appointment Reminders
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-card">
+                        <h3>Payment Settings</h3>
+                        <div class="setting-item">
+                            <label for="defaultTax">Default Tax Rate (%):</label>
+                            <input type="number" id="defaultTax" step="0.01" min="0" max="100">
+                        </div>
+                        <div class="setting-item">
+                            <label for="currency">Currency:</label>
+                            <select id="currency">
+                                <option value="USD">USD ($)</option>
+                                <option value="EUR">EUR (€)</option>
+                                <option value="GBP">GBP (£)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-card">
+                        <h3>Backup & Security</h3>
+                        <div class="setting-item">
+                            <button id="backupDataBtn" class="btn-secondary">Backup Data</button>
+                            <p class="setting-description">Create a backup of all your data</p>
+                        </div>
+                        <div class="setting-item">
+                            <button id="exportDataBtn" class="btn-secondary">Export Analytics Report</button>
+                            <p class="setting-description">Generate comprehensive analytics report as PDF</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="appointmentModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Appointment Details</h3>
+            <div id="appointmentDetails"></div>
+            <div class="modal-actions">
+                <button id="confirmAppointment" class="btn-success">Confirm</button>
+                <button id="cancelAppointment" class="btn-danger">Cancel</button>
+                <button id="rescheduleAppointment" class="btn-primary">Reschedule</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3 id="userModalTitle">User Details</h3>
+            <form id="userForm">
+                <div class="form-group">
+                    <label for="userName">Name:</label>
+                    <input type="text" id="userName" name="userName" required>
+                </div>
+                <div class="form-group">
+                    <label for="userEmail">Email:</label>
+                    <input type="email" id="userEmail" name="userEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="userPhone">Phone:</label>
+                    <input type="tel" id="userPhone" name="userPhone" required>
+                </div>
+                <div class="form-group">
+                    <label for="userRole">Role:</label>
+                    <select id="userRole" name="userRole">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="userMembership">Membership:</label>
+                    <select id="userMembership" name="userMembership">
+                        <option value="">No Membership</option>
+                        <option value="wellness">Wellness Member</option>
+                        <option value="restoration-plus">Restoration Plus</option>
+                        <option value="therapeutic-elite">Therapeutic Elite</option>
+                    </select>
+                </div>
+                <button type="submit">Save User</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

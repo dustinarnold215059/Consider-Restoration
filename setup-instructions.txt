@@ -1,0 +1,75 @@
+CHRISTOPHER'S MASSAGE THERAPY WEBSITE - SETUP INSTRUCTIONS
+=========================================================
+
+WHAT'S INCLUDED:
+- Complete responsive website with booking system
+- Payment processing integration (Stripe)
+- Appointment scheduling with availability calendar
+- Contact information and service listings
+- Mobile-friendly design
+
+FILES STRUCTURE:
+- index.html - Main website page
+- css/style.css - All styling and responsive design
+- js/script.js - Booking system and payment functionality
+- images/ - Folder for photos (add your own images)
+
+TO MAKE THE WEBSITE LIVE:
+
+1. PAYMENT SETUP (REQUIRED):
+   - Sign up for a Stripe account at https://stripe.com
+   - Get your publishable key from the Stripe dashboard
+   - Replace 'pk_test_51234567890abcdef' in js/script.js with your actual key
+   - For live payments, you'll need a backend server to handle payment intents
+
+2. CUSTOMIZE CONTENT:
+   - Edit index.html to update:
+     * Business name, address, phone, email
+     * Service descriptions and prices
+     * About section with Christopher's information
+   
+3. ADD IMAGES:
+   - Add professional photos to the images/ folder
+   - Update the hero section background in CSS if desired
+   - Consider adding photos of the massage room, Christopher, etc.
+
+4. AVAILABILITY MANAGEMENT:
+   In a production environment, you'll need:
+   - A backend database to store real availability
+   - Admin panel to manage Christopher's schedule
+   - Currently uses sample data in JavaScript
+
+5. HOSTING OPTIONS:
+   - Simple hosting: Upload files to any web host
+   - Advanced: Use services like Vercel, Netlify, or AWS
+   - For payment processing, you'll need server-side code
+
+6. TESTING:
+   - Open index.html in a web browser to test locally
+   - Test the booking form (payments won't work without Stripe setup)
+   - Check mobile responsiveness on different devices
+
+FEATURES INCLUDED:
+✓ Responsive design for all devices
+✓ Service selection with pricing
+✓ Calendar availability display
+✓ Appointment booking form
+✓ Form validation
+✓ Stripe payment integration (needs setup)
+✓ Smooth scrolling navigation
+✓ Professional styling
+
+NEXT STEPS FOR PRODUCTION:
+1. Set up a backend server (Node.js, PHP, Python, etc.)
+2. Create a database for appointments and availability
+3. Implement email notifications for bookings
+4. Add admin dashboard for Christopher to manage schedule
+5. Set up SSL certificate for secure payments
+6. Configure domain name and hosting
+
+SUPPORT:
+- Stripe documentation: https://stripe.com/docs
+- For web hosting help, contact your hosting provider
+- Consider hiring a developer for backend implementation
+
+The website is ready to use for display purposes. For full functionality with real payments and appointment management, backend development is required.

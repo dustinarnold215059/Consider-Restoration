@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Modal Test</title>
+</head>
+<body>
+    <h1>🚨 Emergency Modal Test</h1>
+    <p>Click the button below to test if DOM injection works:</p>
+    
+    <button onclick="testEmergencyModal()" style="padding: 20px; font-size: 18px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+        🚀 Test Emergency Modal
+    </button>
+    
+    <script>
+        function testEmergencyModal() {
+            console.log('🚨 testEmergencyModal() called');
+            
+            // Remove any existing modal
+            const existing = document.getElementById('testModal');
+            if (existing) existing.remove();
+            
+            // Create modal
+            const modal = document.createElement('div');
+            modal.id = 'testModal';
+            modal.innerHTML = `
+                <div style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100vw;
+                    height: 100vh;
+                    background: rgba(255,0,0,0.9);
+                    z-index: 999999;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-size: 24px;
+                    text-align: center;
+                    font-family: Arial, sans-serif;
+                ">
+                    <div style="background: white; color: black; padding: 40px; border-radius: 10px; max-width: 400px;">
+                        <h2 style="margin: 0 0 20px 0; color: red;">🚨 EMERGENCY MODAL TEST</h2>
+                        <p style="margin: 0 0 20px 0;">If you can see this, DOM injection is working!</p>
+                        <button onclick="closeTestModal()" style="background: #28a745; color: white; border: none; padding: 15px 30px; border-radius: 5px; cursor: pointer; font-size: 16px;">
+                            ✅ Close Modal
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            console.log('✅ Modal created and added to DOM');
+            console.log('📊 Modal element:', modal);
+            
+            // Check if visible
+            setTimeout(() => {
+                const rect = modal.getBoundingClientRect();
+                console.log('📏 Modal dimensions:', rect);
+                
+                if (rect.width > 0 && rect.height > 0) {
+                    console.log('✅ Modal is visible!');
+                } else {
+                    console.log('❌ Modal not visible - checking issues...');
+                    alert('Modal created but not visible! Check console for details.');
+                }
+            }, 100);
+        }
+        
+        function closeTestModal() {
+            const modal = document.getElementById('testModal');
+            if (modal) {
+                modal.remove();
+                console.log('🗑️ Modal removed');
+            }
+        }
+    </script>
+</body>
+</html>

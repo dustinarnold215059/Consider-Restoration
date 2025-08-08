@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Booking Debug</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 600px; 
+            margin: 50px auto; 
+            padding: 20px; 
+        }
+        .form-group { 
+            margin: 15px 0; 
+        }
+        label { 
+            display: block; 
+            margin-bottom: 5px; 
+        }
+        input, select { 
+            width: 100%; 
+            padding: 8px; 
+            margin-bottom: 10px; 
+            box-sizing: border-box; 
+        }
+        button { 
+            background: #007bff; 
+            color: white; 
+            padding: 15px 30px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-size: 16px; 
+        }
+        button:hover { 
+            background: #0056b3; 
+        }
+        .debug { 
+            background: #f8f9fa; 
+            border: 1px solid #dee2e6; 
+            padding: 10px; 
+            margin: 20px 0; 
+            border-radius: 5px; 
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Simple Booking Test</h1>
+    
+    <div class="debug">
+        <h3>Debug Info:</h3>
+        <div id="debugInfo">Page loaded...</div>
+    </div>
+    
+    <form id="simpleBookingForm">
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" value="Test User" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" value="test@example.com" required>
+        </div>
+        <div class="form-group">
+            <label for="service">Service:</label>
+            <select id="service" required>
+                <option value="massage">Basic Massage - $70</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="date">Date:</label>
+            <input type="date" id="date" value="2025-08-10" required>
+        </div>
+        <div class="form-group">
+            <label for="time">Time:</label>
+            <select id="time" required>
+                <option value="10:00 AM">10:00 AM</option>
+            </select>
+        </div>
+        
+        <button type="submit">🚀 TEST BOOKING</button>
+    </form>
+
+    <script>
+        function debugLog(message) {
+            const debugDiv = document.getElementById('debugInfo');
+            debugDiv.innerHTML += '<br>' + new Date().toLocaleTimeString() + ': ' + message;
+            console.log('[DEBUG]', message);
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            debugLog('✅ DOM loaded');
+            
+            const form = document.getElementById('simpleBookingForm');
+            if (form) {
+                debugLog('✅ Form found');
+                
+                form.addEventListener('submit', function(e) {
+                    debugLog('🚀 FORM SUBMITTED!');
+                    e.preventDefault();
+                    
+                    const formData = {
+                        name: document.getElementById('name').value,
+                        email: document.getElementById('email').value,
+                        service: document.getElementById('service').value,
+                        date: document.getElementById('date').value,
+                        time: document.getElementById('time').value
+                    };
+                    
+                    debugLog('📝 Form data: ' + JSON.stringify(formData));
+                    
+                    // Test emergency modal
+                    debugLog('🚨 Creating emergency modal...');
+                    showTestModal(formData);
+                });
+                
+                debugLog('✅ Event listener attached');
+            } else {
+                debugLog('❌ Form not found!');
+            }
+        });
+        
+        function showTestModal(formData) {
+            debugLog('showTestModal() called');
+            
+            // Remove existing modal
+            const existing = document.getElementById('testModal');
+            if (existing) existing.remove();
+            
+            // Create modal
+            const modal = document.createElement('div');
+            modal.id = 'testModal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0,0,0,0.9);
+                z-index: 999999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-family: Arial, sans-serif;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: white; color: black; padding: 30px; border-radius: 10px; max-width: 400px; width: 90%;">
+                    <h2 style="margin: 0 0 20px 0; color: #007bff;">🎉 Booking Test Success!</h2>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                        <h4 style="margin: 0 0 10px 0;">Your Booking:</h4>
+                        <p style="margin: 5px 0;"><strong>Name:</strong> ${formData.name}</p>
+                        <p style="margin: 5px 0;"><strong>Email:</strong> ${formData.email}</p>
+                        <p style="margin: 5px 0;"><strong>Service:</strong> ${formData.service}</p>
+                        <p style="margin: 5px 0;"><strong>Date:</strong> ${formData.date}</p>
+                        <p style="margin: 5px 0;"><strong>Time:</strong> ${formData.time}</p>
+                    </div>
+                    
+                    <h3 style="color: #28a745;">✅ Form submission is working!</h3>
+                    <p>If you can see this modal, the JavaScript is working correctly.</p>
+                    
+                    <button onclick="closeTestModal()" style="
+                        background: #28a745;
+                        color: white;
+                        border: none;
+                        padding: 15px 30px;
+                        border-radius: 5px;
+                        cursor: pointer;
+                        font-size: 16px;
+                        width: 100%;
+                        margin-top: 15px;
+                    ">Close</button>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            debugLog('✅ Modal created and added to DOM');
+        }
+        
+        function closeTestModal() {
+            const modal = document.getElementById('testModal');
+            if (modal) {
+                modal.remove();
+                debugLog('🗑️ Modal closed');
+            }
+        }
+    </script>
+</body>
+</html>

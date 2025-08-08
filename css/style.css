@@ -1,0 +1,1240 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f9f9f9;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Header & Navigation */
+.navbar {
+    background: #3A7D99;
+    color: white;
+    padding: 1rem 0;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.nav-menu {
+    display: flex;
+    list-style: none;
+    gap: 2rem;
+}
+
+.nav-menu a {
+    color: white;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.nav-menu a:hover {
+    color: #ffffff;
+    background: rgba(255,255,255,0.1);
+    border-radius: 5px;
+    padding: 0.5rem 1rem;
+}
+
+/* Hero Section */
+.hero {
+    background: linear-gradient(rgba(58, 125, 153, 0.7), rgba(42, 93, 117, 0.7)), 
+                url('../images/hero-massage-therapy.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+    margin-top: 70px;
+    position: relative;
+}
+
+/* Fallback image for older browsers */
+.no-webp .hero {
+    background: linear-gradient(rgba(58, 125, 153, 0.7), rgba(42, 93, 117, 0.7)), 
+                url('../images/hero-massage-therapy.jpg');
+}
+
+/* WebP image for modern browsers */
+.webp .hero {
+    background: linear-gradient(rgba(58, 125, 153, 0.7), rgba(42, 93, 117, 0.7)), 
+                url('../images/hero-massage-therapy.webp');
+}
+
+.hero-content h2 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.hero-content p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.cta-button {
+    display: inline-block;
+    background: #27ae60;
+    color: white;
+    padding: 15px 30px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    transition: background 0.3s;
+}
+
+.cta-button:hover {
+    background: #219a52;
+}
+
+/* Sections */
+section {
+    padding: 4rem 0;
+}
+
+.about, .services, .booking, .contact {
+    background: white;
+    margin: 2rem 0;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+section h2 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #2F4F4F;
+    font-size: 2.5rem;
+}
+
+/* Services Grid */
+.service-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.service-card {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 10px;
+    text-align: center;
+    border: 2px solid transparent;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.service-card:hover {
+    border-color: #27ae60;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.service-card h3 {
+    color: #2F4F4F;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.service-card p {
+    color: #666;
+    line-height: 1.6;
+}
+
+/* Booking Section */
+.booking-form-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    margin-top: 2rem;
+}
+
+.booking-form {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 10px;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: #2F4F4F;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #27ae60;
+}
+
+.booking-summary {
+    background: #e8f5e8;
+    padding: 1rem;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.price-display {
+    font-size: 1.2rem;
+    color: #27ae60;
+}
+
+/* Pre-selected service highlight */
+.service-preselected {
+    background-color: #e8f4fd !important;
+    border: 2px solid #3A7D99 !important;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.service-preselected-fade {
+    background-color: transparent !important;
+    border: 1px solid #ddd !important;
+    transition: background-color 2s ease, border-color 2s ease;
+}
+
+.book-button {
+    width: 100%;
+    background: #27ae60;
+    color: white;
+    padding: 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.book-button:hover {
+    background: #219a52;
+}
+
+/* Calendar */
+.availability-calendar {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 10px;
+}
+
+.availability-calendar h3 {
+    margin-bottom: 1rem;
+    color: #2F4F4F;
+}
+
+#calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    margin-top: 1rem;
+}
+
+.calendar-day {
+    padding: 10px;
+    text-align: center;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.calendar-day:hover {
+    background: #e8f5e8;
+}
+
+.calendar-day.available {
+    background: #d4edda;
+    color: #155724;
+    border-color: #c3e6cb;
+}
+
+.calendar-day.selected {
+    background: #3A7D99;
+    color: white;
+    border-color: #3A7D99;
+}
+
+.calendar-day.fully-booked {
+    background: #f8d7da;
+    color: #721c24;
+    cursor: not-allowed;
+    border-color: #f5c6cb;
+}
+
+.calendar-day.closed {
+    background: #e9ecef;
+    color: #6c757d;
+    cursor: not-allowed;
+    border-color: #dee2e6;
+    opacity: 0.6;
+}
+
+.calendar-day.blocked {
+    background: #ffeaa7;
+    color: #d63031;
+    cursor: not-allowed;
+    border-color: #fdcb6e;
+    font-weight: bold;
+}
+
+
+/* Contact Section */
+.contact-info {
+    text-align: center;
+    font-size: 1.1rem;
+    line-height: 2;
+}
+
+.contact-info p {
+    margin-bottom: 1rem;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 10% auto;
+    padding: 2rem;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+}
+
+.close {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    font-size: 2rem;
+    cursor: pointer;
+    color: #aaa;
+}
+
+.close:hover {
+    color: #000;
+}
+
+#card-element {
+    padding: 15px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    margin: 1rem 0;
+}
+
+#card-errors {
+    color: #fa755a;
+    margin: 1rem 0;
+}
+
+#submit-payment {
+    width: 100%;
+    background: #27ae60;
+    color: white;
+    padding: 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+#submit-payment:hover {
+    background: #219a52;
+}
+
+/* Footer */
+footer {
+    background: #3A7D99;
+    color: white;
+    text-align: center;
+    padding: 2rem 0;
+    margin-top: 2rem;
+}
+
+/* Page Sections */
+.page-section {
+    padding: 4rem 0;
+    min-height: 60vh;
+}
+
+.page-section h1 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    color: #3A7D99;
+    text-align: center;
+}
+
+/* Home Preview Cards */
+.home-preview {
+    padding: 4rem 0;
+    background: white;
+}
+
+.preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.preview-card {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 10px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.preview-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.preview-card h3 {
+    color: #3A7D99;
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+}
+
+.preview-card p {
+    margin-bottom: 1.5rem;
+    color: #666;
+}
+
+.preview-link {
+    color: #3A7D99;
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border: 2px solid #3A7D99;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.preview-link:hover {
+    background: #3A7D99;
+    color: white;
+}
+
+/* Active Navigation Link */
+.nav-menu a.active {
+    background: rgba(255,255,255,0.2);
+    border-radius: 5px;
+    padding: 0.5rem 1rem;
+}
+
+/* Membership Page Styles */
+.membership-intro {
+    text-align: center;
+    margin-bottom: 3rem;
+    font-size: 1.1rem;
+    color: #666;
+}
+
+.membership-plans {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 4rem;
+}
+
+.plan-card {
+    background: white;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    position: relative;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.plan-card:hover {
+    transform: translateY(-5px);
+}
+
+.plan-card.featured {
+    border: 3px solid #3A7D99;
+    transform: scale(1.05);
+}
+
+.plan-badge {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #3A7D99;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.plan-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: #3A7D99;
+}
+
+.plan-price {
+    margin-bottom: 1.5rem;
+}
+
+.plan-price .price {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.plan-price .period {
+    color: #666;
+    font-size: 1rem;
+}
+
+.plan-features ul {
+    list-style: none;
+    text-align: left;
+    margin-bottom: 2rem;
+}
+
+.plan-features li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.membership-btn {
+    background: #3A7D99;
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background 0.3s ease;
+    width: 100%;
+}
+
+.membership-btn:hover {
+    background: #2a5d75;
+}
+
+.membership-btn.primary {
+    background: #28a745;
+}
+
+.membership-btn.primary:hover {
+    background: #218838;
+}
+
+.membership-benefits {
+    margin: 4rem 0;
+}
+
+.membership-benefits h2 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #3A7D99;
+}
+
+.benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.benefit-item {
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.benefit-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.benefit-item h4 {
+    margin-bottom: 1rem;
+    color: #3A7D99;
+}
+
+.membership-faq {
+    margin: 4rem 0;
+}
+
+.membership-faq h2 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #3A7D99;
+}
+
+.faq-list {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.faq-item {
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.faq-item h4 {
+    margin-bottom: 1rem;
+    color: #3A7D99;
+}
+
+.membership-cta {
+    text-align: center;
+    padding: 3rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+    margin-top: 3rem;
+}
+
+.membership-cta h2 {
+    margin-bottom: 1rem;
+    color: #3A7D99;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.cta-button.secondary {
+    background: transparent;
+    color: #3A7D99;
+    border: 2px solid #3A7D99;
+}
+
+.cta-button.secondary:hover {
+    background: #3A7D99;
+    color: white;
+}
+
+/* Services Page Styles */
+.service-card .price {
+    font-weight: bold;
+    color: #3A7D99;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.book-service-btn {
+    display: inline-block;
+    background: #3A7D99;
+    color: white;
+    text-decoration: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 5px;
+    margin-top: 1rem;
+    transition: background 0.3s ease;
+}
+
+.book-service-btn:hover {
+    background: #2a5d75;
+}
+
+.service-details {
+    margin-top: 4rem;
+    text-align: center;
+}
+
+.service-details h2 {
+    margin-bottom: 2rem;
+    color: #3A7D99;
+}
+
+.expectations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.expectation-item {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.expectation-item h4 {
+    margin-bottom: 1rem;
+    color: #3A7D99;
+}
+
+/* Contact Page Styles */
+.contact-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    margin-bottom: 3rem;
+}
+
+.contact-item {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.contact-item h3 {
+    margin-bottom: 1rem;
+    color: #3A7D99;
+}
+
+.contact-form-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.contact-form {
+    display: grid;
+    gap: 1rem;
+}
+
+.submit-button {
+    background: #3A7D99;
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.3s ease;
+}
+
+.submit-button:hover {
+    background: #2a5d75;
+}
+
+.additional-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.info-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.info-card h3 {
+    margin-bottom: 1rem;
+    color: #3A7D99;
+}
+
+/* About Page Styles */
+.about-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.credentials, .philosophy, .education {
+    margin: 2rem 0;
+    padding: 2rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.credentials h3, .philosophy h3, .education h3 {
+    margin-bottom: 1rem;
+    color: #3A7D99;
+}
+
+.credentials ul, .education ul {
+    margin-left: 1rem;
+}
+
+.credentials li, .education li {
+    margin-bottom: 0.5rem;
+}
+
+/* Testimonials Section */
+.testimonials {
+    padding: 4rem 0;
+    background: #f8f9fa;
+}
+
+.testimonials h2 {
+    text-align: center;
+    margin-bottom: 3rem;
+    color: #3A7D99;
+    font-size: 2rem;
+}
+
+.testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.testimonial-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.testimonial-card:hover {
+    transform: translateY(-5px);
+}
+
+.testimonial-content {
+    margin-bottom: 1.5rem;
+}
+
+.testimonial-content p {
+    font-style: italic;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #555;
+    margin-bottom: 0;
+}
+
+.testimonial-author {
+    margin-bottom: 1rem;
+}
+
+.testimonial-author strong {
+    display: block;
+    color: #3A7D99;
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+}
+
+.testimonial-author span {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.testimonial-rating {
+    font-size: 1.2rem;
+    color: #FFD700;
+}
+
+/* Loading placeholder for testimonials */
+.testimonial-card.placeholder {
+    opacity: 0.7;
+    background: #f1f3f4;
+    color: #666;
+}
+
+.testimonial-card.placeholder .testimonial-content p {
+    color: #666;
+    font-style: italic;
+}
+
+/* Performance and Accessibility Improvements */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+*:focus {
+    outline: 2px solid #3A7D99;
+    outline-offset: 2px;
+}
+
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: #3A7D99;
+    color: white;
+    padding: 8px;
+    text-decoration: none;
+    border-radius: 4px;
+    z-index: 10000;
+}
+
+.skip-link:focus {
+    top: 6px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .nav-menu {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .hero-content h2 {
+        font-size: 2rem;
+    }
+    
+    .booking-form-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .service-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .nav-container {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 0 15px;
+    }
+    
+    section {
+        padding: 2rem 0;
+    }
+    
+    .hero-content h2 {
+        font-size: 1.5rem;
+    }
+    
+    .hero-content p {
+        font-size: 1rem;
+    }
+}
+
+/* Enhanced About Section Styles */
+.about-content {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.about-content p {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    color: #666;
+    line-height: 1.8;
+}
+
+.about-content p:first-child {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #3A7D99;
+    margin-bottom: 2rem;
+}
+
+.credentials {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 10px;
+    margin-top: 2rem;
+    border-left: 4px solid #3A7D99;
+}
+
+.credentials h3 {
+    color: #2F4F4F;
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+}
+
+.credentials ul {
+    list-style: none;
+    padding: 0;
+}
+
+.credentials li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+.credentials li:before {
+    content: "✓";
+    color: #3A7D99;
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+}
+
+.credentials li:last-child {
+    border-bottom: none;
+}
+
+/* Service Note Styling */
+.service-note {
+    background: #e8f4f8;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    border-left: 4px solid #3A7D99;
+    text-align: center;
+}
+
+.service-note p {
+    margin: 0;
+    color: #2F4F4F;
+    font-size: 1rem;
+}
+
+/* Contact Section Enhancements */
+.hours-section {
+    margin: 1.5rem 0;
+}
+
+.hours-list {
+    list-style: none;
+    padding: 0;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem 0;
+}
+
+.hours-list li {
+    padding: 0.5rem 1.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.hours-list li:last-child {
+    border-bottom: none;
+}
+
+.membership-note {
+    background: #e8f4f8;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1.5rem;
+    text-align: center;
+    border-left: 4px solid #3A7D99;
+}
+
+.membership-note p {
+    margin: 0;
+    color: #3A7D99;
+    font-size: 0.95rem;
+}
+
+/* Calendar Styling for New Business Hours */
+.calendar-day.appointment-only {
+    background: #fff3e0;
+    border: 1px solid #ff9800;
+    position: relative;
+}
+
+.calendar-day.appointment-only:after {
+    content: "By Appt";
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    font-size: 0.6rem;
+    color: #ff9800;
+    font-weight: bold;
+}
+
+
+/* Business Hours Information */
+.booking-hours-info {
+    background: #e8f4f8;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border-left: 4px solid #3A7D99;
+}
+
+.booking-hours-info h4 {
+    margin: 0 0 0.5rem 0;
+    color: #2F4F4F;
+    font-size: 1rem;
+}
+
+.booking-hours-info ul {
+    margin: 0;
+    padding-left: 1rem;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.booking-hours-info li {
+    margin-bottom: 0.25rem;
+}
+
+/* Logged in user form styling */
+input[readonly] {
+    background-color: #f8f9fa;
+    border-color: #27ae60;
+    color: #2F4F4F;
+}
+
+.logged-in-note {
+    background: #d4edda;
+    padding: 0.5rem;
+    border-radius: 5px;
+    border-left: 4px solid #27ae60;
+    margin-top: 0.5rem;
+}
+
+.logged-in-note a {
+    color: #155724;
+    text-decoration: underline;
+}
+
+.logged-in-note a:hover {
+    color: #0c4128;
+}
+
+/* Login Prompt Modal Styling */
+.login-prompt-content {
+    text-align: center;
+}
+
+.login-prompt-content p {
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+    color: #2F4F4F;
+}
+
+.login-prompt-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.login-prompt-buttons .btn-primary {
+    background: #3A7D99;
+    color: white;
+    border: none;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.login-prompt-buttons .btn-primary:hover {
+    background: #2F6B85;
+}
+
+.login-prompt-buttons .btn-secondary {
+    background: white;
+    color: #3A7D99;
+    border: 2px solid #3A7D99;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.login-prompt-buttons .btn-secondary:hover {
+    background: #3A7D99;
+    color: white;
+}
+
+.login-note {
+    font-size: 0.9rem;
+    color: #666;
+    font-style: italic;
+    margin: 0;
+}
+
+@media (max-width: 600px) {
+    .login-prompt-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .login-prompt-buttons .btn-primary,
+    .login-prompt-buttons .btn-secondary {
+        width: 100%;
+    }
+}
+

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Auto-populate Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .highlight { background: #ffff99; border: 3px solid #ff6600; }
+        select { padding: 10px; font-size: 16px; margin: 10px 0; }
+        .info { background: #e8f4fd; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #e8f5e8; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .test-links { background: #f5f5f5; padding: 15px; margin: 20px 0; border-radius: 5px; }
+        .test-links a { display: inline-block; margin: 5px; padding: 10px 15px; background: #3A7D99; color: white; text-decoration: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Service Auto-populate Test</h1>
+    
+    <div class="info">
+        <strong>Current URL:</strong> <span id="current-url"></span><br>
+        <strong>Service Parameter:</strong> <span id="service-param"></span>
+    </div>
+    
+    <div class="test-links">
+        <strong>Test Links (click to test auto-population):</strong><br>
+        <a href="simple-test.html?service=mindful-start">Mindful Start</a>
+        <a href="simple-test.html?service=integrated-massage">Integrated Massage</a>
+        <a href="simple-test.html?service=thai-stretch">Thai-Stretch Fusion</a>
+        <a href="simple-test.html?service=applied-neurology">Applied Neurology</a>
+        <a href="simple-test.html?service=prenatal">Prenatal Massage</a>
+    </div>
+    
+    <form>
+        <label for="service"><strong>Service Selection:</strong></label><br>
+        <select id="service" name="service">
+            <option value="">Select a service</option>
+            <option value="mindful-start" data-price="70">Mindful Start - Starting at $70</option>
+            <option value="integrated-massage" data-price="100">Integrated Massage - $100+</option>
+            <option value="thai-stretch" data-price="120">Thai-Stretch Fusion - $120+</option>
+            <option value="applied-neurology" data-price="150">Applied Neurology Consultation - $150+</option>
+            <option value="prenatal" data-price="90">Prenatal Massage - $90</option>
+            <option value="neurology-training" data-price="330">Applied Neurology Training - Up to $330</option>
+        </select>
+    </form>
+    
+    <div id="result" class="info"></div>
+    
+    <div id="log" style="background: #000; color: #00ff00; padding: 10px; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto; margin: 20px 0;"></div>
+
+    <script>
+        function log(message) {
+            console.log(message);
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function autoPopulateService() {
+            log('🚀 Starting auto-populate function...');
+            
+            // Show current URL info
+            document.getElementById('current-url').textContent = window.location.href;
+            
+            // Get URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const serviceParam = urlParams.get('service');
+            
+            document.getElementById('service-param').textContent = serviceParam || 'None';
+            log(`📋 URL parameters: ${urlParams.toString()}`);
+            log(`🎯 Service parameter: ${serviceParam}`);
+            
+            if (serviceParam) {
+                const serviceSelect = document.getElementById('service');
+                log(`📝 Service select found: ${serviceSelect ? 'Yes' : 'No'}`);
+                
+                if (serviceSelect) {
+                    const serviceOption = serviceSelect.querySelector(`option[value="${serviceParam}"]`);
+                    log(`🔍 Looking for option with value: "${serviceParam}"`);
+                    log(`🎯 Service option found: ${serviceOption ? 'Yes' : 'No'}`);
+                    
+                    if (serviceOption) {
+                        // Set the selection
+                        serviceSelect.value = serviceParam;
+                        serviceSelect.classList.add('highlight');
+                        
+                        const result = document.getElementById('result');
+                        result.className = 'success';
+                        result.innerHTML = `
+                            <strong>✅ SUCCESS! Service Auto-populated</strong><br>
+                            Selected: ${serviceOption.textContent}<br>
+                            Value: ${serviceParam}<br>
+                            Price: $${serviceOption.dataset.price}
+                        `;
+                        
+                        log(`✅ SUCCESS: Auto-populated "${serviceParam}"`);
+                        
+                        // Remove highlight after 3 seconds
+                        setTimeout(() => {
+                            serviceSelect.classList.remove('highlight');
+                        }, 3000);
+                        
+                    } else {
+                        const result = document.getElementById('result');
+                        result.innerHTML = `<strong>❌ ERROR:</strong> Service "${serviceParam}" not found in dropdown options`;
+                        log(`❌ ERROR: Service "${serviceParam}" not found`);
+                        
+                        // List available options
+                        const allOptions = Array.from(serviceSelect.querySelectorAll('option'));
+                        log('📋 Available options:');
+                        allOptions.forEach((opt, i) => {
+                            log(`  ${i}: "${opt.value}" - ${opt.textContent}`);
+                        });
+                    }
+                } else {
+                    log('❌ ERROR: Service select element not found');
+                }
+            } else {
+                log('ℹ️ No service parameter in URL');
+                const result = document.getElementById('result');
+                result.innerHTML = 'ℹ️ No service parameter in URL. Click a test link above to test auto-population.';
+            }
+        }
+        
+        // Run when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            log('📄 Page loaded, running auto-populate test...');
+            autoPopulateService();
+        });
+        
+        // Track manual changes
+        document.getElementById('service').addEventListener('change', function() {
+            if (this.value) {
+                log(`👤 Manual selection: ${this.value}`);
+            }
+        });
+    </script>
+</body>
+</html>

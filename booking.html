@@ -1,0 +1,2502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Massage Appointment Online - Consider Restoration | Livonia, MI</title>
+    <meta name="description" content="Book your massage appointment online with Christopher Rembisz, LMT in Livonia, MI. Available services include Swedish, deep tissue, prenatal massage, and applied neurology consultations.">
+    <meta name="keywords" content="book massage appointment, online booking, massage therapy Livonia, Swedish massage, deep tissue massage, prenatal massage">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Modal Styles - Emergency approach that works */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.8);
+            z-index: 99999;
+            display: none;
+        }
+        
+        .modal.show {
+            display: block;
+        }
+        
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        
+        .modal-header {
+            background: #3A7D99;
+            color: white;
+            padding: 10px 15px;
+            margin: -20px -20px 15px -20px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-modal:hover {
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+        
+        .modal-body {
+            /* No additional padding needed - handled by modal-content */
+        }
+        
+        .booking-preview {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .booking-preview h4 {
+            margin: 0 0 10px 0;
+            color: #3A7D99;
+        }
+        
+        .booking-detail {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .booking-detail:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 18px;
+            color: #28a745;
+        }
+        
+        .auth-tabs {
+            display: flex;
+            margin: 20px 0 15px 0;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn.active {
+            color: #3A7D99;
+            border-bottom-color: #3A7D99;
+            font-weight: bold;
+        }
+        
+        .tab-btn:hover {
+            background: #f8f9fa;
+        }
+        
+        .auth-form {
+            margin-top: 20px;
+        }
+        
+        .auth-btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            transition: all 0.3s;
+        }
+        
+        .auth-btn:hover {
+            background: linear-gradient(135deg, #218838, #1cc88a);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+        
+        .demo-accounts {
+            margin-top: 25px;
+            padding: 15px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+        }
+        
+        .demo-accounts h4 {
+            margin: 0 0 15px 0;
+            color: #856404;
+        }
+        
+        .demo-account {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            padding: 8px;
+            background: white;
+            border-radius: 5px;
+        }
+        
+        .demo-account button {
+            background: #ffc107;
+            color: #212529;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .demo-account button:hover {
+            background: #e0a800;
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                max-width: none;
+                max-height: 90vh;
+                border-radius: 5px;
+                padding: 15px;
+            }
+            
+            .modal-header {
+                margin: -15px -15px 12px -15px;
+                padding: 8px 12px;
+            }
+            
+            .modal-header h2 {
+                font-size: 16px;
+            }
+            
+            .booking-preview {
+                margin: 10px 0;
+                padding: 8px;
+            }
+            
+            .booking-detail {
+                font-size: 13px;
+                padding: 2px 0;
+            }
+            
+            .auth-tabs {
+                margin: 12px 0 8px 0;
+            }
+            
+            .tab-btn {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+            
+            .auth-btn {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+            
+            .demo-accounts {
+                margin-top: 12px;
+                padding: 8px;
+            }
+            
+            .demo-account {
+                flex-direction: column;
+                gap: 6px;
+                text-align: center;
+                padding: 5px;
+                margin: 6px 0;
+            }
+            
+            .demo-account button {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+        }
+        
+        @media (max-height: 600px) {
+            .modal-content {
+                max-height: 95vh;
+                padding: 12px;
+            }
+            
+            .modal-header {
+                margin: -12px -12px 10px -12px;
+            }
+        }
+        
+        /* Modern Beautiful Calendar */
+        #calendar {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            padding: 24px;
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            order: 0; /* Position first */
+        }
+        
+        .nav-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            border: none;
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-btn:hover {
+            background: #3A7D99;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(58, 125, 153, 0.3);
+        }
+        
+        .month-year {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+        
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin: 0 0 16px 0;
+            order: 1; /* Position after header but before grid */
+        }
+        
+        .weekday {
+            text-align: center;
+            font-weight: 700;
+            color: #475569;
+            font-size: 14px;
+            padding: 12px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.75px;
+            background: #f1f5f9;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            order: 2; /* Position after weekdays */
+        }
+        
+        .calendar-day {
+            aspect-ratio: 1;
+            min-height: 56px;
+            background: #f8fafc;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            font-weight: 500;
+        }
+        
+        .calendar-day:hover:not(.past):not(.other-month):not(.fully-booked) {
+            border-color: #3A7D99;
+            background: rgba(58, 125, 153, 0.05);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(58, 125, 153, 0.15);
+        }
+        
+        .calendar-day.other-month {
+            background: transparent;
+            color: #cbd5e1;
+            cursor: default;
+        }
+        
+        .calendar-day.past {
+            background: #f1f5f9;
+            color: #94a3b8;
+            cursor: default;
+        }
+        
+        .calendar-day.today {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+        }
+        
+        .calendar-day.available {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .calendar-day.available:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+        
+        .calendar-day.fully-booked {
+            background: #fee2e2;
+            color: #dc2626;
+            border-color: #fecaca;
+            cursor: default;
+            position: relative;
+        }
+        
+        .calendar-day.fully-booked::after {
+            content: '✕';
+            position: absolute;
+            top: 2px;
+            right: 6px;
+            font-size: 10px;
+            opacity: 0.6;
+        }
+        
+        .calendar-day.blocked {
+            background: #ffeaa7;
+            color: #d63031;
+            cursor: not-allowed;
+            border-color: #fdcb6e;
+            font-weight: bold;
+        }
+        
+        .calendar-day.selected {
+            background: linear-gradient(135deg, #3A7D99, #2c5f75);
+            color: white;
+            font-weight: 700;
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(58, 125, 153, 0.5);
+        }
+        
+        .day-number {
+            font-size: 16px;
+            line-height: 1;
+        }
+        
+        .availability-indicator {
+            font-size: 9px;
+            font-weight: 600;
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.2);
+            padding: 2px 6px;
+            border-radius: 8px;
+            white-space: nowrap;
+        }
+        
+        .calendar-day.available .availability-indicator {
+            background: rgba(255,255,255,0.25);
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .calendar-day.fully-booked .availability-indicator {
+            background: rgba(220, 38, 38, 0.1);
+            color: #dc2626;
+        }
+        
+        /* Subtle pulse animation for today */
+        .calendar-day.today {
+            animation: todayPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes todayPulse {
+            0%, 100% { box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4); }
+            50% { box-shadow: 0 6px 20px rgba(251, 191, 36, 0.6); }
+        }
+        
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            #calendar {
+                padding: 16px;
+            }
+            
+            .calendar-day {
+                min-height: 48px;
+                border-radius: 10px;
+            }
+            
+            .day-number {
+                font-size: 14px;
+            }
+            
+            .availability-indicator {
+                font-size: 8px;
+                padding: 1px 4px;
+            }
+            
+            .month-year {
+                font-size: 22px;
+            }
+            
+            .nav-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+        }
+    </style>
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="js/error-handler.js" defer></script>
+    <script src="js/shared-data.js" defer></script>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-container">
+                <h1 class="logo">Consider Restoration</h1>
+                <ul class="nav-menu">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="services.html">Services</a></li>
+                    <li><a href="membership.html">Membership</a></li>
+                    <li><a href="booking.html" class="active">Book Appointment</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                    <li><a href="user-portal.html" id="accountNavLink">Login</a></li>
+                    <li id="adminNavLink" style="display: none;"><a href="admin.html">Admin</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="booking page-section">
+            <div class="container">
+                <h1>Book Your Session</h1>
+                <div class="booking-hours-info">
+                    <h4>Business Hours:</h4>
+                    <ul>
+                        <li><strong>Monday:</strong> 10:00 AM - 4:00 PM</li>
+                        <li><strong>Tuesday:</strong> By appointment only</li>
+                        <li><strong>Wednesday:</strong> 9:45 AM - 5:30 PM</li>
+                        <li><strong>Thursday:</strong> 12:00 PM - 7:00 PM</li>
+                        <li><strong>Friday:</strong> 10:00 AM - 6:00 PM</li>
+                        <li><strong>Saturday/Sunday:</strong> Closed</li>
+                    </ul>
+                </div>
+                <div class="booking-form-container">
+                    <form id="bookingForm" class="booking-form">
+                        <div class="form-group">
+                            <label for="clientName">Full Name:</label>
+                            <input type="text" id="clientName" name="clientName" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">Email:</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="phone">Phone Number:</label>
+                            <input type="tel" id="phone" name="phone" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="service">Service:</label>
+                            <select id="service" name="service" required>
+                                <option value="">Select a service</option>
+                                <option value="mindful-start" data-price="70">Mindful Start - Starting at $70</option>
+                                <option value="integrated-massage" data-price="100">Integrated Massage - $100+</option>
+                                <option value="thai-stretch" data-price="120">Thai-Stretch Fusion - $120+</option>
+                                <option value="applied-neurology" data-price="150">Applied Neurology Consultation - $150+</option>
+                                <option value="prenatal" data-price="90">Prenatal Massage - $90</option>
+                                <option value="neurology-training" data-price="330">Applied Neurology Training - Up to $330</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="date">Preferred Date:</label>
+                            <input type="date" id="date" name="date" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="time">Preferred Time:</label>
+                            <select id="time" name="time" required>
+                                <option value="">Select a time</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="notes">Special Requests/Notes:</label>
+                            <textarea id="notes" name="notes" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="booking-summary">
+                            <div class="price-display">
+                                <strong>Total: $<span id="totalPrice">0</span></strong>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="book-button" onclick="handleBookingSubmit(event)">Book & Pay Now</button>
+                        <button type="button" onclick="debugSharedDataStatus()" style="background: #17a2b8; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-top: 10px; cursor: pointer;">🔍 Debug Shared Data</button>
+                    </form>
+                    
+                    <div class="availability-calendar">
+                        <h3>Available Times</h3>
+                        <div id="calendar"></div>
+                    </div>
+                </div>
+                
+                <!-- Login Modal -->
+                <div id="loginModal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>Login Required</h2>
+                            <span class="close-modal" onclick="closeLoginModal()">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <p><strong>Login to complete booking</strong></p>
+                            
+                            <div class="booking-preview" id="bookingPreview">
+                                <!-- Booking details will be shown here -->
+                            </div>
+                            
+                            <div class="auth-tabs">
+                                <button class="tab-btn active" onclick="showLoginTab()">Login</button>
+                                <button class="tab-btn" onclick="showRegisterTab()">Register</button>
+                            </div>
+                            
+                            <!-- Login Form -->
+                            <form id="loginForm" class="auth-form" style="display: block;">
+                                <div class="form-group">
+                                    <label for="loginEmail">Email:</label>
+                                    <input type="email" id="loginEmail" name="email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="loginPassword">Password:</label>
+                                    <input type="password" id="loginPassword" name="password" required>
+                                </div>
+                                <button type="submit" class="auth-btn">Login & Complete Booking</button>
+                            </form>
+                            
+                            <!-- Register Form -->
+                            <form id="registerForm" class="auth-form" style="display: none;">
+                                <div class="form-group">
+                                    <label for="registerName">Full Name:</label>
+                                    <input type="text" id="registerName" name="name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="registerEmail">Email:</label>
+                                    <input type="email" id="registerEmail" name="email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="registerPhone">Phone:</label>
+                                    <input type="tel" id="registerPhone" name="phone" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="registerPassword">Password:</label>
+                                    <input type="password" id="registerPassword" name="password" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="confirmPassword">Confirm Password:</label>
+                                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                                </div>
+                                <button type="submit" class="auth-btn">Register & Complete Booking</button>
+                            </form>
+                            
+                            <div class="demo-accounts">
+                                <h4>Demo Accounts (for testing):</h4>
+                                <div class="demo-account">
+                                    <strong>User:</strong> john.doe@email.com / user123
+                                    <button onclick="fillDemoLogin('john.doe@email.com', 'user123')">Use This Account</button>
+                                </div>
+                                <div class="demo-account">
+                                    <strong>User:</strong> jane.smith@email.com / user123
+                                    <button onclick="fillDemoLogin('jane.smith@email.com', 'user123')">Use This Account</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="booking-info">
+                    <h2>Before Your Appointment</h2>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <h4>What to Bring</h4>
+                            <ul>
+                                <li>Comfortable clothing</li>
+                                <li>List of current medications</li>
+                                <li>Insurance card (if applicable)</li>
+                            </ul>
+                        </div>
+                        <div class="info-item">
+                            <h4>Arrival Time</h4>
+                            <p>Please arrive 10-15 minutes early for intake forms and consultation.</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>Cancellation Policy</h4>
+                            <p>24-hour notice required for cancellations to avoid fees.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Consider Restoration - Christopher Rembisz, LMT. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Original script temporarily disabled -->
+    <!-- <script src="js/script.js"></script> -->
+    
+    <!-- Clean, working version - TEMPORARILY DISABLED FOR TESTING -->
+    <!-- <script src="js/booking-simple.js"></script> -->
+    
+    <script>
+        // Prevent duplicate submissions
+        let isSubmitting = false;
+        
+        // Direct inline handler as backup
+        function handleBookingSubmit(event) {
+            console.log('🚀 Direct handler called');
+            console.log('Event received:', event);
+            event.preventDefault();
+            
+            // Prevent duplicate submissions
+            if (isSubmitting) {
+                console.log('⚠️ Already submitting, ignoring duplicate');
+                return;
+            }
+            isSubmitting = true;
+            
+            try {
+                // Get form values
+                const clientName = document.getElementById('clientName').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const phone = document.getElementById('phone').value.trim();
+                const service = document.getElementById('service').value;
+                const date = document.getElementById('date').value;
+                const time = document.getElementById('time').value;
+                const notes = document.getElementById('notes').value;
+                
+                console.log('Form values:', { clientName, email, phone, service, date, time });
+                
+                // Basic validation
+                if (!clientName || !email || !phone || !service || !date || !time) {
+                    alert('Please fill in all required fields.');
+                    return;
+                }
+                
+                // Store booking data
+                window.pendingBookingData = {
+                    clientName: clientName,
+                    email: email,
+                    phone: phone,
+                    service: service,
+                    date: date,
+                    time: time,
+                    price: document.getElementById('totalPrice').textContent || '0',
+                    notes: notes
+                };
+                
+                console.log('Booking data stored:', window.pendingBookingData);
+                
+                // Debug: Check if shared data is available
+                console.log('🔍 Checking shared data availability...');
+                console.log('window.sharedAppointments:', window.sharedAppointments);
+                console.log('window.addAppointment:', typeof window.addAppointment);
+                console.log('window.sharedUsers:', window.sharedUsers);
+                console.log('window.addUser:', typeof window.addUser);
+                
+                // Check if user is already logged in
+                if (shouldSkipLoginModal()) {
+                    // User is logged in, booking completed directly
+                    return;
+                }
+                
+                console.log('User not logged in, showing login modal...');
+                
+                // Always use the emergency modal approach
+                console.log('Using emergency modal directly...');
+                showModalDirect();
+                
+            } catch (error) {
+                console.error('Booking submission error:', error);
+                alert('An error occurred. Please check the console and try again.');
+            } finally {
+                // Reset submission flag
+                setTimeout(() => {
+                    isSubmitting = false;
+                    console.log('🔓 Submission flag reset');
+                }, 2000);
+            }
+        }
+        
+        // Direct modal show function - Emergency approach that always works
+        function showModalDirect() {
+            console.log('🚨 showModalDirect() called - starting emergency modal injection...');
+            
+            // First, remove any existing emergency modals
+            const existingModal = document.getElementById('emergencyLoginModal');
+            if (existingModal) {
+                existingModal.remove();
+                console.log('🗑️ Removed existing emergency modal');
+            }
+            
+            // Show booking preview data
+            const serviceDisplay = getServiceDisplayName(window.pendingBookingData?.service || 'Selected Service');
+            const dateDisplay = window.pendingBookingData?.date || 'Selected Date';
+            const timeDisplay = window.pendingBookingData?.time || 'Selected Time';
+            const priceDisplay = window.pendingBookingData?.price || '0';
+            
+            // Inject emergency modal directly into body
+            const emergencyModal = document.createElement('div');
+            emergencyModal.id = 'emergencyLoginModal';
+            emergencyModal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0,0,0,0.9);
+                z-index: 999999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 10px;
+                box-sizing: border-box;
+            `;
+            
+            emergencyModal.innerHTML = `
+                <div style="
+                    background: white;
+                    padding: 20px;
+                    border-radius: 8px;
+                    max-width: 400px;
+                    width: 100%;
+                    max-height: 85vh;
+                    overflow-y: auto;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+                ">
+                    <div style="
+                        background: #3A7D99;
+                        color: white;
+                        padding: 15px;
+                        margin: -20px -20px 20px -20px;
+                        border-radius: 8px 8px 0 0;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                    ">
+                        <h3 style="margin: 0; font-size: 18px;">Login Required</h3>
+                        <button onclick="closeEmergencyModal()" style="
+                            background: none;
+                            border: none;
+                            color: white;
+                            font-size: 24px;
+                            cursor: pointer;
+                            padding: 0;
+                            width: 30px;
+                            height: 30px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        ">&times;</button>
+                    </div>
+                    
+                    <p><strong>Please login to complete your booking</strong></p>
+                    
+                    <div style="
+                        background: #f8f9fa;
+                        border: 1px solid #dee2e6;
+                        border-radius: 8px;
+                        padding: 15px;
+                        margin: 15px 0;
+                    ">
+                        <h4 style="margin: 0 0 10px 0; color: #3A7D99;">Your Booking Details:</h4>
+                        <div style="display: flex; justify-content: space-between; margin: 5px 0; padding: 5px 0; border-bottom: 1px solid #eee;">
+                            <span>Service:</span>
+                            <span>${serviceDisplay}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin: 5px 0; padding: 5px 0; border-bottom: 1px solid #eee;">
+                            <span>Date:</span>
+                            <span>${dateDisplay}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin: 5px 0; padding: 5px 0; border-bottom: 1px solid #eee;">
+                            <span>Time:</span>
+                            <span>${timeDisplay}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin: 5px 0; padding: 5px 0; font-weight: bold; color: #28a745;">
+                            <span>Total:</span>
+                            <span>$${priceDisplay}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Auth Tabs -->
+                    <div style="
+                        display: flex;
+                        margin: 20px 0 15px 0;
+                        border-bottom: 2px solid #e9ecef;
+                    ">
+                        <button onclick="showEmergencyLoginTab()" id="emergencyLoginTab" style="
+                            background: none;
+                            border: none;
+                            padding: 12px 24px;
+                            font-size: 16px;
+                            cursor: pointer;
+                            border-bottom: 3px solid #3A7D99;
+                            color: #3A7D99;
+                            font-weight: bold;
+                            flex: 1;
+                        ">Existing Account</button>
+                        <button onclick="showEmergencyRegisterTab()" id="emergencyRegisterTab" style="
+                            background: none;
+                            border: none;
+                            padding: 12px 24px;
+                            font-size: 16px;
+                            cursor: pointer;
+                            border-bottom: 3px solid #3A7D99;
+                            color: #3A7D99;
+                            font-weight: bold;
+                            flex: 1;
+                        ">✨ Create New Account</button>
+                    </div>
+                    
+                    <!-- Login Form -->
+                    <form id="emergencyLoginForm" onsubmit="handleEmergencyLogin(event)" style="display: block;">
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Email:</label>
+                            <input type="email" id="emergencyEmail" required style="
+                                width: 100%;
+                                padding: 10px;
+                                border: 1px solid #ddd;
+                                border-radius: 5px;
+                                font-size: 16px;
+                                box-sizing: border-box;
+                            ">
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Password:</label>
+                            <input type="password" id="emergencyPassword" required style="
+                                width: 100%;
+                                padding: 10px;
+                                border: 1px solid #ddd;
+                                border-radius: 5px;
+                                font-size: 16px;
+                                box-sizing: border-box;
+                            ">
+                        </div>
+                        
+                        <button type="submit" style="
+                            background: #28a745;
+                            color: white;
+                            border: none;
+                            padding: 15px 20px;
+                            border-radius: 5px;
+                            cursor: pointer;
+                            width: 100%;
+                            font-size: 16px;
+                            margin-top: 10px;
+                        ">✅ Login & Complete Booking</button>
+                    </form>
+                    
+                    <!-- Registration Form -->
+                    <form id="emergencyRegisterForm" onsubmit="handleEmergencyRegister(event)" style="display: none;">
+                        <div style="
+                            background: #d4edda;
+                            border: 1px solid #c3e6cb;
+                            border-radius: 5px;
+                            padding: 10px;
+                            margin-bottom: 15px;
+                            color: #155724;
+                            text-align: center;
+                        ">
+                            <strong>✨ New Customer?</strong><br>
+                            Create an account to save your info for faster future bookings!
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Full Name:</label>
+                            <input type="text" id="emergencyRegisterName" required style="
+                                width: 100%;
+                                padding: 10px;
+                                border: 1px solid #ddd;
+                                border-radius: 5px;
+                                font-size: 16px;
+                                box-sizing: border-box;
+                            ">
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Email:</label>
+                            <input type="email" id="emergencyRegisterEmail" required style="
+                                width: 100%;
+                                padding: 10px;
+                                border: 1px solid #ddd;
+                                border-radius: 5px;
+                                font-size: 16px;
+                                box-sizing: border-box;
+                            ">
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Phone:</label>
+                            <input type="tel" id="emergencyRegisterPhone" required style="
+                                width: 100%;
+                                padding: 10px;
+                                border: 1px solid #ddd;
+                                border-radius: 5px;
+                                font-size: 16px;
+                                box-sizing: border-box;
+                            ">
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Create Password:</label>
+                            <input type="password" id="emergencyRegisterPassword" required minlength="6" style="
+                                width: 100%;
+                                padding: 10px;
+                                border: 1px solid #ddd;
+                                border-radius: 5px;
+                                font-size: 16px;
+                                box-sizing: border-box;
+                            ">
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Confirm Password:</label>
+                            <input type="password" id="emergencyConfirmPassword" required minlength="6" style="
+                                width: 100%;
+                                padding: 10px;
+                                border: 1px solid #ddd;
+                                border-radius: 5px;
+                                font-size: 16px;
+                                box-sizing: border-box;
+                            ">
+                        </div>
+                        
+                        <button type="submit" style="
+                            background: linear-gradient(135deg, #007bff, #0056b3);
+                            color: white;
+                            border: none;
+                            padding: 15px 20px;
+                            border-radius: 5px;
+                            cursor: pointer;
+                            width: 100%;
+                            font-size: 16px;
+                            margin-top: 10px;
+                        ">🎉 Create Account & Complete Booking</button>
+                        
+                        <p style="
+                            font-size: 12px;
+                            color: #666;
+                            text-align: center;
+                            margin-top: 10px;
+                            line-height: 1.4;
+                        ">By creating an account, you agree to our terms of service. Your information is kept secure and private.</p>
+                    </form>
+                    
+                    <div style="
+                        background: #fff3cd;
+                        border: 1px solid #ffeaa7;
+                        border-radius: 8px;
+                        padding: 15px;
+                        margin-top: 20px;
+                        text-align: center;
+                    ">
+                        <h4 style="margin: 0 0 10px 0; color: #856404;">🔧 For Testing Only:</h4>
+                        <p style="margin: 5px 0; font-size: 13px; color: #856404;">
+                            <strong>Demo Accounts:</strong><br>
+                            john.doe@email.com / user123<br>
+                            jane.smith@email.com / user123
+                        </p>
+                        <button onclick="fillEmergencyDemo()" style="
+                            background: #ffc107;
+                            color: #212529;
+                            border: none;
+                            padding: 6px 10px;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-size: 11px;
+                            margin: 5px;
+                        ">Try Demo Login</button>
+                        <button onclick="showEmergencyRegisterTab()" style="
+                            background: #28a745;
+                            color: white;
+                            border: none;
+                            padding: 6px 10px;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-size: 11px;
+                            margin: 5px;
+                        ">Create Real Account</button>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+                        <button onclick="logoutAndContinue()" style="
+                            background: #dc3545;
+                            color: white;
+                            border: none;
+                            padding: 6px 12px;
+                            border-radius: 3px;
+                            cursor: pointer;
+                            font-size: 12px;
+                        ">Logout Current User</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(emergencyModal);
+            document.body.style.overflow = 'hidden';
+            
+            console.log('✅ Emergency modal injected and should be visible');
+            console.log('📊 Modal element:', emergencyModal);
+            console.log('📊 Modal display style:', window.getComputedStyle(emergencyModal).display);
+            console.log('📊 Modal position:', window.getComputedStyle(emergencyModal).position);
+            
+            // Final fallback - alert if modal might not be visible
+            setTimeout(() => {
+                const modalRect = emergencyModal.getBoundingClientRect();
+                console.log('📏 Modal position:', modalRect);
+                if (modalRect.width === 0 || modalRect.height === 0) {
+                    alert('🚨 EMERGENCY: Modal created but not visible! Check browser zoom/viewport. Press F5 to refresh and try again.');
+                }
+            }, 100);
+        }
+        
+        // Helper function for saving appointments
+        function saveAppointment(appointmentData) {
+            console.log('💾 Attempting to save appointment:', appointmentData);
+            
+            // Validate appointment data
+            if (!appointmentData.date || !appointmentData.time || !appointmentData.clientName) {
+                console.error('❌ Invalid appointment data - missing required fields:', appointmentData);
+                return null;
+            }
+            
+            let savedAppointment;
+            if (typeof window.addAppointment === 'function') {
+                console.log('🔧 Using window.addAppointment function');
+                savedAppointment = window.addAppointment(appointmentData);
+                console.log('✅ Appointment saved via addAppointment:', savedAppointment);
+                
+                // Double-check it was actually saved
+                if (window.getAppointments) {
+                    const allAppointments = window.getAppointments();
+                    console.log('📊 Total appointments after save:', allAppointments.length);
+                    const justSaved = allAppointments.find(apt => apt.id === savedAppointment.id);
+                    if (justSaved) {
+                        console.log('✅ Verification: Appointment found in shared data:', justSaved);
+                    } else {
+                        console.error('❌ Verification failed: Appointment not found in shared data!');
+                    }
+                }
+            } else {
+                console.log('⚠️ window.addAppointment not available, using fallback...');
+                // Fallback: save directly to shared array
+                if (!window.sharedAppointments) {
+                    window.sharedAppointments = [];
+                    console.log('📝 Created new sharedAppointments array');
+                }
+                const newId = Math.max(...(window.sharedAppointments.map(apt => apt.id) || [0]), 0) + 1;
+                savedAppointment = { 
+                    id: newId, 
+                    ...appointmentData,
+                    createdAt: new Date().toISOString()
+                };
+                window.sharedAppointments.push(savedAppointment);
+                console.log('✅ Appointment saved via fallback:', savedAppointment);
+                console.log('📊 Total appointments in array:', window.sharedAppointments.length);
+                
+                // Save to localStorage
+                try {
+                    localStorage.setItem('massageAppointments', JSON.stringify(window.sharedAppointments));
+                    console.log('💾 Appointments saved to localStorage');
+                    
+                    // Verify localStorage save
+                    const savedData = localStorage.getItem('massageAppointments');
+                    const parsedData = JSON.parse(savedData || '[]');
+                    console.log('🔍 Verification: localStorage has', parsedData.length, 'appointments');
+                } catch (e) {
+                    console.error('❌ Failed to save to localStorage:', e);
+                }
+                
+                // Trigger event to notify admin panel
+                try {
+                    window.dispatchEvent(new CustomEvent('appointmentAdded', { detail: savedAppointment }));
+                    console.log('📡 Event dispatched: appointmentAdded');
+                } catch (e) {
+                    console.error('❌ Failed to dispatch event:', e);
+                }
+            }
+            return savedAppointment;
+        }
+        
+        // Helper function for saving users
+        function saveUser(userData) {
+            console.log('👤 Attempting to save user:', userData);
+            
+            let savedUser;
+            if (typeof window.addUser === 'function') {
+                savedUser = window.addUser(userData);
+                console.log('✅ User saved via addUser:', savedUser);
+            } else {
+                console.log('⚠️ window.addUser not available, using fallback...');
+                // Fallback: save directly to shared array
+                if (!window.sharedUsers) {
+                    window.sharedUsers = [];
+                    console.log('📝 Created new sharedUsers array');
+                }
+                const newId = Math.max(...(window.sharedUsers.map(user => user.id) || [0]), 0) + 1;
+                savedUser = { 
+                    id: newId, 
+                    ...userData 
+                };
+                window.sharedUsers.push(savedUser);
+                console.log('✅ User saved via fallback:', savedUser);
+                
+                // Save to localStorage
+                try {
+                    localStorage.setItem('massageUsers', JSON.stringify(window.sharedUsers));
+                    console.log('💾 Users saved to localStorage');
+                } catch (e) {
+                    console.error('Failed to save to localStorage:', e);
+                }
+            }
+            return savedUser;
+        }
+        
+        // Helper function
+        function getServiceDisplayName(serviceValue) {
+            const serviceSelect = document.getElementById('service');
+            if (serviceSelect) {
+                const option = serviceSelect.querySelector(`option[value="${serviceValue}"]`);
+                if (option) {
+                    return option.textContent.split(' - ')[0];
+                }
+            }
+            return serviceValue || 'Selected Service';
+        }
+        
+        // Close modal functions
+        function closeLoginModal() {
+            console.log('Closing modal...');
+            const modal = document.getElementById('loginModal');
+            if (modal) {
+                modal.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+        }
+        
+        function showLoginTab() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            tabs[0].classList.add('active');
+        }
+        
+        function showRegisterTab() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            tabs[1].classList.add('active');
+        }
+        
+        function fillDemoLogin(email, password) {
+            document.getElementById('loginEmail').value = email;
+            document.getElementById('loginPassword').value = password;
+            showLoginTab();
+        }
+        
+        // Navigation and session management functions
+        function updateNavigationForLoggedInUser(user) {
+            const accountNavLink = document.getElementById('accountNavLink');
+            console.log('🔍 Looking for navigation element:', accountNavLink);
+            
+            if (accountNavLink) {
+                // The ID is directly on the <a> tag, so update it directly
+                const firstName = user.name.split(' ')[0];
+                accountNavLink.textContent = `Welcome, ${firstName}`;
+                accountNavLink.href = 'user-portal.html';
+                console.log('✅ Navigation text updated to:', accountNavLink.textContent);
+            } else {
+                console.log('❌ accountNavLink element not found');
+            }
+            console.log('Navigation update completed for:', user.name);
+        }
+        
+        function checkUserSession() {
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            const currentUser = localStorage.getItem('currentUser');
+            
+            if (isLoggedIn && currentUser) {
+                const user = JSON.parse(currentUser);
+                console.log('✅ User session found:', user.name);
+                updateNavigationForLoggedInUser(user);
+                
+                // Auto-fill user info if user is logged in
+                const nameField = document.getElementById('clientName');
+                const emailField = document.getElementById('email');
+                const phoneField = document.getElementById('phone');
+                
+                if (nameField && !nameField.value) nameField.value = user.name;
+                if (emailField && !emailField.value) emailField.value = user.email;
+                if (phoneField && !phoneField.value && user.phone) phoneField.value = user.phone;
+                
+                return user;
+            }
+            
+            console.log('No user session found');
+            return null;
+        }
+        
+        function logoutUser() {
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('isLoggedIn');
+            console.log('User logged out');
+            
+            // Reset navigation
+            const accountNavLink = document.getElementById('accountNavLink');
+            if (accountNavLink) {
+                const link = accountNavLink.querySelector('a');
+                if (link) {
+                    link.textContent = 'Login';
+                    link.href = 'user-portal.html';
+                }
+            }
+            
+            // Clear form fields
+            const form = document.getElementById('bookingForm');
+            if (form) form.reset();
+        }
+        
+        // Check if user should skip login modal (already logged in)
+        function shouldSkipLoginModal() {
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            const currentUser = localStorage.getItem('currentUser');
+            console.log('🔍 Checking login status:', { isLoggedIn, hasCurrentUser: !!currentUser });
+            
+            if (isLoggedIn && currentUser) {
+                const user = JSON.parse(currentUser);
+                console.log('✅ User already logged in, proceeding to payment...', user);
+                
+                // Complete booking data and show payment modal instead of direct confirmation
+                console.log('📋 Booking data:', window.pendingBookingData);
+                
+                // Create the appointment data (but don't save it yet - save after payment)
+                const newAppointment = {
+                    userId: user.id,
+                    clientName: user.name,
+                    email: user.email,
+                    phone: user.phone || window.pendingBookingData?.phone || '',
+                    service: getServiceDisplayName(window.pendingBookingData?.service) || 'Selected Service',
+                    date: window.pendingBookingData?.date || '',
+                    time: window.pendingBookingData?.time || '',
+                    price: parseInt(window.pendingBookingData?.price) || 0,
+                    status: 'pending',
+                    notes: window.pendingBookingData?.notes || '',
+                    paymentStatus: 'pending',
+                    paymentMethod: 'Stripe',
+                    transactionId: null
+                };
+                
+                console.log('💳 Proceeding to payment for logged-in user...');
+                
+                // Show payment modal instead of directly confirming
+                showBookingPaymentModal(newAppointment);
+                
+                return true; // Indicates login was skipped and booking is proceeding to payment
+            }
+            
+            console.log('❌ User not logged in, will show login modal');
+            return false;
+        }
+        
+        // Time slot availability functions
+        function getBookedTimesForDate(date) {
+            console.log('🔍 Checking booked times for date:', date);
+            
+            // Get appointments from shared data
+            const appointments = window.sharedAppointments || [];
+            console.log('📅 Total appointments in system:', appointments.length);
+            
+            // Filter appointments for the specific date and confirmed/pending status
+            const bookedTimes = appointments
+                .filter(appointment => {
+                    const matches = appointment.date === date && 
+                           (appointment.status === 'confirmed' || appointment.status === 'pending');
+                    if (matches) {
+                        console.log('📍 Found booking:', appointment);
+                    }
+                    return matches;
+                })
+                .map(appointment => appointment.time);
+            
+            console.log('⛔ Booked times for', date, ':', bookedTimes);
+            return bookedTimes;
+        }
+        
+        function updateAvailableTimes() {
+            const dateInput = document.getElementById('date');
+            const timeSelect = document.getElementById('time');
+            
+            if (!timeSelect || !dateInput) return;
+            
+            const selectedDate = dateInput.value;
+            console.log('🔄 Updating available times for:', selectedDate);
+            
+            // Clear existing options
+            timeSelect.innerHTML = '<option value="">Select a time</option>';
+            
+            // Available time slots (simplified for demo)
+            const allTimes = ['10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM'];
+            
+            // Get booked times for this date
+            const bookedTimes = getBookedTimesForDate(selectedDate);
+            
+            // Add time options (excluding booked times)
+            allTimes.forEach(time => {
+                const isBooked = bookedTimes.includes(time);
+                
+                const option = document.createElement('option');
+                option.value = time;
+                option.textContent = isBooked ? `${time} (Unavailable)` : time;
+                option.disabled = isBooked;
+                option.style.color = isBooked ? '#999' : '';
+                
+                timeSelect.appendChild(option);
+            });
+            
+            console.log('✅ Time options updated');
+        }
+        
+        // Basic form setup since external script is disabled
+        function setupBasicForm() {
+            // Set minimum date to today
+            const dateInput = document.getElementById('date');
+            if (dateInput) {
+                const today = new Date().toISOString().split('T')[0];
+                dateInput.min = today;
+                
+                // Auto-select today as default
+                dateInput.value = today;
+                
+                // Add date change listener
+                dateInput.addEventListener('change', function() {
+                    console.log('📅 Date changed to:', this.value);
+                    updateAvailableTimes();
+                });
+            }
+            
+            // Auto-populate time options with availability checking
+            const timeSelect = document.getElementById('time');
+            if (timeSelect) {
+                // Initial population
+                updateAvailableTimes();
+            }
+            
+            // Auto-update price when service changes
+            const serviceSelect = document.getElementById('service');
+            const priceSpan = document.getElementById('totalPrice');
+            if (serviceSelect && priceSpan) {
+                serviceSelect.addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    const price = selectedOption.getAttribute('data-price') || '0';
+                    priceSpan.textContent = price;
+                });
+                
+                // Set initial price
+                if (serviceSelect.selectedIndex > 0) {
+                    const selectedOption = serviceSelect.options[serviceSelect.selectedIndex];
+                    const price = selectedOption.getAttribute('data-price') || '70';
+                    priceSpan.textContent = price;
+                }
+            }
+        }
+        
+        // Auto-populate service from URL parameter
+        function autoPopulateServiceFromURL() {
+            console.log('🔍 Auto-populate function called');
+            
+            // Get URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const serviceParam = urlParams.get('service');
+            
+            console.log('URL:', window.location.href);
+            console.log('Service parameter:', serviceParam);
+            
+            if (!serviceParam) {
+                console.log('No service parameter found');
+                return;
+            }
+            
+            // Find service dropdown
+            const serviceSelect = document.getElementById('service');
+            if (!serviceSelect) {
+                console.log('Service dropdown not found');
+                return;
+            }
+            
+            // Debug: Show all available options
+            const allOptions = serviceSelect.querySelectorAll('option');
+            console.log('Available options:');
+            allOptions.forEach(option => {
+                console.log(`- "${option.value}" (${option.textContent})`);
+            });
+            
+            // Find matching option
+            const targetOption = serviceSelect.querySelector(`option[value="${serviceParam}"]`);
+            if (!targetOption) {
+                console.log('❌ No matching option found for:', serviceParam);
+                console.log('Available option values:', Array.from(allOptions).map(opt => opt.value));
+                return;
+            }
+            
+            console.log('Found matching option:', targetOption);
+            
+            // Set the selection
+            serviceSelect.value = serviceParam;
+            
+            // Update price display
+            const price = targetOption.dataset.price || '0';
+            const priceElement = document.getElementById('totalPrice');
+            if (priceElement) {
+                priceElement.textContent = price;
+            }
+            
+            // Visual feedback
+            serviceSelect.style.backgroundColor = '#e8f5e8';
+            serviceSelect.style.border = '2px solid #27ae60';
+            
+            // Trigger change event to update calendar
+            serviceSelect.dispatchEvent(new Event('change'));
+            
+            console.log('✅ Service auto-populated:', serviceParam, 'Price:', price);
+        }
+        
+        // Calendar state
+        let currentCalendarDate = new Date();
+        currentCalendarDate.setDate(1); // Start at first of month
+        
+        // Generate full monthly calendar
+        function generateMonthlyCalendar() {
+            const calendarDiv = document.getElementById('calendar');
+            if (!calendarDiv) return;
+            
+            console.log('📅 Generating monthly calendar for:', currentCalendarDate.toLocaleDateString());
+            
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            const today = new Date();
+            
+            // Calendar header with navigation
+            let calendarHTML = `
+                <div class="calendar-header">
+                    <button class="nav-btn" onclick="navigateMonth(-1)">‹</button>
+                    <h3 class="month-year">${currentCalendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h3>
+                    <button class="nav-btn" onclick="navigateMonth(1)">›</button>
+                </div>
+                <div class="calendar-weekdays">
+                    <div class="weekday">Sun</div>
+                    <div class="weekday">Mon</div>
+                    <div class="weekday">Tue</div>
+                    <div class="weekday">Wed</div>
+                    <div class="weekday">Thu</div>
+                    <div class="weekday">Fri</div>
+                    <div class="weekday">Sat</div>
+                </div>
+                <div class="calendar-grid">
+            `;
+            
+            // Get first day of month and number of days
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay()); // Start from Sunday
+            
+            // Generate 6 weeks (42 days) to cover all possible month layouts
+            for (let i = 0; i < 42; i++) {
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + i);
+                
+                const dateStr = date.toISOString().split('T')[0];
+                const dayNum = date.getDate();
+                const isCurrentMonth = date.getMonth() === month;
+                const isPast = date < today.setHours(0,0,0,0);
+                const isToday = date.toDateString() === today.toDateString();
+                
+                let dayClass = 'calendar-day';
+                if (!isCurrentMonth) dayClass += ' other-month';
+                if (isPast) dayClass += ' past';
+                if (isToday) dayClass += ' today';
+                
+                // Check if date is blocked by admin
+                const isBlocked = window.getBlockedDates ? window.getBlockedDates().some(blocked => blocked.date === dateStr) : false;
+                if (isBlocked) {
+                    dayClass += ' blocked';
+                    console.log('🚫 Date blocked by admin:', dateStr);
+                }
+                
+                // Check availability for current month dates
+                let availabilityInfo = '';
+                if (isCurrentMonth && !isPast && !isBlocked) {
+                    const availableTimes = getAvailableTimesForDate(dateStr);
+                    const isAvailable = availableTimes.length > 0;
+                    
+                    if (isAvailable) {
+                        dayClass += ' available';
+                        availabilityInfo = `<div class="availability-indicator">${availableTimes.length} slots</div>`;
+                    } else {
+                        dayClass += ' fully-booked';
+                        availabilityInfo = `<div class="availability-indicator">Full</div>`;
+                    }
+                } else if (isBlocked) {
+                    availabilityInfo = `<div class="availability-indicator">Blocked</div>`;
+                }
+                
+                const clickHandler = (isCurrentMonth && !isPast && !isBlocked) ? `onclick="selectDate('${dateStr}')"` : '';
+                
+                calendarHTML += `
+                    <div class="${dayClass}" ${clickHandler} data-date="${dateStr}">
+                        <div class="day-number">${dayNum}</div>
+                        ${availabilityInfo}
+                    </div>
+                `;
+            }
+            
+            calendarHTML += '</div>';
+            calendarDiv.innerHTML = calendarHTML;
+            
+            console.log('✅ Monthly calendar generated');
+        }
+        
+        function navigateMonth(direction) {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + direction);
+            console.log('📅 Navigating to:', currentCalendarDate.toLocaleDateString());
+            generateMonthlyCalendar();
+        }
+        
+        function getAvailableTimesForDate(date) {
+            // Use the same time slots as the booking form
+            const allTimes = ['10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM'];
+            const bookedTimes = getBookedTimesForDate(date);
+            return allTimes.filter(time => !bookedTimes.includes(time));
+        }
+        
+        function selectDate(dateStr) {
+            console.log('📅 Date selected:', dateStr);
+            const dateInput = document.getElementById('date');
+            if (dateInput) {
+                dateInput.value = dateStr;
+                updateAvailableTimes();
+            }
+            
+            // Update visual selection
+            document.querySelectorAll('.calendar-day').forEach(day => {
+                day.classList.remove('selected');
+            });
+            document.querySelector(`[data-date="${dateStr}"]`)?.classList.add('selected');
+        }
+        
+        // Setup login form handling
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Setting up login form handlers...');
+            
+            // Setup basic form functionality
+            setupBasicForm();
+            
+            // Generate initial calendar
+            generateMonthlyCalendar();
+            
+            // Auto-populate service if coming from services page
+            setTimeout(() => {
+                autoPopulateServiceFromURL();
+            }, 100);
+            
+            // Backup auto-populate call after a longer delay
+            setTimeout(() => {
+                const serviceSelect = document.getElementById('service');
+                if (serviceSelect && !serviceSelect.value) {
+                    console.log('🔄 Backup auto-populate call...');
+                    autoPopulateServiceFromURL();
+                }
+            }, 500);
+            
+            // Check for existing user session on page load
+            checkUserSession();
+            
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    console.log('Login form submitted');
+                    
+                    const email = document.getElementById('loginEmail').value;
+                    const password = document.getElementById('loginPassword').value;
+                    
+                    console.log('Login attempt:', email);
+                    
+                    // Simple demo authentication
+                    if (email === 'john.doe@email.com' && password === 'user123') {
+                        alert('✅ Login successful!\n\nBooking confirmed:\n' + 
+                              `• Service: ${window.pendingBookingData?.service || 'N/A'}\n` +
+                              `• Date: ${window.pendingBookingData?.date || 'N/A'}\n` +
+                              `• Time: ${window.pendingBookingData?.time || 'N/A'}\n` +
+                              `• Total: $${window.pendingBookingData?.price || '0'}\n\n` +
+                              'Appointment ID: ' + Date.now());
+                        closeLoginModal();
+                    } else {
+                        alert('❌ Invalid credentials. Use:\nEmail: john.doe@email.com\nPassword: user123');
+                    }
+                });
+            }
+            
+            console.log('Inline handlers setup complete');
+        });
+        
+        // Test function for time slot blocking
+        function testTimeSlotBlocking() {
+            console.log('🔧 Testing time slot blocking...');
+            
+            const dateInput = document.getElementById('date');
+            const testDate = dateInput ? dateInput.value : '2025-08-06';
+            
+            console.log('Testing date:', testDate);
+            
+            // Check booked times
+            const bookedTimes = getBookedTimesForDate(testDate);
+            
+            // Show results
+            alert(`🔧 Time Slot Blocking Test Results:\n\n` +
+                  `Date: ${testDate}\n` +
+                  `Total appointments in system: ${window.sharedAppointments?.length || 0}\n` +
+                  `Booked times for this date: ${bookedTimes.length > 0 ? bookedTimes.join(', ') : 'None'}\n\n` +
+                  `Check console for detailed logs.`);
+                  
+            // Force refresh time slots
+            updateAvailableTimes();
+        }
+        
+        // Debug function to check shared data status
+        function debugSharedDataStatus() {
+            console.log('🔍 === SHARED DATA DEBUG STATUS ===');
+            console.log('window.sharedAppointments:', window.sharedAppointments);
+            console.log('window.addAppointment type:', typeof window.addAppointment);
+            console.log('window.getAppointments type:', typeof window.getAppointments);
+            console.log('localStorage massageAppointments:', localStorage.getItem('massageAppointments'));
+            
+            if (window.getAppointments) {
+                const appointments = window.getAppointments();
+                console.log('Appointments from getAppointments():', appointments.length, appointments);
+            }
+            
+            alert('Check console for shared data debug information');
+        }
+        
+        // Function to clean up duplicate appointments
+        function cleanupDuplicateAppointments() {
+            if (!window.sharedAppointments) return;
+            
+            const beforeCount = window.sharedAppointments.length;
+            console.log('🧹 Cleaning up duplicate appointments...');
+            console.log('Before cleanup:', beforeCount, 'appointments');
+            
+            // Remove duplicates based on userId, date, time combination
+            const uniqueAppointments = [];
+            const seen = new Set();
+            
+            window.sharedAppointments.forEach(apt => {
+                const key = `${apt.userId}-${apt.date}-${apt.time}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueAppointments.push(apt);
+                } else {
+                    console.log('🗑️ Removing duplicate:', apt);
+                }
+            });
+            
+            window.sharedAppointments = uniqueAppointments;
+            
+            // Save cleaned data
+            try {
+                localStorage.setItem('massageAppointments', JSON.stringify(window.sharedAppointments));
+                console.log('✅ Cleaned appointments saved to localStorage');
+            } catch (e) {
+                console.error('Failed to save cleaned appointments:', e);
+            }
+            
+            const afterCount = window.sharedAppointments.length;
+            console.log('After cleanup:', afterCount, 'appointments');
+            console.log('Removed', beforeCount - afterCount, 'duplicates');
+            
+            // Refresh time slots
+            updateAvailableTimes();
+            
+            alert(`🧹 Cleanup Complete!\n\nBefore: ${beforeCount} appointments\nAfter: ${afterCount} appointments\nRemoved: ${beforeCount - afterCount} duplicates`);
+        }
+        
+        // Emergency modal functions
+        function closeEmergencyModal() {
+            const modal = document.getElementById('emergencyLoginModal');
+            if (modal) {
+                modal.remove();
+                document.body.style.overflow = '';
+            }
+        }
+        
+        function fillEmergencyDemo() {
+            document.getElementById('emergencyEmail').value = 'john.doe@email.com';
+            document.getElementById('emergencyPassword').value = 'user123';
+        }
+        
+        function logoutAndContinue() {
+            logoutUser();
+            closeEmergencyModal();
+            alert('✅ You have been logged out. Fill out the form again to book with a different account.');
+        }
+        
+        // Emergency modal tab functions
+        function showEmergencyLoginTab() {
+            document.getElementById('emergencyLoginForm').style.display = 'block';
+            document.getElementById('emergencyRegisterForm').style.display = 'none';
+            
+            // Update tab styling
+            const loginTab = document.getElementById('emergencyLoginTab');
+            const registerTab = document.getElementById('emergencyRegisterTab');
+            
+            loginTab.style.borderBottom = '3px solid #3A7D99';
+            loginTab.style.color = '#3A7D99';
+            loginTab.style.fontWeight = 'bold';
+            
+            registerTab.style.borderBottom = '3px solid transparent';
+            registerTab.style.color = 'inherit';
+            registerTab.style.fontWeight = 'normal';
+        }
+        
+        function showEmergencyRegisterTab() {
+            document.getElementById('emergencyLoginForm').style.display = 'none';
+            document.getElementById('emergencyRegisterForm').style.display = 'block';
+            
+            // Pre-fill registration form with booking data
+            if (window.pendingBookingData) {
+                const nameField = document.getElementById('emergencyRegisterName');
+                const emailField = document.getElementById('emergencyRegisterEmail');
+                const phoneField = document.getElementById('emergencyRegisterPhone');
+                
+                if (nameField && window.pendingBookingData.clientName) {
+                    nameField.value = window.pendingBookingData.clientName;
+                }
+                if (emailField && window.pendingBookingData.email) {
+                    emailField.value = window.pendingBookingData.email;
+                }
+                if (phoneField && window.pendingBookingData.phone) {
+                    phoneField.value = window.pendingBookingData.phone;
+                }
+            }
+            
+            // Update tab styling
+            const loginTab = document.getElementById('emergencyLoginTab');
+            const registerTab = document.getElementById('emergencyRegisterTab');
+            
+            loginTab.style.borderBottom = '3px solid transparent';
+            loginTab.style.color = 'inherit';
+            loginTab.style.fontWeight = 'normal';
+            
+            registerTab.style.borderBottom = '3px solid #3A7D99';
+            registerTab.style.color = '#3A7D99';
+            registerTab.style.fontWeight = 'bold';
+        }
+        
+        function handleEmergencyLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('emergencyEmail').value;
+            const password = document.getElementById('emergencyPassword').value;
+            
+            console.log('Emergency login attempt:', email);
+            
+            // Simple demo authentication - check registered users too
+            const existingUser = window.sharedUsers ? window.sharedUsers.find(u => u.email === email && u.password === password) : null;
+            
+            if (email === 'john.doe@email.com' && password === 'user123') {
+                // Find existing user in shared data
+                const existingUser = window.sharedUsers.find(u => u.email === email);
+                let userSession;
+                
+                if (existingUser) {
+                    userSession = {
+                        id: existingUser.id,
+                        name: existingUser.name,
+                        email: existingUser.email,
+                        phone: existingUser.phone,
+                        role: existingUser.role,
+                        loginTime: new Date().toISOString(),
+                        totalAppointments: existingUser.totalAppointments + 1
+                    };
+                    
+                    // Update user's total appointments and last visit
+                    window.updateUser(existingUser.id, {
+                        totalAppointments: existingUser.totalAppointments + 1,
+                        lastVisit: new Date().toISOString()
+                    });
+                } else {
+                    userSession = {
+                        id: 2, // Default for John Doe
+                        name: 'John Doe',
+                        email: 'john.doe@email.com',
+                        role: 'user',
+                        loginTime: new Date().toISOString(),
+                        totalAppointments: 1
+                    };
+                }
+                
+                // Create and save the appointment
+                const newAppointment = {
+                    userId: userSession.id,
+                    clientName: userSession.name,
+                    email: userSession.email,
+                    phone: userSession.phone || window.pendingBookingData?.phone || '',
+                    service: getServiceDisplayName(window.pendingBookingData?.service) || 'Selected Service',
+                    date: window.pendingBookingData?.date || '',
+                    time: window.pendingBookingData?.time || '',
+                    price: parseInt(window.pendingBookingData?.price) || 0,
+                    status: 'confirmed',
+                    notes: window.pendingBookingData?.notes || '',
+                    paymentStatus: 'confirmed',
+                    paymentMethod: 'Online Booking',
+                    transactionId: `txn_${Date.now()}`
+                };
+                
+                const savedAppointment = saveAppointment(newAppointment);
+                
+                localStorage.setItem('currentUser', JSON.stringify(userSession));
+                localStorage.setItem('isLoggedIn', 'true');
+                console.log('✅ User session stored in localStorage');
+                
+                // Instead of immediately confirming, show payment modal
+                console.log('✅ Login successful, proceeding to payment...');
+                closeEmergencyModal();
+                
+                // Store data for payment processing
+                window.pendingAppointment = newAppointment;
+                window.currentUserSession = userSession;
+                
+                // Show payment modal
+                showBookingPaymentModal(newAppointment);
+                
+                // Update navigation to show logged-in state
+                updateNavigationForLoggedInUser(userSession);
+                
+                // Clear form and refresh time slots
+                const form = document.getElementById('bookingForm');
+                if (form) form.reset();
+                
+                // Refresh time slots to show the new booking as unavailable
+                setTimeout(() => {
+                    updateAvailableTimes();
+                    console.log('🔄 Time slots refreshed after booking');
+                }, 500);
+                
+            } else if (email === 'jane.smith@email.com' && password === 'user123') {
+                // Find existing user in shared data
+                const existingUser = window.sharedUsers.find(u => u.email === email);
+                let userSession;
+                
+                if (existingUser) {
+                    userSession = {
+                        id: existingUser.id,
+                        name: existingUser.name,
+                        email: existingUser.email,
+                        phone: existingUser.phone,
+                        role: existingUser.role,
+                        loginTime: new Date().toISOString(),
+                        totalAppointments: existingUser.totalAppointments + 1
+                    };
+                    
+                    // Update user's total appointments and last visit
+                    window.updateUser(existingUser.id, {
+                        totalAppointments: existingUser.totalAppointments + 1,
+                        lastVisit: new Date().toISOString()
+                    });
+                } else {
+                    userSession = {
+                        id: 3, // Default for Jane Smith
+                        name: 'Jane Smith',
+                        email: 'jane.smith@email.com',
+                        role: 'user',
+                        loginTime: new Date().toISOString(),
+                        totalAppointments: 1
+                    };
+                }
+                
+                // Create and save the appointment
+                const newAppointment = {
+                    userId: userSession.id,
+                    clientName: userSession.name,
+                    email: userSession.email,
+                    phone: userSession.phone || window.pendingBookingData?.phone || '',
+                    service: getServiceDisplayName(window.pendingBookingData?.service) || 'Selected Service',
+                    date: window.pendingBookingData?.date || '',
+                    time: window.pendingBookingData?.time || '',
+                    price: parseInt(window.pendingBookingData?.price) || 0,
+                    status: 'confirmed',
+                    notes: window.pendingBookingData?.notes || '',
+                    paymentStatus: 'confirmed',
+                    paymentMethod: 'Online Booking',
+                    transactionId: `txn_${Date.now()}`
+                };
+                
+                const savedAppointment = saveAppointment(newAppointment);
+                
+                localStorage.setItem('currentUser', JSON.stringify(userSession));
+                localStorage.setItem('isLoggedIn', 'true');
+                console.log('✅ User session stored in localStorage');
+                
+                alert('✅ Login successful!\\n\\nWelcome Jane!\\n\\nBooking confirmed:\\n' + 
+                      `• Service: ${newAppointment.service}\\n` +
+                      `• Date: ${newAppointment.date}\\n` +
+                      `• Time: ${newAppointment.time}\\n` +
+                      `• Total: $${newAppointment.price}\\n\\n` +
+                      `Appointment ID: ${savedAppointment.id}\\n\\n` +
+                      '🎉 You are now logged in and can book future appointments instantly!\\n\\n' +
+                      '📅 This time slot is now blocked for other users.');
+                      
+                closeEmergencyModal();
+                updateNavigationForLoggedInUser(userSession);
+                
+                const form = document.getElementById('bookingForm');
+                if (form) form.reset();
+            } else if (existingUser) {
+                // Handle any registered user
+                console.log('✅ Found registered user:', existingUser);
+                
+                let userSession = {
+                    id: existingUser.id,
+                    name: existingUser.name,
+                    email: existingUser.email,
+                    phone: existingUser.phone,
+                    role: existingUser.role,
+                    loginTime: new Date().toISOString(),
+                    totalAppointments: existingUser.totalAppointments + 1
+                };
+                
+                // Update user's total appointments and last visit
+                window.updateUser(existingUser.id, {
+                    totalAppointments: existingUser.totalAppointments + 1,
+                    lastVisit: new Date().toISOString()
+                });
+                
+                // Create and save the appointment
+                const newAppointment = {
+                    userId: userSession.id,
+                    clientName: userSession.name,
+                    email: userSession.email,
+                    phone: userSession.phone || window.pendingBookingData?.phone || '',
+                    service: getServiceDisplayName(window.pendingBookingData?.service) || 'Selected Service',
+                    date: window.pendingBookingData?.date || '',
+                    time: window.pendingBookingData?.time || '',
+                    price: parseInt(window.pendingBookingData?.price) || 0,
+                    status: 'confirmed',
+                    notes: window.pendingBookingData?.notes || '',
+                    paymentStatus: 'confirmed',
+                    paymentMethod: 'Online Booking',
+                    transactionId: `txn_${Date.now()}`
+                };
+                
+                const savedAppointment = saveAppointment(newAppointment);
+                
+                localStorage.setItem('currentUser', JSON.stringify(userSession));
+                localStorage.setItem('isLoggedIn', 'true');
+                
+                // Instead of immediately confirming, show payment modal
+                console.log('✅ Login successful, proceeding to payment...');
+                closeEmergencyModal();
+                
+                // Store data for payment processing
+                window.pendingAppointment = newAppointment;
+                window.currentUserSession = userSession;
+                
+                // Show payment modal
+                showBookingPaymentModal(newAppointment);
+                
+                updateNavigationForLoggedInUser(userSession);
+            } else {
+                alert('❌ Invalid credentials. Use:\\nEmail: john.doe@email.com\\nPassword: user123\\n\\nOR\\n\\nEmail: jane.smith@email.com\\nPassword: user123\\n\\nOR click "Create New Account" to register!');
+            }
+        }
+        
+        function handleEmergencyRegister(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('emergencyRegisterName').value.trim();
+            const email = document.getElementById('emergencyRegisterEmail').value.trim();
+            const phone = document.getElementById('emergencyRegisterPhone').value.trim();
+            const password = document.getElementById('emergencyRegisterPassword').value;
+            const confirmPassword = document.getElementById('emergencyConfirmPassword').value;
+            
+            console.log('🎉 New account registration attempt:', { name, email, phone });
+            
+            // Validation
+            if (!name || !email || !phone || !password || !confirmPassword) {
+                alert('❌ Please fill in all fields.');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                alert('❌ Passwords do not match. Please try again.');
+                return;
+            }
+            
+            if (password.length < 6) {
+                alert('❌ Password must be at least 6 characters long.');
+                return;
+            }
+            
+            // Check if email already exists (demo check)
+            if (email === 'john.doe@email.com' || email === 'jane.smith@email.com') {
+                alert('❌ An account with this email already exists. Please use the "Existing Account" tab to login.');
+                showEmergencyLoginTab();
+                document.getElementById('emergencyEmail').value = email;
+                return;
+            }
+            
+            // Create new user and add to shared data
+            const newUserData = {
+                username: email,
+                password: password,
+                name: name,
+                email: email,
+                phone: phone,
+                role: 'user',
+                totalAppointments: 1,
+                lastVisit: new Date().toISOString(),
+                preferences: ''
+            };
+            
+            const savedUser = saveUser(newUserData);
+            console.log('✅ New user added to shared data:', savedUser);
+            
+            // Create user session
+            const newUserSession = {
+                id: savedUser.id,
+                name: savedUser.name,
+                email: savedUser.email,
+                phone: savedUser.phone,
+                role: savedUser.role,
+                loginTime: new Date().toISOString(),
+                totalAppointments: savedUser.totalAppointments,
+                isNewUser: true
+            };
+            
+            // Create and save the appointment
+            const newAppointment = {
+                userId: savedUser.id,
+                clientName: savedUser.name,
+                email: savedUser.email,
+                phone: savedUser.phone,
+                service: getServiceDisplayName(window.pendingBookingData?.service) || 'Selected Service',
+                date: window.pendingBookingData?.date || '',
+                time: window.pendingBookingData?.time || '',
+                price: parseInt(window.pendingBookingData?.price) || 0,
+                status: 'confirmed',
+                notes: window.pendingBookingData?.notes || '',
+                paymentStatus: 'confirmed',
+                paymentMethod: 'Online Booking',
+                transactionId: `txn_${Date.now()}`
+            };
+            
+            const savedAppointment = window.addAppointment(newAppointment);
+            console.log('✅ Appointment saved:', savedAppointment);
+            
+            // Store user session
+            localStorage.setItem('currentUser', JSON.stringify(newUserSession));
+            localStorage.setItem('isLoggedIn', 'true');
+            console.log('✅ New user session stored in localStorage');
+            
+            // Instead of immediately confirming, show payment modal
+            console.log('✅ Account created successfully, proceeding to payment...');
+            closeEmergencyModal();
+            
+            // Store data for payment processing
+            window.pendingAppointment = newAppointment;
+            window.currentUserSession = newUserSession;
+            
+            // Show payment modal with account creation success message
+            showBookingPaymentModal(newAppointment, true, name);
+            
+            // Update navigation for the new user
+            updateNavigationForLoggedInUser(newUserSession);
+        }
+        
+        // Show Stripe payment modal for booking
+        function showBookingPaymentModal(appointment, isNewAccount = false, newUserName = '') {
+            console.log('💳 Showing booking payment modal');
+            
+            // Store appointment data for payment success handler
+            window.pendingAppointment = appointment;
+            
+            // Create payment modal
+            const paymentModal = document.createElement('div');
+            paymentModal.id = 'bookingPaymentModal';
+            paymentModal.className = 'modal';
+            paymentModal.style.display = 'flex';
+            
+            const welcomeMessage = isNewAccount ? 
+                `<div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #155724;">🎉 Account Created Successfully!</h4>
+                    <p style="margin: 0; color: #155724;">Welcome to Consider Restoration, ${newUserName}!</p>
+                </div>` : '';
+            
+            paymentModal.innerHTML = `
+                <div class="modal-content" style="max-width: 500px;">
+                    <div class="modal-header" style="background: #3A7D99; color: white; padding: 1rem; margin: -20px -20px 20px -20px; border-radius: 8px 8px 0 0;">
+                        <h2 style="margin: 0; font-size: 1.5rem;">💳 Complete Your Booking</h2>
+                        <span onclick="closeBookingPaymentModal()" style="
+                            float: right;
+                            font-size: 24px;
+                            cursor: pointer;
+                            color: white;
+                            background: none;
+                            border: none;
+                            padding: 0;
+                            margin-top: -5px;
+                        ">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        ${welcomeMessage}
+                        
+                        <div class="booking-summary" style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #2c3e50;">Appointment Summary</h4>
+                            <p style="margin: 0.25rem 0;"><strong>Service:</strong> ${appointment.service}</p>
+                            <p style="margin: 0.25rem 0;"><strong>Date:</strong> ${appointment.date}</p>
+                            <p style="margin: 0.25rem 0;"><strong>Time:</strong> ${appointment.time}</p>
+                            <p style="margin: 0.25rem 0;"><strong>Client:</strong> ${appointment.clientName}</p>
+                            <p style="margin: 0.25rem 0;"><strong>Total:</strong> <span style="font-size: 1.2rem; color: #28a745; font-weight: bold;">$${appointment.price}</span></p>
+                        </div>
+                        
+                        <div class="test-cards-info" style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #856404;">🧪 Test Mode - Use These Card Numbers:</h4>
+                            <div style="font-family: monospace; font-size: 0.9rem;">
+                                <p style="margin: 0.25rem 0;"><strong>✅ Success:</strong> 4242 4242 4242 4242</p>
+                                <p style="margin: 0.25rem 0;"><strong>❌ Decline:</strong> 4000 0000 0000 0002</p>
+                                <p style="margin: 0.25rem 0;"><strong>💳 Use any future date, any CVC</strong></p>
+                            </div>
+                        </div>
+                        
+                        <form id="booking-payment-form">
+                            <div style="margin-bottom: 1rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Card Information:</label>
+                                <div id="booking-card-element" style="padding: 12px; border: 1px solid #ddd; border-radius: 5px; background: white;">
+                                    <!-- Stripe Elements will create form elements here -->
+                                </div>
+                                <div id="booking-card-errors" role="alert" style="color: #fa755a; margin-top: 0.5rem;"></div>
+                            </div>
+                            
+                            <button type="submit" id="submit-booking-payment" style="
+                                width: 100%;
+                                background: #28a745;
+                                color: white;
+                                border: none;
+                                padding: 15px;
+                                border-radius: 5px;
+                                font-size: 1.1rem;
+                                cursor: pointer;
+                                transition: background 0.3s;
+                                font-weight: bold;
+                            ">
+                                <span id="booking-button-text">💳 Pay $${appointment.price} & Confirm Booking</span>
+                                <span id="booking-spinner" style="display: none;">Processing Payment...</span>
+                            </button>
+                        </form>
+                        
+                        <p style="font-size: 0.85rem; color: #666; text-align: center; margin-top: 1rem;">
+                            🔒 Secure payment powered by Stripe<br>
+                            Your appointment will be confirmed after payment
+                        </p>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(paymentModal);
+            document.body.style.overflow = 'hidden';
+            
+            // Initialize Stripe for booking payment
+            initializeBookingStripePayment();
+        }
+        
+        // Initialize demo payment form for booking (exact copy from membership page)
+        function initializeBookingStripePayment() {
+            console.log('🧪 Initializing demo payment form for booking...');
+            
+            // Create demo card input fields instead of using real Stripe Elements
+            const cardElementContainer = document.getElementById('booking-card-element');
+            cardElementContainer.innerHTML = `
+                <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+                    <input type="text" id="demo-card-number" placeholder="1234 1234 1234 1234" 
+                           style="flex: 2; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px;" 
+                           maxlength="19">
+                    <input type="text" id="demo-expiry" placeholder="MM/YY" 
+                           style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px;" 
+                           maxlength="5">
+                    <input type="text" id="demo-cvc" placeholder="CVC" 
+                           style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px;" 
+                           maxlength="4">
+                </div>
+            `;
+            
+            // Add card number formatting
+            const cardNumberInput = document.getElementById('demo-card-number');
+            cardNumberInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+                let formattedValue = value.match(/.{1,4}/g)?.join(' ') || '';
+                e.target.value = formattedValue;
+            });
+            
+            // Add expiry formatting
+            const expiryInput = document.getElementById('demo-expiry');
+            expiryInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length >= 2) {
+                    value = value.substring(0,2) + '/' + value.substring(2,4);
+                }
+                e.target.value = value;
+            });
+            
+            // Handle form submission
+            const form = document.getElementById('booking-payment-form');
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                
+                const submitButton = document.getElementById('submit-booking-payment');
+                const buttonText = document.getElementById('booking-button-text');
+                const spinner = document.getElementById('booking-spinner');
+                const errorDisplay = document.getElementById('booking-card-errors');
+                
+                // Clear any previous errors
+                errorDisplay.textContent = '';
+                
+                // Get form values
+                const cardNumber = document.getElementById('demo-card-number').value.replace(/\s/g, '');
+                const expiry = document.getElementById('demo-expiry').value;
+                const cvc = document.getElementById('demo-cvc').value;
+                
+                // Basic validation
+                if (!cardNumber || cardNumber.length < 13) {
+                    errorDisplay.textContent = 'Please enter a valid card number.';
+                    return;
+                }
+                if (!expiry || expiry.length < 5) {
+                    errorDisplay.textContent = 'Please enter a valid expiry date.';
+                    return;
+                }
+                if (!cvc || cvc.length < 3) {
+                    errorDisplay.textContent = 'Please enter a valid CVC.';
+                    return;
+                }
+                
+                // Show loading state
+                submitButton.disabled = true;
+                buttonText.style.display = 'none';
+                spinner.style.display = 'inline';
+                
+                // Demo payment processing
+                setTimeout(() => {
+                    // Check for test card numbers
+                    if (cardNumber === '4242424242424242') {
+                        console.log('💳 Demo payment successful with test card!');
+                        handleBookingPaymentSuccess();
+                    } else if (cardNumber === '4000000000000002') {
+                        // Simulate declined card
+                        errorDisplay.textContent = 'Your card was declined. Please try again with a different payment method.';
+                        submitButton.disabled = false;
+                        buttonText.style.display = 'inline';
+                        spinner.style.display = 'none';
+                    } else {
+                        // For any other card number, simulate success for demo purposes
+                        console.log('💳 Demo payment successful with any card number!');
+                        handleBookingPaymentSuccess();
+                    }
+                }, 2000);
+            });
+        }
+        
+        // Handle successful booking payment
+        function handleBookingPaymentSuccess() {
+            console.log('🎉 Booking payment successful!');
+            
+            const appointment = window.pendingAppointment;
+            
+            // Update appointment payment status
+            appointment.paymentStatus = 'paid';
+            appointment.paymentMethod = 'Stripe';
+            appointment.transactionId = `stripe_${Date.now()}`;
+            
+            // Save the final appointment
+            const finalAppointment = saveAppointment(appointment);
+            
+            // Create user session data from current user
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            const userSession = {
+                name: currentUser.name || 'User',
+                isNewUser: false // For logged-in users, they're not new
+            };
+            
+            // Close payment modal
+            closeBookingPaymentModal();
+            
+            // Show success modal
+            showBookingSuccessModal(finalAppointment, userSession);
+        }
+        
+        // Show booking success modal
+        function showBookingSuccessModal(appointment, userSession) {
+            const successModal = document.createElement('div');
+            successModal.className = 'modal';
+            successModal.style.display = 'flex';
+            
+            const isNewUser = userSession.isNewUser;
+            const welcomeText = isNewUser ? 
+                `🎉 Welcome to Consider Restoration, ${userSession.name}!` :
+                `✅ Welcome back, ${userSession.name}!`;
+            
+            successModal.innerHTML = `
+                <div class="modal-content" style="max-width: 450px; text-align: center;">
+                    <div style="padding: 2rem;">
+                        <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
+                        <h2 style="color: #28a745; margin-bottom: 1rem;">Booking Confirmed!</h2>
+                        <p style="margin-bottom: 1.5rem;">${welcomeText}</p>
+                        
+                        <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 1.5rem; margin: 1rem 0; text-align: left;">
+                            <h4 style="margin: 0 0 1rem 0; color: #155724; text-align: center;">Appointment Details</h4>
+                            <p style="margin: 0.5rem 0;"><strong>Service:</strong> ${appointment.service}</p>
+                            <p style="margin: 0.5rem 0;"><strong>Date:</strong> ${appointment.date}</p>
+                            <p style="margin: 0.5rem 0;"><strong>Time:</strong> ${appointment.time}</p>
+                            <p style="margin: 0.5rem 0;"><strong>Total:</strong> $${appointment.price}</p>
+                            <p style="margin: 0.5rem 0;"><strong>Appointment ID:</strong> ${appointment.id}</p>
+                            <p style="margin: 0.5rem 0;"><strong>Status:</strong> <span style="color: #28a745; font-weight: bold;">Confirmed ✅</span></p>
+                        </div>
+                        
+                        <p style="font-size: 0.9rem; color: #666; margin-bottom: 1.5rem;">
+                            ${isNewUser ? '✨ Your account is now active! Future bookings will be even faster.<br>' : ''}
+                            📅 This time slot is now blocked for other users.<br>
+                            📧 Check your email for appointment confirmation.
+                        </p>
+                        
+                        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                            <button onclick="closeBookingSuccessModal(); window.location.href='user-portal.html'" style="
+                                background: #3A7D99;
+                                color: white;
+                                border: none;
+                                padding: 0.75rem 1.5rem;
+                                border-radius: 5px;
+                                cursor: pointer;
+                                font-size: 1rem;
+                            ">👤 View Portal</button>
+                            <button onclick="closeBookingSuccessModal(); window.location.reload()" style="
+                                background: #28a745;
+                                color: white;
+                                border: none;
+                                padding: 0.75rem 1.5rem;
+                                border-radius: 5px;
+                                cursor: pointer;
+                                font-size: 1rem;
+                            ">📅 Book Another</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(successModal);
+            
+            // Clear form and refresh time slots after success
+            setTimeout(() => {
+                const form = document.getElementById('bookingForm');
+                if (form) form.reset();
+                updateAvailableTimes();
+                console.log('🔄 Form cleared and time slots refreshed after booking');
+            }, 1000);
+            
+            // Auto-close after 12 seconds
+            setTimeout(() => {
+                closeBookingSuccessModal();
+            }, 12000);
+        }
+        
+        // Modal management functions for booking payment
+        function closeBookingPaymentModal() {
+            const modal = document.getElementById('bookingPaymentModal');
+            if (modal) {
+                modal.remove();
+                document.body.style.overflow = '';
+            }
+        }
+        
+        function closeBookingSuccessModal() {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => modal.remove());
+            document.body.style.overflow = '';
+        }
+    </script>
+</body>
+</html>

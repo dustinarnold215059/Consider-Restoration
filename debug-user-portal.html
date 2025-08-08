@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    <title>Debug User Portal Data</title>
+    <script src="js/shared-data.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .debug-section { background: #f8f9fa; border: 1px solid #dee2e6; padding: 20px; margin: 20px 0; border-radius: 5px; }
+        .data-display { background: #e9ecef; padding: 15px; border-radius: 5px; font-family: monospace; white-space: pre-wrap; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🔍 User Portal Data Debug</h1>
+    
+    <div class="debug-section">
+        <h3>Current Test User</h3>
+        <p>Testing with John Doe (userId: 2)</p>
+        <div id="currentUser" class="data-display">No user set</div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>All Shared Appointments</h3>
+        <div id="allAppointments" class="data-display">Loading...</div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>John Doe's Appointments (userId: 2)</h3>
+        <div id="userAppointments" class="data-display">Loading...</div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>All Shared Users</h3>
+        <div id="allUsers" class="data-display">Loading...</div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>Actions</h3>
+        <button onclick="refreshData()">🔄 Refresh Data</button>
+        <button onclick="simulateLogin()">👤 Simulate John Doe Login</button>
+        <button onclick="resetToFreshData()">🔄 Reset to Fresh Data</button>
+        <button onclick="addFutureAppointments()">➕ Add Future Appointments for John</button>
+        <button onclick="testPortalFunctions()">🧪 Test Portal Functions</button>
+    </div>
+    
+    <div class="debug-section">
+        <h3>Portal Function Test Results</h3>
+        <div id="testResults" class="data-display">Click "Test Portal Functions" to run tests</div>
+    </div>
+
+    <script>
+        // Simulate current user for testing
+        let currentUser = null;
+        
+        function debugLog(message) {
+            console.log('[DEBUG]', message);
+            return message;
+        }
+        
+        function refreshData() {
+            debugLog('Refreshing data display...');
+            
+            // Show all appointments
+            const allAppts = window.sharedAppointments || [];
+            document.getElementById('allAppointments').textContent = 
+                'Total appointments: ' + allAppts.length + '\n\n' + 
+                JSON.stringify(allAppts, null, 2);
+            
+            // Show all users
+            const allUsers = window.sharedUsers || [];
+            document.getElementById('allUsers').textContent = 
+                'Total users: ' + allUsers.length + '\n\n' + 
+                JSON.stringify(allUsers, null, 2);
+            
+            // Show current user
+            document.getElementById('currentUser').textContent = 
+                currentUser ? JSON.stringify(currentUser, null, 2) : 'No user logged in';
+            
+            // Show user-specific appointments
+            if (currentUser) {
+                const userAppts = allAppts.filter(apt => apt.userId === currentUser.id);
+                document.getElementById('userAppointments').textContent = 
+                    'User appointments: ' + userAppts.length + '\n\n' + 
+                    JSON.stringify(userAppts, null, 2);
+            } else {
+                document.getElementById('userAppointments').textContent = 'No user logged in';
+            }
+        }
+        
+        function simulateLogin() {
+            debugLog('Simulating John Doe login...');
+            const allUsers = window.sharedUsers || [];
+            currentUser = allUsers.find(u => u.id === 2); // John Doe
+            
+            if (currentUser) {
+                debugLog('Login successful: ' + currentUser.name);
+            } else {
+                debugLog('Login failed: John Doe not found');
+            }
+            
+            refreshData();
+        }
+        
+        function resetToFreshData() {
+            debugLog('Resetting to fresh data with future appointments...');
+            
+            // Clear localStorage and reset to original data
+            localStorage.removeItem('massageAppointments');
+            localStorage.removeItem('massageUsers');
+            
+            // Reset to fresh data with future dates
+            window.sharedAppointments = [
+                {
+                    id: 1,
+                    userId: 2,
+                    clientName: 'John Doe',
+                    email: 'john.doe@email.com',
+                    phone: '(555) 234-5678',
+                    service: 'Integrated Massage',
+                    date: '2025-08-06', // Tomorrow
+                    time: '10:00 AM',
+                    price: 100,
+                    status: 'confirmed',
+                    notes: 'First time client, prefers light pressure',
+                    paymentStatus: 'paid',
+                    paymentMethod: 'Credit Card',
+                    transactionId: 'txn_1234567890',
+                    createdAt: new Date('2025-08-05').toISOString()
+                },
+                {
+                    id: 3,
+                    userId: 2,
+                    clientName: 'John Doe',
+                    email: 'john.doe@email.com',
+                    phone: '(555) 234-5678',
+                    service: 'Thai-Stretch Fusion',
+                    date: '2025-08-07', // Day after tomorrow
+                    time: '11:00 AM',
+                    price: 120,
+                    status: 'confirmed',
+                    notes: 'Pre-marathon preparation',
+                    paymentStatus: 'paid',
+                    paymentMethod: 'Credit Card',
+                    transactionId: 'txn_1122334456',
+                    createdAt: new Date('2025-08-05').toISOString()
+                },
+                {
+                    id: 5,
+                    userId: 2,
+                    clientName: 'John Doe',
+                    email: 'john.doe@email.com',
+                    phone: '(555) 234-5678',
+                    service: 'Sports Massage',
+                    date: '2025-08-10', // Future date
+                    time: '2:00 PM',
+                    price: 85,
+                    status: 'confirmed',
+                    notes: 'Post-workout recovery',
+                    paymentStatus: 'paid',
+                    paymentMethod: 'Credit Card',
+                    transactionId: 'txn_future1',
+                    createdAt: new Date('2025-08-05').toISOString()
+                }
+            ];
+            
+            // Save to localStorage
+            localStorage.setItem('massageAppointments', JSON.stringify(window.sharedAppointments));
+            
+            debugLog('Fresh data reset complete!');
+            refreshData();
+        }
+        
+        function addFutureAppointments() {
+            debugLog('Adding future appointments for John Doe...');
+            
+            const futureAppointments = [
+                {
+                    id: Math.max(...(window.sharedAppointments.map(a => a.id)), 0) + 1,
+                    userId: 2, // John Doe
+                    clientName: 'John Doe',
+                    email: 'john.doe@email.com',
+                    phone: '(555) 234-5678',
+                    service: 'Deep Tissue Massage',
+                    date: '2025-08-07', // Tomorrow
+                    time: '10:00 AM',
+                    price: 90,
+                    status: 'confirmed',
+                    notes: 'Focus on shoulders',
+                    paymentStatus: 'paid',
+                    paymentMethod: 'Credit Card',
+                    transactionId: 'txn_future_john_1',
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: Math.max(...(window.sharedAppointments.map(a => a.id)), 0) + 2,
+                    userId: 2, // John Doe
+                    clientName: 'John Doe',
+                    email: 'john.doe@email.com',
+                    phone: '(555) 234-5678',
+                    service: 'Swedish Massage',
+                    date: '2025-08-10', // Future
+                    time: '2:00 PM',
+                    price: 80,
+                    status: 'confirmed',
+                    notes: 'Relaxation session',
+                    paymentStatus: 'paid',
+                    paymentMethod: 'Credit Card',
+                    transactionId: 'txn_future_john_2',
+                    createdAt: new Date().toISOString()
+                }
+            ];
+            
+            // Add appointments using the shared system
+            if (window.addAppointment) {
+                futureAppointments.forEach(apt => {
+                    const {id, createdAt, ...aptData} = apt; // Remove id and createdAt so addAppointment can set them
+                    window.addAppointment(aptData);
+                });
+            } else {
+                // Fallback - add directly
+                window.sharedAppointments.push(...futureAppointments);
+                localStorage.setItem('massageAppointments', JSON.stringify(window.sharedAppointments));
+            }
+            
+            debugLog('Added 2 future appointments for John Doe!');
+            refreshData();
+        }
+        
+        function testPortalFunctions() {
+            if (!currentUser) {
+                document.getElementById('testResults').textContent = 'Please simulate login first!';
+                return;
+            }
+            
+            let results = 'Testing portal functions...\n\n';
+            
+            // Test 1: Load upcoming appointments
+            results += '=== TEST 1: Upcoming Appointments ===\n';
+            try {
+                const today = new Date();
+                const allAppointments = window.sharedAppointments || [];
+                results += 'Total appointments in system: ' + allAppointments.length + '\n';
+                results += 'Current user ID: ' + currentUser.id + '\n';
+                
+                const upcomingAppts = allAppointments.filter(apt => {
+                    const matches = apt.userId === currentUser.id && 
+                           new Date(apt.date) >= today &&
+                           apt.status !== 'cancelled';
+                    results += 'Checking appointment ID ' + apt.id + ': userId=' + apt.userId + ', date=' + apt.date + ', status=' + apt.status + ', matches=' + matches + '\n';
+                    return matches;
+                }).sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                results += 'Upcoming appointments found: ' + upcomingAppts.length + '\n';
+                results += JSON.stringify(upcomingAppts, null, 2) + '\n\n';
+            } catch (e) {
+                results += 'ERROR: ' + e.message + '\n\n';
+            }
+            
+            // Test 2: Load recent appointments
+            results += '=== TEST 2: Recent Appointments ===\n';
+            try {
+                const allAppointments = window.sharedAppointments || [];
+                const recentAppts = allAppointments.filter(apt => {
+                    const matches = apt.userId === currentUser.id;
+                    results += 'Checking appointment ID ' + apt.id + ' for recent: userId=' + apt.userId + ', matches=' + matches + '\n';
+                    return matches;
+                }).sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 3);
+                
+                results += 'Recent appointments found: ' + recentAppts.length + '\n';
+                results += JSON.stringify(recentAppts, null, 2) + '\n\n';
+            } catch (e) {
+                results += 'ERROR: ' + e.message + '\n\n';
+            }
+            
+            // Test 3: Account summary
+            results += '=== TEST 3: Account Summary ===\n';
+            try {
+                const allAppointments = window.sharedAppointments || [];
+                const userAppointments = allAppointments.filter(apt => apt.userId === currentUser.id);
+                const totalVisits = userAppointments.filter(apt => apt.status === 'completed').length;
+                
+                results += 'User appointments: ' + userAppointments.length + '\n';
+                results += 'Completed visits: ' + totalVisits + '\n';
+                
+                // Service count
+                const serviceCount = {};
+                userAppointments.forEach(apt => {
+                    serviceCount[apt.service] = (serviceCount[apt.service] || 0) + 1;
+                });
+                results += 'Service breakdown: ' + JSON.stringify(serviceCount, null, 2) + '\n\n';
+            } catch (e) {
+                results += 'ERROR: ' + e.message + '\n\n';
+            }
+            
+            document.getElementById('testResults').textContent = results;
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            debugLog('Debug page loaded');
+            refreshData();
+        });
+    </script>
+</body>
+</html>
