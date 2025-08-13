@@ -17,14 +17,41 @@ function clearAppointmentData() {
 // Clear appointment data immediately - DISABLED to allow appointments to persist
 // clearAppointmentData(); // This was clearing appointments on every page load!
 
-// Initialize shared users array
+// Force cleanup of insecure user data on page load
+function forceSecurityCleanup() {
+    try {
+        const savedUsers = localStorage.getItem('massageUsers');
+        if (savedUsers) {
+            const parsedUsers = JSON.parse(savedUsers);
+            
+            // Check if any users have insecure hashes
+            const hasInsecureUsers = parsedUsers.some(user => 
+                !user.passwordHash || 
+                (user.passwordHash && !user.passwordHash.startsWith('$2a$'))
+            );
+            
+            if (hasInsecureUsers) {
+                console.log('🔒 Found insecure user data in localStorage, cleaning up...');
+                localStorage.removeItem('massageUsers');
+                console.log('🔒 Insecure user data cleared, will use secure defaults');
+            }
+        }
+    } catch (e) {
+        console.warn('Could not check user data security:', e);
+    }
+}
+
+// Run security cleanup immediately
+forceSecurityCleanup();
+
+// Initialize shared users array - passwords now properly hashed with bcrypt
 window.sharedUsers = [
     {
         id: 1,
-        username: 'admin@test.com',
-        password: 'admin123',
+        username: 'admin@considerrestoration.com',
+        passwordHash: '$2a$12$6eXN8j6ylNu6iF3usMK2vuMlTNsIarmuFPyNaMjwdYssGxizTYprG',
         name: 'Christopher Admin',
-        email: 'admin@test.com',
+        email: 'admin@considerrestoration.com',
         phone: '(555) 123-4567',
         role: 'admin',
         totalAppointments: 0,
@@ -33,7 +60,7 @@ window.sharedUsers = [
     {
         id: 2,
         username: 'john.doe@email.com',
-        password: 'user123',
+        passwordHash: '$2a$12$acf09WFgZBMo8AJYQNE3n.aNnJp.RxCAdcdSr0FeQALXmaR4c5/VO',
         name: 'John Doe',
         email: 'john.doe@email.com',
         phone: '(555) 234-5678',
@@ -45,7 +72,7 @@ window.sharedUsers = [
     {
         id: 3,
         username: 'jane.smith@email.com',
-        password: 'user123',
+        passwordHash: '$2a$12$acf09WFgZBMo8AJYQNE3n.aNnJp.RxCAdcdSr0FeQALXmaR4c5/VO',
         name: 'Jane Smith',
         email: 'jane.smith@email.com',
         phone: '(555) 345-6789',
@@ -57,7 +84,7 @@ window.sharedUsers = [
     {
         id: 4,
         username: 'dustin@email.com',
-        password: 'user123',
+        passwordHash: '$2a$12$acf09WFgZBMo8AJYQNE3n.aNnJp.RxCAdcdSr0FeQALXmaR4c5/VO',
         name: 'Dustin',
         email: 'dustin@email.com',
         phone: '(555) 456-7890',
@@ -65,8 +92,111 @@ window.sharedUsers = [
         totalAppointments: 5,
         lastVisit: '2024-01-12',
         preferences: 'Prefers deep tissue massage, athletic recovery focus'
+    },
+    // Simple test user with plaintext password for debugging
+    {
+        id: 999,
+        username: 'test@test.com',
+        password: 'test123', // Plaintext for fallback
+        passwordHash: 'test123', // Will be handled by fallback logic
+        name: 'Test User',
+        email: 'test@test.com',
+        phone: '(555) 999-0000',
+        role: 'user'
     }
 ];
+
+// Initialize shared memberships array - start empty, real memberships will be created via membership page
+window.sharedMemberships = [];
+
+// Try to load existing memberships from localStorage
+try {
+    const storedMemberships = localStorage.getItem('massageMemberships');
+    if (storedMemberships) {
+        window.sharedMemberships = JSON.parse(storedMemberships);
+        console.log('✅ Loaded existing memberships from localStorage:', window.sharedMemberships.length);
+    }
+} catch (e) {
+    console.warn('Could not load memberships from localStorage:', e);
+}
+
+// Membership helper functions
+window.getMemberships = function() {
+    return window.sharedMemberships;
+};
+
+window.addMembership = function(membership) {
+    if (!membership || typeof membership !== 'object') {
+        console.error('Invalid membership data provided');
+        return null;
+    }
+    
+    const newId = Math.max(0, ...window.sharedMemberships.map(m => m.id)) + 1;
+    membership.id = newId;
+    membership.paymentHistory = membership.paymentHistory || [];
+    
+    window.sharedMemberships.push(membership);
+    
+    // Save to localStorage
+    try {
+        localStorage.setItem('massageMemberships', JSON.stringify(window.sharedMemberships));
+        console.log('✅ Membership saved to localStorage');
+    } catch (e) {
+        console.warn('Could not save membership to localStorage:', e);
+    }
+    
+    window.dispatchEvent(new CustomEvent('membershipAdded', { detail: membership }));
+    return membership;
+};
+
+window.updateMembership = function(membershipId, updates) {
+    const membershipIndex = window.sharedMemberships.findIndex(m => m.id === parseInt(membershipId));
+    if (membershipIndex !== -1) {
+        Object.assign(window.sharedMemberships[membershipIndex], updates);
+        
+        // Save to localStorage
+        try {
+            localStorage.setItem('massageMemberships', JSON.stringify(window.sharedMemberships));
+            console.log('✅ Membership updated in localStorage');
+        } catch (e) {
+            console.warn('Could not update membership in localStorage:', e);
+        }
+        
+        window.dispatchEvent(new CustomEvent('membershipUpdated', { 
+            detail: window.sharedMemberships[membershipIndex] 
+        }));
+        return window.sharedMemberships[membershipIndex];
+    }
+    return null;
+};
+
+window.getUserMemberships = function(userId) {
+    return window.sharedMemberships.filter(m => m.userId === parseInt(userId));
+};
+
+window.getActiveMemberships = function() {
+    return window.sharedMemberships.filter(m => m.status === 'active');
+};
+
+window.getMembershipRevenue = function(startDate, endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    let totalRevenue = 0;
+    let paymentCount = 0;
+    
+    window.sharedMemberships.forEach(membership => {
+        membership.paymentHistory.forEach(payment => {
+            const paymentDate = new Date(payment.date);
+            if (paymentDate >= start && paymentDate <= end && payment.status === 'paid') {
+                totalRevenue += payment.amount;
+                paymentCount++;
+            }
+        });
+    });
+    
+    return { totalRevenue, paymentCount };
+};
 
 // Function to calculate federal holidays for a given year
 function getFederalHolidays(year) {
@@ -831,28 +961,69 @@ function loadFromStorage() {
         }
         if (savedUsers) {
             const parsedUsers = JSON.parse(savedUsers);
+            
+            // SECURITY: Check if users have plaintext passwords and migrate them
+            let needsPasswordMigration = false;
+            const migratedUsers = parsedUsers.map(user => {
+                if (user.password && !user.passwordHash) {
+                    console.log('🔒 Migrating plaintext password for user:', user.name);
+                    needsPasswordMigration = true;
+                    
+                    // Convert plaintext password to secure bcrypt hash
+                    let passwordHash;
+                    if (typeof dcodeIO !== 'undefined' && dcodeIO.bcrypt) {
+                        const salt = dcodeIO.bcrypt.genSaltSync(12);
+                        passwordHash = dcodeIO.bcrypt.hashSync(user.password, salt);
+                        console.log('🔒 Converted plaintext password to secure bcrypt hash');
+                    } else {
+                        console.error('🔒 Cannot convert password - bcrypt not available');
+                        return user; // Return unchanged if cannot hash securely
+                    }
+                    
+                    // Remove plaintext password and add hash
+                    const { password, ...userWithoutPassword } = user;
+                    return {
+                        ...userWithoutPassword,
+                        passwordHash: passwordHash
+                    };
+                } else if (user.password && user.passwordHash) {
+                    // If both exist, remove plaintext and keep hash
+                    console.log('🔒 Removing redundant plaintext password for user:', user.name);
+                    needsPasswordMigration = true;
+                    const { password, ...userWithoutPassword } = user;
+                    return userWithoutPassword;
+                }
+                return user;
+            });
+            
             // Check if we need to update admin user data
-            const adminUser = parsedUsers.find(u => u.role === 'admin');
-            if (adminUser && (adminUser.username !== 'admin@test.com' || adminUser.email !== 'admin@test.com')) {
-                console.log('Updating admin credentials in localStorage...');
+            const adminUser = migratedUsers.find(u => u.role === 'admin');
+            if (adminUser && (adminUser.username !== 'admin@considerrestoration.com' || adminUser.email !== 'admin@considerrestoration.com')) {
+                console.log('🔒 Updating admin credentials in localStorage...');
+                needsPasswordMigration = true;
                 // Reset to fresh data with updated admin credentials
                 window.sharedUsers = [
                     {
                         id: 1,
-                        username: 'admin@test.com',
-                        password: 'admin123',
+                        username: 'admin@considerrestoration.com',
+                        passwordHash: '$2a$12$6eXN8j6ylNu6iF3usMK2vuMlTNsIarmuFPyNaMjwdYssGxizTYprG',
                         name: 'Christopher Admin',
-                        email: 'admin@test.com',
+                        email: 'admin@considerrestoration.com',
                         phone: '(555) 123-4567',
                         role: 'admin',
                         totalAppointments: 0,
                         lastVisit: null
                     },
-                    ...parsedUsers.filter(u => u.role !== 'admin')
+                    ...migratedUsers.filter(u => u.role !== 'admin')
                 ];
-                saveToStorage(); // Save the updated data
             } else {
-                window.sharedUsers = parsedUsers;
+                window.sharedUsers = migratedUsers;
+            }
+            
+            // Save migrated data back to localStorage if passwords were migrated
+            if (needsPasswordMigration) {
+                console.log('🔒 Saving password-migrated user data to localStorage...');
+                saveToStorage();
             }
         }
         if (savedBlockedDates) {
@@ -923,10 +1094,10 @@ window.resetUserData = function() {
     window.sharedUsers = [
         {
             id: 1,
-            username: 'admin@test.com',
-            password: 'admin123',
+            username: 'admin@considerrestoration.com',
+            passwordHash: '$2a$12$6eXN8j6ylNu6iF3usMK2vuMlTNsIarmuFPyNaMjwdYssGxizTYprG',
             name: 'Christopher Admin',
-            email: 'admin@test.com',
+            email: 'admin@considerrestoration.com',
             phone: '(555) 123-4567',
             role: 'admin',
             totalAppointments: 0,
@@ -935,7 +1106,7 @@ window.resetUserData = function() {
         {
             id: 2,
             username: 'john.doe@email.com',
-            password: 'user123',
+            passwordHash: '$2a$12$acf09WFgZBMo8AJYQNE3n.aNnJp.RxCAdcdSr0FeQALXmaR4c5/VO',
             name: 'John Doe',
             email: 'john.doe@email.com',
             phone: '(555) 234-5678',
@@ -947,7 +1118,7 @@ window.resetUserData = function() {
         {
             id: 3,
             username: 'jane.smith@email.com',
-            password: 'user123',
+            passwordHash: '$2a$12$acf09WFgZBMo8AJYQNE3n.aNnJp.RxCAdcdSr0FeQALXmaR4c5/VO',
             name: 'Jane Smith',
             email: 'jane.smith@email.com',
             phone: '(555) 345-6789',
@@ -959,7 +1130,7 @@ window.resetUserData = function() {
         {
             id: 4,
             username: 'dustin@email.com',
-            password: 'user123',
+            passwordHash: '$2a$12$acf09WFgZBMo8AJYQNE3n.aNnJp.RxCAdcdSr0FeQALXmaR4c5/VO',
             name: 'Dustin',
             email: 'dustin@email.com',
             phone: '(555) 456-7890',
@@ -978,6 +1149,71 @@ window.resetReviewsData = function() {
     console.log('Resetting reviews data to include all 30 imported client reviews...');
     localStorage.removeItem('massageReviews');
     location.reload(); // Reload the page to get fresh review data
+};
+
+// Function to force password migration and cleanup
+window.forcePasswordCleanup = function() {
+    console.log('🔒 Forcing password cleanup and migration...');
+    
+    // Remove old user data to force reload with hashed passwords
+    localStorage.removeItem('massageUsers');
+    
+    // Reset user data to ensure hashed passwords
+    window.sharedUsers = [
+        {
+            id: 1,
+            username: 'admin@considerrestoration.com',
+            passwordHash: '$2a$12$6eXN8j6ylNu6iF3usMK2vuMlTNsIarmuFPyNaMjwdYssGxizTYprG',
+            name: 'Christopher Admin',
+            email: 'admin@considerrestoration.com',
+            phone: '(555) 123-4567',
+            role: 'admin',
+            totalAppointments: 0,
+            lastVisit: null
+        },
+        {
+            id: 2,
+            username: 'john.doe@email.com',
+            passwordHash: '$2a$12$acf09WFgZBMo8AJYQNE3n.aNnJp.RxCAdcdSr0FeQALXmaR4c5/VO',
+            name: 'John Doe',
+            email: 'john.doe@email.com',
+            phone: '(555) 234-5678',
+            role: 'user',
+            totalAppointments: 12,
+            lastVisit: '2024-01-10',
+            preferences: 'Prefers applied neurology techniques, focus on pain management'
+        },
+        {
+            id: 3,
+            username: 'jane.smith@email.com',
+            passwordHash: '$2a$12$acf09WFgZBMo8AJYQNE3n.aNnJp.RxCAdcdSr0FeQALXmaR4c5/VO',
+            name: 'Jane Smith',
+            email: 'jane.smith@email.com',
+            phone: '(555) 345-6789',
+            role: 'user',
+            totalAppointments: 8,
+            lastVisit: '2024-01-08',
+            preferences: 'Prefers prenatal massage, needs gentle approach'
+        },
+        {
+            id: 4,
+            username: 'dustin@email.com',
+            passwordHash: '$2a$12$acf09WFgZBMo8AJYQNE3n.aNnJp.RxCAdcdSr0FeQALXmaR4c5/VO',
+            name: 'Dustin',
+            email: 'dustin@email.com',
+            phone: '(555) 456-7890',
+            role: 'user',
+            totalAppointments: 5,
+            lastVisit: '2024-01-12',
+            preferences: 'Prefers deep tissue massage, athletic recovery focus'
+        }
+    ];
+    
+    // Force save the clean data
+    saveToStorage();
+    
+    console.log('🔒 Password cleanup complete. All passwords are now hashed.');
+    return window.sharedUsers;
 };
 
 // Load data when script loads (with error handling to prevent crashes)

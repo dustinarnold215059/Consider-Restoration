@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minimal Login Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+    <script>
+        // Create compatibility wrapper for bcrypt
+        setTimeout(() => {
+            if (typeof dcodeIO !== 'undefined' && dcodeIO.bcrypt && !window.bcrypt) {
+                window.bcrypt = dcodeIO.bcrypt;
+                console.log('🔒 Created window.bcrypt reference to dcodeIO.bcrypt');
+            }
+        }, 100);
+    </script>
+    <script src="js/bcrypt-browser.js"></script>
+    <script src="js/shared-data.js"></script>
+    <script src="js/auth-security.js"></script>
+    <script src="js/cookie-session-manager.js"></script>
+</head>
+<body>
+    <h1>Minimal Login Test</h1>
+    
+    <form id="testForm">
+        <div>
+            <label>Email:</label>
+            <input type="email" id="email" value="test@test.com" required>
+        </div>
+        <div>
+            <label>Password:</label>
+            <input type="password" id="password" value="test123" required>
+        </div>
+        <button type="submit">Login</button>
+    </form>
+    
+    <div id="status"></div>
+    <div id="navigation">
+        <span id="accountNavLink">Login</span> | 
+        <span id="adminNavLink" style="display: none;">Admin</span>
+    </div>
+    
+    <script>
+        function log(msg) {
+            document.getElementById('status').innerHTML += '<div>' + msg + '</div>';
+            console.log(msg);
+        }
+        
+        document.getElementById('testForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            log('Testing login with: ' + email);
+            
+            try {
+                // Debug user data first
+                log('=== Debug Info ===');
+                log('Available users: ' + window.sharedUsers.length);
+                window.sharedUsers.forEach((user, index) => {
+                    log(`User ${index}: ${user.email || user.username} - Role: ${user.role}`);
+                });
+                
+                // Test bcrypt verification manually
+                log('=== Testing Password Hash Verification ===');
+                const testUser = window.sharedUsers.find(u => u.email === email || u.username === email);
+                if (testUser) {
+                    log('Found test user: ' + testUser.name);
+                    log('Password hash: ' + testUser.passwordHash);
+                    log('Testing password: ' + password);
+                    
+                    // Test bcrypt verification if available
+                    if (window.bcrypt && window.bcrypt.compareSync) {
+                        const bcryptResult = window.bcrypt.compareSync(password, testUser.passwordHash);
+                        log('Bcrypt verification: ' + (bcryptResult ? 'SUCCESS' : 'FAILED'));
+                        
+                        // Test known passwords
+                        const testPasswords = ['user123', 'password', 'test123', 'admin123', '123'];
+                        log('=== Testing Common Passwords ===');
+                        testPasswords.forEach(testPass => {
+                            const result = window.bcrypt.compareSync(testPass, testUser.passwordHash);
+                            log(`Password "${testPass}": ${result ? 'SUCCESS' : 'FAILED'}`);
+                        });
+                    } else if (window.verifyPasswordHash) {
+                        const hashResult = window.verifyPasswordHash(password, testUser.passwordHash);
+                        log('Custom hash verification: ' + (hashResult ? 'SUCCESS' : 'FAILED'));
+                    } else {
+                        log('No password verification method available');
+                        log('Bcrypt object check: ' + (typeof window.bcrypt));
+                        log('dcodeIO check: ' + (typeof dcodeIO));
+                        if (typeof dcodeIO !== 'undefined') {
+                            log('dcodeIO.bcrypt check: ' + (typeof dcodeIO.bcrypt));
+                        }
+                    }
+                } else {
+                    log('❌ User not found in sharedUsers');
+                }
+                
+                // Test authentication
+                if (window.authenticateUser) {
+                    log('=== Attempting Authentication ===');
+                    const user = window.authenticateUser(email, password);
+                    log('Authentication result: ' + (user ? 'SUCCESS' : 'FAILED'));
+                    if (user) {
+                        log('✅ Authentication successful: ' + user.name);
+                        
+                        // Test cookie session manager
+                        if (window.CookieSessionManager) {
+                            const loginSuccess = window.CookieSessionManager.login(user);
+                            log('✅ Session manager login: ' + (loginSuccess ? 'SUCCESS' : 'FAILED'));
+                            
+                            // Check current user
+                            const currentUser = window.CookieSessionManager.getCurrentUser();
+                            log('✅ Current user: ' + (currentUser ? currentUser.name : 'None'));
+                            
+                            // Check navigation update
+                            setTimeout(() => {
+                                const accountLink = document.getElementById('accountNavLink');
+                                log('✅ Navigation text: "' + accountLink.textContent + '"');
+                            }, 500);
+                        } else {
+                            log('❌ CookieSessionManager not available');
+                        }
+                    } else {
+                        log('❌ Authentication failed');
+                    }
+                } else {
+                    log('❌ authenticateUser function not available');
+                }
+            } catch (error) {
+                log('❌ Error during login: ' + error.message);
+                console.error('Login error:', error);
+            }
+        });
+        
+        // Initial status check
+        setTimeout(() => {
+            log('=== Initial Status ===');
+            log('Protocol: ' + location.protocol);
+            log('CookieSessionManager available: ' + (window.CookieSessionManager ? 'YES' : 'NO'));
+            log('authenticateUser available: ' + (window.authenticateUser ? 'YES' : 'NO'));
+            log('SharedUsers length: ' + (window.sharedUsers ? window.sharedUsers.length : 'N/A'));
+            
+            // Add a simple test user with plaintext password
+            if (window.sharedUsers) {
+                const testUser = {
+                    id: 999,
+                    username: 'test@test.com',
+                    password: 'test123', // Plaintext for testing
+                    passwordHash: 'test123', // Will fallback to plaintext comparison
+                    name: 'Test User',
+                    email: 'test@test.com',
+                    phone: '(555) 999-0000',
+                    role: 'user'
+                };
+                window.sharedUsers.push(testUser);
+                log('✅ Added simple test user: test@test.com / test123');
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

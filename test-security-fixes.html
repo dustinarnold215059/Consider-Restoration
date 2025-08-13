@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Fixes Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .critical {
+            border-left: 5px solid #dc3545;
+        }
+        .fixed {
+            border-left: 5px solid #28a745;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔒 Security Fixes Verification Test</h1>
+        <p>Testing the critical security issues that were fixed...</p>
+        
+        <div id="testResults"></div>
+        
+        <button onclick="runAllSecurityTests()">Run All Security Tests</button>
+        <button onclick="testDatabaseSecurity()">Test Database Security</button>
+        <button onclick="testAdminValidation()">Test Admin Validation</button>
+        <button onclick="testRateLimiting()">Test Rate Limiting</button>
+        <button onclick="testEnvironmentConfig()">Test Environment Config</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+
+    <script>
+        const results = document.getElementById('testResults');
+        
+        function addResult(message, type = 'info', critical = false) {
+            const div = document.createElement('div');
+            div.className = `test-result ${type} ${critical ? 'critical' : ''}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+        
+        function clearResults() {
+            results.innerHTML = '';
+        }
+        
+        // Test 1: Database Security Configuration
+        async function testDatabaseSecurity() {
+            addResult('🔄 Testing database security configuration...', 'info');
+            
+            try {
+                // Test if server is using environment variables
+                const response = await fetch('/health', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const health = await response.json();
+                    addResult('✅ Server is running with health endpoint', 'success');
+                    
+                    // Check if we can get any sensitive info (should be blocked)
+                    try {
+                        const configResponse = await fetch('/api/config', {
+                            method: 'GET',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                        
+                        if (configResponse.status === 404) {
+                            addResult('✅ Configuration endpoint properly blocked', 'success', true);
+                        } else {
+                            addResult('❌ Configuration endpoint accessible (security risk)', 'error', true);
+                        }
+                    } catch (error) {
+                        addResult('✅ Configuration endpoint not accessible', 'success');
+                    }
+                } else {
+                    addResult('⚠️ Server health check failed', 'warning');
+                }
+            } catch (error) {
+                addResult(`❌ Database security test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 2: Server-Side Admin Validation
+        async function testAdminValidation() {
+            addResult('🔄 Testing server-side admin validation...', 'info');
+            
+            try {
+                // Test 1: Try to access admin endpoint without authentication
+                const unauthorizedResponse = await fetch('/api/admin/dashboard', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (unauthorizedResponse.status === 401) {
+                    addResult('✅ Admin endpoints properly require authentication', 'success', true);
+                } else {
+                    addResult('❌ Admin endpoints accessible without auth (CRITICAL)', 'error', true);
+                }
+                
+                // Test 2: Try admin login with invalid credentials
+                const invalidLoginResponse = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'fake@test.com',
+                        password: 'wrongpassword'
+                    })
+                });
+                
+                if (invalidLoginResponse.status === 401) {
+                    addResult('✅ Invalid admin login properly rejected', 'success');
+                } else {
+                    addResult('❌ Invalid admin login not properly rejected', 'error');
+                }
+                
+                // Test 3: Check admin verification endpoint
+                const verifyResponse = await fetch('/api/admin/verify', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (verifyResponse.status === 401) {
+                    addResult('✅ Admin verification requires valid session', 'success');
+                } else {
+                    addResult('⚠️ Admin verification endpoint behavior unclear', 'warning');
+                }
+                
+            } catch (error) {
+                addResult(`❌ Admin validation test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 3: Rate Limiting
+        async function testRateLimiting() {
+            addResult('🔄 Testing rate limiting...', 'info');
+            
+            try {
+                // Make multiple rapid requests to test rate limiting
+                const promises = [];
+                for (let i = 0; i < 10; i++) {
+                    promises.push(
+                        fetch('/api/admin/login', {
+                            method: 'POST',
+                            credentials: 'include',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                email: 'test@test.com',
+                                password: 'test'
+                            })
+                        })
+                    );
+                }
+                
+                const responses = await Promise.all(promises);
+                const rateLimitedResponses = responses.filter(r => r.status === 429);
+                
+                if (rateLimitedResponses.length > 0) {
+                    addResult(`✅ Rate limiting working - ${rateLimitedResponses.length} requests blocked`, 'success', true);
+                } else {
+                    addResult('⚠️ Rate limiting not detected (may need more requests)', 'warning');
+                }
+                
+            } catch (error) {
+                addResult(`❌ Rate limiting test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 4: Environment Configuration
+        async function testEnvironmentConfig() {
+            addResult('🔄 Testing environment configuration...', 'info');
+            
+            try {
+                // Check if debug info is exposed
+                const response = await fetch('/api/debug', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.status === 404) {
+                    addResult('✅ Debug endpoints not exposed', 'success');
+                } else {
+                    addResult('❌ Debug endpoints exposed (security risk)', 'error');
+                }
+                
+                // Check CORS headers
+                const corsResponse = await fetch('/health', {
+                    method: 'OPTIONS',
+                    headers: { 'Origin': 'https://malicious-site.com' }
+                });
+                
+                const corsHeader = corsResponse.headers.get('Access-Control-Allow-Origin');
+                if (!corsHeader || corsHeader === 'https://malicious-site.com') {
+                    addResult('⚠️ CORS configuration may be too permissive', 'warning');
+                } else {
+                    addResult('✅ CORS headers properly configured', 'success');
+                }
+                
+                // Check security headers
+                const securityResponse = await fetch('/health');
+                const cspHeader = securityResponse.headers.get('Content-Security-Policy');
+                const xssHeader = securityResponse.headers.get('X-XSS-Protection');
+                
+                if (cspHeader) {
+                    addResult('✅ Content Security Policy header present', 'success');
+                } else {
+                    addResult('⚠️ Content Security Policy header missing', 'warning');
+                }
+                
+            } catch (error) {
+                addResult(`❌ Environment config test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 5: Session Security
+        async function testSessionSecurity() {
+            addResult('🔄 Testing session security...', 'info');
+            
+            try {
+                // Check if session cookies have secure flags
+                // This is a basic test - in production you'd use more sophisticated testing
+                
+                const response = await fetch('/health', {
+                    credentials: 'include'
+                });
+                
+                const cookies = response.headers.get('Set-Cookie');
+                if (cookies) {
+                    if (cookies.includes('HttpOnly')) {
+                        addResult('✅ Session cookies use HttpOnly flag', 'success');
+                    } else {
+                        addResult('⚠️ Session cookies missing HttpOnly flag', 'warning');
+                    }
+                    
+                    if (cookies.includes('SameSite')) {
+                        addResult('✅ Session cookies use SameSite flag', 'success');
+                    } else {
+                        addResult('⚠️ Session cookies missing SameSite flag', 'warning');
+                    }
+                } else {
+                    addResult('ℹ️ No session cookies set by health endpoint', 'info');
+                }
+                
+            } catch (error) {
+                addResult(`❌ Session security test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Run all security tests
+        async function runAllSecurityTests() {
+            clearResults();
+            addResult('🚀 Starting comprehensive security test suite...', 'info');
+            
+            await testDatabaseSecurity();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testAdminValidation();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testRateLimiting();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testEnvironmentConfig();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testSessionSecurity();
+            
+            addResult('✅ All security tests completed!', 'success');
+            
+            // Summary
+            const errorCount = results.querySelectorAll('.error').length;
+            const warningCount = results.querySelectorAll('.warning').length;
+            const successCount = results.querySelectorAll('.success').length;
+            
+            addResult(`📊 Test Summary: ${successCount} passed, ${warningCount} warnings, ${errorCount} errors`, 
+                errorCount > 0 ? 'error' : warningCount > 0 ? 'warning' : 'success');
+                
+            if (errorCount === 0) {
+                addResult('🎉 All critical security fixes are working properly!', 'success', true);
+            } else {
+                addResult('🔴 Critical security issues detected - review errors above', 'error', true);
+            }
+        }
+        
+        // Auto-run tests when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                addResult('🔄 Auto-running security tests...', 'info');
+                runAllSecurityTests();
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

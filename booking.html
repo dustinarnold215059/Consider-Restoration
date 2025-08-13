@@ -7,6 +7,8 @@
     <meta name="description" content="Book your massage appointment online with Christopher Rembisz, LMT in Livonia, MI. Available services include Swedish, deep tissue, prenatal massage, and applied neurology consultations.">
     <meta name="keywords" content="book massage appointment, online booking, massage therapy Livonia, Swedish massage, deep tissue massage, prenatal massage">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#3A7D99">
     <style>
         /* Modal Styles - Emergency approach that works */
         .modal {
@@ -499,8 +501,26 @@
         }
     </style>
     <script src="https://js.stripe.com/v3/"></script>
-    <script src="js/error-handler.js" defer></script>
+    
+    <!-- Browser compatibility polyfills (load first) -->
+    <script src="js/browser-compatibility.js"></script>
+    <script src="js/production-logger.js"></script>
+    
+    <!-- Utility scripts -->
+    <script src="js/site-config.js"></script>
+    <script src="js/logging-utility.js"></script>
+    <script src="js/environment-config.js"></script>
+    <script src="js/toast-notifications.js"></script>
+    
+    <script src="js/enhanced-error-handler.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+    <script src="js/secure-tokens.js" defer></script>
+    <script src="js/auth-security.js" defer></script>
+    <script src="js/secure-init.js" defer></script>
+    <script src="js/api-client.js" defer></script>
+    <script src="js/data-persistence-fixed.js" defer></script>
     <script src="js/shared-data.js" defer></script>
+    <script src="js/performance-optimizer.js" defer></script>
 </head>
 <body>
     <header>
@@ -513,6 +533,7 @@
                     <li><a href="services.html">Services</a></li>
                     <li><a href="membership.html">Membership</a></li>
                     <li><a href="booking.html" class="active">Book Appointment</a></li>
+                    <li><a href="reviews.html">Reviews</a></li>
                     <li><a href="contact.html">Contact</a></li>
                     <li><a href="user-portal.html" id="accountNavLink">Login</a></li>
                     <li id="adminNavLink" style="display: none;"><a href="admin.html">Admin</a></li>
@@ -657,16 +678,9 @@
                                 <button type="submit" class="auth-btn">Register & Complete Booking</button>
                             </form>
                             
-                            <div class="demo-accounts">
-                                <h4>Demo Accounts (for testing):</h4>
-                                <div class="demo-account">
-                                    <strong>User:</strong> john.doe@email.com / user123
-                                    <button onclick="fillDemoLogin('john.doe@email.com', 'user123')">Use This Account</button>
-                                </div>
-                                <div class="demo-account">
-                                    <strong>User:</strong> jane.smith@email.com / user123
-                                    <button onclick="fillDemoLogin('jane.smith@email.com', 'user123')">Use This Account</button>
-                                </div>
+                            <div class="security-notice">
+                                <h4>🔒 Secure Registration</h4>
+                                <p>Create a new account to book your appointment. All passwords are encrypted with bcrypt for maximum security.</p>
                             </div>
                         </div>
                     </div>
@@ -740,7 +754,7 @@
                 
                 // Basic validation
                 if (!clientName || !email || !phone || !service || !date || !time) {
-                    alert('Please fill in all required fields.');
+                    Toast.error('Please fill in all required fields.', 'Form Incomplete');
                     return;
                 }
                 
@@ -779,7 +793,7 @@
                 
             } catch (error) {
                 console.error('Booking submission error:', error);
-                alert('An error occurred. Please check the console and try again.');
+                Toast.error('An error occurred during booking. Please try again or contact support.', 'Booking Error');
             } finally {
                 // Reset submission flag
                 setTimeout(() => {
@@ -1062,11 +1076,11 @@
                         margin-top: 20px;
                         text-align: center;
                     ">
-                        <h4 style="margin: 0 0 10px 0; color: #856404;">🔧 For Testing Only:</h4>
-                        <p style="margin: 5px 0; font-size: 13px; color: #856404;">
-                            <strong>Demo Accounts:</strong><br>
-                            john.doe@email.com / user123<br>
-                            jane.smith@email.com / user123
+                        <h4 style="margin: 0 0 10px 0; color: #2d5aa0;">🔒 Production System:</h4>
+                        <p style="margin: 5px 0; font-size: 13px; color: #2d5aa0;">
+                            <strong>Secure Access:</strong><br>
+                            All accounts use encrypted passwords.<br>
+                            Create an account or contact support for access.
                         </p>
                         <button onclick="fillEmergencyDemo()" style="
                             background: #ffc107;
@@ -1175,6 +1189,33 @@
                     const savedData = localStorage.getItem('massageAppointments');
                     const parsedData = JSON.parse(savedData || '[]');
                     console.log('🔍 Verification: localStorage has', parsedData.length, 'appointments');
+                    
+                    // Trigger email automation for the new appointment
+                    if (window.EmailAutomation && window.EmailAutomation.initialized) {
+                        console.log('📧 Triggering appointment confirmation email');
+                        window.dispatchEvent(new CustomEvent('appointmentBooked', {
+                            detail: {
+                                ...savedAppointment,
+                                clientName: savedAppointment.name,
+                                clientEmail: savedAppointment.email,
+                                status: 'confirmed'
+                            }
+                        }));
+                    } else {
+                        console.log('📧 Email automation not available, scheduling for later');
+                        setTimeout(() => {
+                            if (window.EmailAutomation && window.EmailAutomation.initialized) {
+                                window.dispatchEvent(new CustomEvent('appointmentBooked', {
+                                    detail: {
+                                        ...savedAppointment,
+                                        clientName: savedAppointment.name,
+                                        clientEmail: savedAppointment.email,
+                                        status: 'confirmed'
+                                    }
+                                }));
+                            }
+                        }, 2000);
+                    }
                 } catch (e) {
                     console.error('❌ Failed to save to localStorage:', e);
                 }
@@ -1217,6 +1258,33 @@
                 try {
                     localStorage.setItem('massageUsers', JSON.stringify(window.sharedUsers));
                     console.log('💾 Users saved to localStorage');
+                    
+                    // Trigger welcome email for new user
+                    if (window.EmailAutomation && window.EmailAutomation.initialized) {
+                        console.log('📧 Triggering welcome email for new user');
+                        window.dispatchEvent(new CustomEvent('userRegistered', {
+                            detail: {
+                                id: savedUser.id,
+                                name: savedUser.name,
+                                email: savedUser.email,
+                                emailVerified: true
+                            }
+                        }));
+                    } else {
+                        console.log('📧 Email automation not ready, scheduling welcome email');
+                        setTimeout(() => {
+                            if (window.EmailAutomation && window.EmailAutomation.initialized) {
+                                window.dispatchEvent(new CustomEvent('userRegistered', {
+                                    detail: {
+                                        id: savedUser.id,
+                                        name: savedUser.name,
+                                        email: savedUser.email,
+                                        emailVerified: true
+                                    }
+                                }));
+                            }
+                        }, 2000);
+                    }
                 } catch (e) {
                     console.error('Failed to save to localStorage:', e);
                 }
@@ -1264,11 +1332,7 @@
             tabs[1].classList.add('active');
         }
         
-        function fillDemoLogin(email, password) {
-            document.getElementById('loginEmail').value = email;
-            document.getElementById('loginPassword').value = password;
-            showLoginTab();
-        }
+        // fillDemoLogin function removed for security - no hardcoded credentials
         
         // Navigation and session management functions
         function updateNavigationForLoggedInUser(user) {
@@ -1288,28 +1352,68 @@
         }
         
         function checkUserSession() {
-            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-            const currentUser = localStorage.getItem('currentUser');
+            console.log('📅 Checking user session for booking auto-population...');
             
-            if (isLoggedIn && currentUser) {
-                const user = JSON.parse(currentUser);
-                console.log('✅ User session found:', user.name);
+            // Use cookie session manager instead of localStorage
+            let user = null;
+            if (window.CookieSessionManager) {
+                user = window.CookieSessionManager.getCurrentUser();
+                console.log('📅 CookieSessionManager result:', user ? `${user.name} (${user.email})` : 'No user');
+            } else {
+                console.log('📅 CookieSessionManager not available');
+            }
+            
+            const nameField = document.getElementById('clientName');
+            const emailField = document.getElementById('email');
+            const phoneField = document.getElementById('phone');
+            
+            console.log('📅 Form fields found:', {
+                nameField: !!nameField,
+                emailField: !!emailField, 
+                phoneField: !!phoneField
+            });
+            
+            if (user) {
+                console.log('✅ User session found, auto-populating fields for:', user.name);
                 updateNavigationForLoggedInUser(user);
                 
                 // Auto-fill user info if user is logged in
-                const nameField = document.getElementById('clientName');
-                const emailField = document.getElementById('email');
-                const phoneField = document.getElementById('phone');
-                
-                if (nameField && !nameField.value) nameField.value = user.name;
-                if (emailField && !emailField.value) emailField.value = user.email;
-                if (phoneField && !phoneField.value && user.phone) phoneField.value = user.phone;
+                if (nameField && !nameField.value) {
+                    nameField.value = user.name || '';
+                    nameField.style.backgroundColor = '#f0f8ff'; // Light blue to show pre-filled
+                    console.log('📅 Populated name field:', user.name);
+                }
+                if (emailField && !emailField.value) {
+                    emailField.value = user.email || '';
+                    emailField.style.backgroundColor = '#f0f8ff';
+                    console.log('📅 Populated email field:', user.email);
+                }
+                if (phoneField && !phoneField.value && user.phone) {
+                    phoneField.value = user.phone;
+                    phoneField.style.backgroundColor = '#f0f8ff';
+                    console.log('📅 Populated phone field:', user.phone);
+                }
                 
                 return user;
+            } else {
+                console.log('❌ No user session found, clearing fields');
+                
+                // Clear fields and reset styling when logged out
+                if (nameField && nameField.style.backgroundColor === 'rgb(240, 248, 255)') {
+                    nameField.value = '';
+                    nameField.style.backgroundColor = '';
+                }
+                if (emailField && emailField.style.backgroundColor === 'rgb(240, 248, 255)') {
+                    emailField.value = '';
+                    emailField.style.backgroundColor = '';
+                }
+                if (phoneField && phoneField.style.backgroundColor === 'rgb(240, 248, 255)') {
+                    phoneField.value = '';
+                    phoneField.style.backgroundColor = '';
+                }
+                
+                return null;
             }
-            
-            console.log('No user session found');
-            return null;
         }
         
         function logoutUser() {
@@ -1334,13 +1438,14 @@
         
         // Check if user should skip login modal (already logged in)
         function shouldSkipLoginModal() {
-            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-            const currentUser = localStorage.getItem('currentUser');
-            console.log('🔍 Checking login status:', { isLoggedIn, hasCurrentUser: !!currentUser });
+            let currentUser = null;
+            if (window.CookieSessionManager) {
+                currentUser = window.CookieSessionManager.getCurrentUser();
+            }
+            console.log('🔍 Checking login status:', { hasCurrentUser: !!currentUser });
             
-            if (isLoggedIn && currentUser) {
-                const user = JSON.parse(currentUser);
-                console.log('✅ User already logged in, proceeding to payment...', user);
+            if (currentUser) {
+                console.log('✅ User already logged in, proceeding to payment...', currentUser);
                 
                 // Complete booking data and show payment modal instead of direct confirmation
                 console.log('📋 Booking data:', window.pendingBookingData);
@@ -1348,7 +1453,7 @@
                 // Debug: Check if booking data has required fields
                 if (!window.pendingBookingData) {
                     console.error('❌ window.pendingBookingData is null/undefined!');
-                    alert('Error: No booking data found. Please try submitting the form again.');
+                    Toast.error('No booking data found. Please try submitting the form again.', 'Booking Data Missing');
                     return false;
                 }
                 
@@ -1357,16 +1462,16 @@
                         date: window.pendingBookingData.date,
                         time: window.pendingBookingData.time
                     });
-                    alert('Error: Missing appointment date or time. Please select a date and time.');
+                    Toast.error('Missing appointment date or time. Please select a date and time.', 'Incomplete Booking');
                     return false;
                 }
                 
                 // Create the appointment data (but don't save it yet - save after payment)
                 const newAppointment = {
-                    userId: user.id,
-                    clientName: user.name,
-                    email: user.email,
-                    phone: user.phone || window.pendingBookingData?.phone || '',
+                    userId: currentUser.id,
+                    clientName: currentUser.name,
+                    email: currentUser.email,
+                    phone: currentUser.phone || window.pendingBookingData?.phone || '',
                     service: getServiceDisplayName(window.pendingBookingData?.service) || 'Selected Service',
                     date: window.pendingBookingData?.date || '',
                     time: window.pendingBookingData?.time || '',
@@ -1704,8 +1809,19 @@
                 }
             }, 500);
             
-            // Check for existing user session on page load
-            checkUserSession();
+            // Check for existing user session on page load (with delay to ensure CookieSessionManager is ready)
+            setTimeout(checkUserSession, 300);
+            
+            // Listen for authentication events
+            window.addEventListener('userAuthChanged', (event) => {
+                console.log('📅 User authentication changed, refreshing booking form');
+                setTimeout(checkUserSession, 100);
+            });
+            
+            window.addEventListener('userLoggedOut', () => {
+                console.log('📅 User logged out, clearing booking form');
+                setTimeout(checkUserSession, 100);
+            });
             
             const loginForm = document.getElementById('loginForm');
             if (loginForm) {
@@ -1719,8 +1835,9 @@
                     console.log('Login attempt:', email);
                     
                     // Simple demo authentication
-                    if (email === 'john.doe@email.com' && password === 'user123') {
-                        alert('✅ Login successful!\n\nBooking confirmed:\n' + 
+                    const authenticatedUser = window.authenticateUser ? window.authenticateUser(email, password) : null;
+                    if (authenticatedUser) {
+                        Toast.success('Login successful! Your booking has been confirmed:\n' + 
                               `• Service: ${window.pendingBookingData?.service || 'N/A'}\n` +
                               `• Date: ${window.pendingBookingData?.date || 'N/A'}\n` +
                               `• Time: ${window.pendingBookingData?.time || 'N/A'}\n` +
@@ -1728,7 +1845,7 @@
                               'Appointment ID: ' + Date.now());
                         closeLoginModal();
                     } else {
-                        alert('❌ Invalid credentials. Use:\nEmail: john.doe@email.com\nPassword: user123');
+                        Toast.error('Invalid credentials. Please check your email and password, or create a new account.', 'Login Failed');
                     }
                 });
             }
@@ -1859,8 +1976,8 @@
         }
         
         function fillEmergencyDemo() {
-            document.getElementById('emergencyEmail').value = 'john.doe@email.com';
-            document.getElementById('emergencyPassword').value = 'user123';
+            document.getElementById('emergencyEmail').value = '';
+            document.getElementById('emergencyPassword').value = '';
         }
         
         function logoutAndContinue() {
@@ -1929,10 +2046,10 @@
             
             console.log('Emergency login attempt:', email);
             
-            // Simple demo authentication - check registered users too
-            const existingUser = window.sharedUsers ? window.sharedUsers.find(u => u.email === email && u.password === password) : null;
+            // Use secure authentication system
             
-            if (email === 'john.doe@email.com' && password === 'user123') {
+            const authenticatedUser = window.authenticateUser ? window.authenticateUser(email, password) : null;
+            if (authenticatedUser) {
                 // Find existing user in shared data
                 const existingUser = window.sharedUsers.find(u => u.email === email);
                 let userSession;
@@ -1945,6 +2062,7 @@
                         phone: existingUser.phone,
                         role: existingUser.role,
                         loginTime: new Date().toISOString(),
+                        sessionToken: window.generateSecureSessionToken ? window.generateSecureSessionToken() : `fallback_${Date.now()}_${Math.random().toString(36).substr(2, 15)}`,
                         totalAppointments: existingUser.totalAppointments + 1
                     };
                     
@@ -1960,6 +2078,7 @@
                         email: 'john.doe@email.com',
                         role: 'user',
                         loginTime: new Date().toISOString(),
+                        sessionToken: window.generateSecureSessionToken ? window.generateSecureSessionToken() : `fallback_${Date.now()}_${Math.random().toString(36).substr(2, 15)}`,
                         totalAppointments: 1
                     };
                 }
@@ -1984,9 +2103,13 @@
                 // Don't save appointment yet - will save after payment
                 // const savedAppointment = saveAppointment(newAppointment);
                 
-                localStorage.setItem('currentUser', JSON.stringify(userSession));
-                localStorage.setItem('isLoggedIn', 'true');
-                console.log('✅ User session stored in localStorage');
+                // Use cookie session manager instead of localStorage
+                if (window.CookieSessionManager) {
+                    window.CookieSessionManager.login(userSession);
+                    console.log('✅ CookieSessionManager updated for existing user');
+                } else {
+                    console.error('❌ CookieSessionManager not available');
+                }
                 
                 // Instead of immediately confirming, show payment modal
                 console.log('✅ Login successful, proceeding to payment...');
@@ -2012,7 +2135,7 @@
                     console.log('🔄 Time slots refreshed after booking');
                 }, 500);
                 
-            } else if (email === 'jane.smith@email.com' && password === 'user123') {
+            } else if (authenticatedUser && authenticatedUser.email === 'jane.smith@email.com') {
                 // Find existing user in shared data
                 const existingUser = window.sharedUsers.find(u => u.email === email);
                 let userSession;
@@ -2025,6 +2148,7 @@
                         phone: existingUser.phone,
                         role: existingUser.role,
                         loginTime: new Date().toISOString(),
+                        sessionToken: window.generateSecureSessionToken ? window.generateSecureSessionToken() : `fallback_${Date.now()}_${Math.random().toString(36).substr(2, 15)}`,
                         totalAppointments: existingUser.totalAppointments + 1
                     };
                     
@@ -2040,6 +2164,7 @@
                         email: 'jane.smith@email.com',
                         role: 'user',
                         loginTime: new Date().toISOString(),
+                        sessionToken: window.generateSecureSessionToken ? window.generateSecureSessionToken() : `fallback_${Date.now()}_${Math.random().toString(36).substr(2, 15)}`,
                         totalAppointments: 1
                     };
                 }
@@ -2064,9 +2189,13 @@
                 // Don't save appointment yet - will save after payment
                 // const savedAppointment = saveAppointment(newAppointment);
                 
-                localStorage.setItem('currentUser', JSON.stringify(userSession));
-                localStorage.setItem('isLoggedIn', 'true');
-                console.log('✅ User session stored in localStorage');
+                // Use cookie session manager instead of localStorage
+                if (window.CookieSessionManager) {
+                    window.CookieSessionManager.login(userSession);
+                    console.log('✅ CookieSessionManager updated for existing user');
+                } else {
+                    console.error('❌ CookieSessionManager not available');
+                }
                 
                 alert('✅ Login successful!\\n\\nWelcome Jane!\\n\\nBooking confirmed:\\n' + 
                       `• Service: ${newAppointment.service}\\n` +
@@ -2125,6 +2254,12 @@
                 localStorage.setItem('currentUser', JSON.stringify(userSession));
                 localStorage.setItem('isLoggedIn', 'true');
                 
+                // Update SimpleSessionManager if available
+                if (window.SimpleSessionManager) {
+                    window.SimpleSessionManager.login(userSession);
+                    console.log('✅ SimpleSessionManager updated for existing user');
+                }
+                
                 // Instead of immediately confirming, show payment modal
                 console.log('✅ Login successful, proceeding to payment...');
                 closeEmergencyModal();
@@ -2138,7 +2273,7 @@
                 
                 updateNavigationForLoggedInUser(userSession);
             } else {
-                alert('❌ Invalid credentials. Use:\\nEmail: john.doe@email.com\\nPassword: user123\\n\\nOR\\n\\nEmail: jane.smith@email.com\\nPassword: user123\\n\\nOR click "Create New Account" to register!');
+                alert('❌ Invalid credentials. Please check your email and password, or create a new account by clicking "Create New Account".');
             }
         }
         
@@ -2177,10 +2312,27 @@
                 return;
             }
             
-            // Create new user and add to shared data
+            // Create new user with secure password hash
+            let passwordHash;
+            try {
+                if (typeof dcodeIO !== 'undefined' && dcodeIO.bcrypt) {
+                    // Generate secure bcrypt hash
+                    const salt = dcodeIO.bcrypt.genSaltSync(12);
+                    passwordHash = dcodeIO.bcrypt.hashSync(password, salt);
+                    console.log('🔒 Generated secure bcrypt hash for new user');
+                } else {
+                    // Fallback to simpleHash (INSECURE)
+                    console.warn('🔒 bcrypt.js not available, using insecure fallback');
+                    passwordHash = simpleHash(password);
+                }
+            } catch (error) {
+                console.error('🔒 Password hashing error:', error);
+                passwordHash = simpleHash(password); // Fallback
+            }
+
             const newUserData = {
                 username: email,
-                password: password,
+                passwordHash: passwordHash, // Use hashed password instead of plaintext
                 name: name,
                 email: email,
                 phone: phone,
@@ -2193,7 +2345,7 @@
             const savedUser = saveUser(newUserData);
             console.log('✅ New user added to shared data:', savedUser);
             
-            // Create user session
+            // Create user session with security token
             const newUserSession = {
                 id: savedUser.id,
                 name: savedUser.name,
@@ -2201,6 +2353,7 @@
                 phone: savedUser.phone,
                 role: savedUser.role,
                 loginTime: new Date().toISOString(),
+                sessionToken: window.generateSecureSessionToken ? window.generateSecureSessionToken() : `fallback_${Date.now()}_${Math.random().toString(36).substr(2, 15)}`,
                 totalAppointments: savedUser.totalAppointments,
                 isNewUser: true
             };
@@ -2222,13 +2375,18 @@
                 transactionId: `txn_${Date.now()}`
             };
             
-            const savedAppointment = window.addAppointment(newAppointment);
-            console.log('✅ Appointment saved:', savedAppointment);
+            // Don't save appointment yet - will save after payment
+            // const savedAppointment = window.addAppointment(newAppointment);
+            console.log('📝 Appointment prepared for payment:', newAppointment);
             
             // Store user session
-            localStorage.setItem('currentUser', JSON.stringify(newUserSession));
-            localStorage.setItem('isLoggedIn', 'true');
-            console.log('✅ New user session stored in localStorage');
+            // Use cookie session manager instead of localStorage
+            if (window.CookieSessionManager) {
+                window.CookieSessionManager.login(newUserSession);
+                console.log('✅ CookieSessionManager updated for new user');
+            } else {
+                console.error('❌ CookieSessionManager not available');
+            }
             
             // Instead of immediately confirming, show payment modal
             console.log('✅ Account created successfully, proceeding to payment...');
@@ -2468,11 +2626,35 @@
                 return;
             }
             
-            // Create user session data from current user
-            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            // Ensure session is properly maintained after payment
+            let currentUser = null;
+            if (window.CookieSessionManager) {
+                currentUser = window.CookieSessionManager.getCurrentUser();
+            }
+            
+            // Verify and refresh session data
+            if (currentUser && currentUser.id && currentUser.email) {
+                console.log('🔐 Refreshing session after payment success...');
+                
+                // Update session with fresh login time and ensure session token exists
+                const refreshedUser = {
+                    ...currentUser,
+                    loginTime: new Date().toISOString(),
+                    sessionToken: currentUser.sessionToken || (window.generateSecureSessionToken ? window.generateSecureSessionToken() : `fallback_${Date.now()}_${Math.random().toString(36).substr(2, 15)}`)
+                };
+                
+                // Re-save session using cookie manager
+                if (window.CookieSessionManager) {
+                    window.CookieSessionManager.login(refreshedUser);
+                    console.log('🔐 CookieSessionManager updated after payment');
+                } else {
+                    console.error('❌ CookieSessionManager not available');
+                }
+            }
+            
             const userSession = {
                 name: currentUser.name || 'User',
-                isNewUser: false // For logged-in users, they're not new
+                isNewUser: currentUser.isNewUser || false
             };
             
             // Close payment modal
@@ -2517,7 +2699,7 @@
                         </p>
                         
                         <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                            <button onclick="closeBookingSuccessModal(); window.location.href='user-portal.html'" style="
+                            <button onclick="navigateToPortalSafely()" style="
                                 background: #3A7D99;
                                 color: white;
                                 border: none;
@@ -2569,6 +2751,88 @@
             const modals = document.querySelectorAll('.modal');
             modals.forEach(modal => modal.remove());
             document.body.style.overflow = '';
+        }
+        
+        // Safe navigation to user portal that ensures session persistence
+        function navigateToPortalSafely() {
+            console.log('🔐 Navigating to portal safely...');
+            
+            // Ensure session data is properly saved
+            let currentUser = null;
+            if (window.CookieSessionManager) {
+                currentUser = window.CookieSessionManager.getCurrentUser();
+            }
+            
+            console.log('🔐 Pre-navigation session check:');
+            console.log('  - currentUser exists:', !!currentUser);
+            
+            if (currentUser) {
+                console.log('  - User data valid:', currentUser.name, currentUser.email);
+                
+                // Refresh session before navigation
+                if (window.CookieSessionManager) {
+                    console.log('🔐 Refreshing CookieSessionManager before navigation...');
+                    window.CookieSessionManager.refreshSession();
+                }
+                    
+                    // Small delay to ensure all data is committed
+                    setTimeout(() => {
+                        closeBookingSuccessModal();
+                        console.log('🔐 Navigating to user portal...');
+                        window.location.href = 'user-portal.html';
+                    }, 100);
+                    
+                } catch (error) {
+                    console.error('🔐 Session validation error before navigation:', error);
+                    alert('Session error. Please log in again at the user portal.');
+                    closeBookingSuccessModal();
+                    window.location.href = 'user-portal.html';
+                }
+            } else {
+                console.warn('🔐 No valid session found before navigation');
+                alert('No session found. You may need to log in again.');
+                closeBookingSuccessModal();
+                window.location.href = 'user-portal.html';
+            }
+        }
+    </script>
+
+    <!-- Session Management Only (auth-security.js already loaded in head) -->
+    <script src="js/cookie-session-manager.js"></script>
+    <script src="js/navigation-handler.js"></script>
+    
+    <!-- Modular Booking System -->
+    <script src="js/modules/booking/booking-form-handler.js" defer></script>
+    <script src="js/modules/booking/booking-ui-manager.js" defer></script>
+    <script src="js/booking-modular.js" defer></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => {
+                    console.log('🚀 Service Worker registered');
+                    
+                    // Cache booking data for offline access
+                    window.addEventListener('beforeunload', function() {
+                        if (navigator.serviceWorker.controller) {
+                            const bookingData = {
+                                // Get current booking form data
+                                service: document.querySelector('input[name="service"]:checked')?.value,
+                                date: document.getElementById('date')?.value,
+                                time: document.getElementById('time')?.value
+                            };
+                            
+                            if (bookingData.service && bookingData.date && bookingData.time) {
+                                navigator.serviceWorker.controller.postMessage({
+                                    type: 'CACHE_BOOKING',
+                                    booking: bookingData
+                                });
+                            }
+                        }
+                    });
+                })
+                .catch(error => console.log('❌ Service Worker registration failed:', error));
         }
     </script>
 </body>

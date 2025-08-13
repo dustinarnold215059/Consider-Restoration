@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check New User Password Hash</title>
+    <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+    <script src="js/shared-data.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .user-card { 
+            background: #f8f9fa; 
+            border: 1px solid #dee2e6;
+            border-radius: 8px; 
+            padding: 15px; 
+            margin: 10px 0; 
+        }
+        .secure { border-left: 4px solid #28a745; }
+        .insecure { border-left: 4px solid #dc3545; }
+        .hash-display { 
+            font-family: monospace; 
+            font-size: 12px; 
+            background: #e9ecef; 
+            padding: 8px; 
+            border-radius: 4px; 
+            word-break: break-all;
+            margin: 5px 0;
+        }
+        .recent { background: #d4edda; }
+    </style>
+</head>
+<body>
+    <h1>🔍 New User Password Hash Verification</h1>
+    
+    <button onclick="checkAllUsers()">Check All Users</button>
+    <button onclick="checkLocalStorage()">Check localStorage</button>
+    <button onclick="findRecentUsers()">Find Recent Users</button>
+    
+    <h2>Current Users in System:</h2>
+    <div id="usersList"></div>
+    
+    <h2>localStorage Data:</h2>
+    <div id="localStorageData"></div>
+    
+    <h2>Recent Activity:</h2>
+    <div id="recentUsers"></div>
+
+    <script>
+        function checkAllUsers() {
+            const usersList = document.getElementById('usersList');
+            usersList.innerHTML = '<h3>Loading users...</h3>';
+            
+            let usersHtml = '';
+            
+            if (window.sharedUsers && window.sharedUsers.length > 0) {
+                window.sharedUsers.forEach((user, index) => {
+                    const isSecure = user.passwordHash && (
+                        user.passwordHash.startsWith('$2a$') || 
+                        user.passwordHash.startsWith('$2b$') || 
+                        user.passwordHash.startsWith('$2y$')
+                    );
+                    
+                    const securityClass = isSecure ? 'secure' : 'insecure';
+                    const securityIcon = isSecure ? '✅' : '❌';
+                    const hashType = isSecure ? 'bcrypt (SECURE)' : 'legacy/insecure';
+                    
+                    // Check if this might be a recently added user
+                    const isRecent = user.totalAppointments <= 1 || 
+                                   (user.lastVisit && new Date(user.lastVisit) > new Date(Date.now() - 24*60*60*1000));
+                    
+                    usersHtml += `
+                        <div class="user-card ${securityClass} ${isRecent ? 'recent' : ''}">
+                            <h4>${securityIcon} ${user.name} ${isRecent ? '(RECENT)' : ''}</h4>
+                            <p><strong>Email:</strong> ${user.email}</p>
+                            <p><strong>ID:</strong> ${user.id}</p>
+                            <p><strong>Role:</strong> ${user.role}</p>
+                            <p><strong>Total Appointments:</strong> ${user.totalAppointments}</p>
+                            <p><strong>Last Visit:</strong> ${user.lastVisit || 'Never'}</p>
+                            <p><strong>Security Status:</strong> ${hashType}</p>
+                            <div class="hash-display">
+                                <strong>Password Hash:</strong><br>
+                                ${user.passwordHash || 'NO HASH FOUND'}
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                usersHtml = '<p>No users found in window.sharedUsers</p>';
+            }
+            
+            usersList.innerHTML = usersHtml;
+        }
+        
+        function checkLocalStorage() {
+            const localStorageData = document.getElementById('localStorageData');
+            
+            try {
+                const massageUsers = localStorage.getItem('massageUsers');
+                const currentUser = localStorage.getItem('currentUser');
+                
+                let html = '';
+                
+                if (massageUsers) {
+                    const users = JSON.parse(massageUsers);
+                    html += `<h4>massageUsers (${users.length} users):</h4>`;
+                    users.forEach(user => {
+                        const isSecure = user.passwordHash && user.passwordHash.startsWith('$2a$');
+                        html += `<p>${isSecure ? '✅' : '❌'} ${user.name} - ${isSecure ? 'SECURE' : 'INSECURE'}</p>`;
+                    });
+                } else {
+                    html += '<p>No massageUsers in localStorage</p>';
+                }
+                
+                if (currentUser) {
+                    const user = JSON.parse(currentUser);
+                    html += `<h4>currentUser (logged in):</h4>`;
+                    html += `<p>Name: ${user.name}</p>`;
+                    html += `<p>Email: ${user.email}</p>`;
+                    html += `<p>Session Token: ${user.sessionToken ? 'Present' : 'Missing'}</p>`;
+                } else {
+                    html += '<p>No user currently logged in</p>';
+                }
+                
+                localStorageData.innerHTML = html;
+            } catch (error) {
+                localStorageData.innerHTML = `<p>Error reading localStorage: ${error.message}</p>`;
+            }
+        }
+        
+        function findRecentUsers() {
+            const recentUsers = document.getElementById('recentUsers');
+            
+            if (!window.sharedUsers) {
+                recentUsers.innerHTML = '<p>No users data available</p>';
+                return;
+            }
+            
+            // Find users with recent activity (last 24 hours) or low appointment count
+            const recent = window.sharedUsers.filter(user => {
+                const hasRecentVisit = user.lastVisit && 
+                    new Date(user.lastVisit) > new Date(Date.now() - 24*60*60*1000);
+                const isNewUser = user.totalAppointments <= 1;
+                const highId = user.id > 4; // Original users have IDs 1-4
+                
+                return hasRecentVisit || isNewUser || highId;
+            });
+            
+            if (recent.length === 0) {
+                recentUsers.innerHTML = '<p>No recent users found</p>';
+                return;
+            }
+            
+            let html = `<p>Found ${recent.length} recent user(s):</p>`;
+            recent.forEach(user => {
+                const isSecure = user.passwordHash && user.passwordHash.startsWith('$2a$');
+                html += `
+                    <div class="user-card ${isSecure ? 'secure' : 'insecure'} recent">
+                        <h4>${isSecure ? '✅' : '❌'} ${user.name} (ID: ${user.id})</h4>
+                        <p><strong>Email:</strong> ${user.email}</p>
+                        <p><strong>Security:</strong> ${isSecure ? 'SECURE bcrypt hash' : 'INSECURE legacy hash'}</p>
+                        <p><strong>Created/Updated:</strong> ${user.lastVisit || 'Unknown'}</p>
+                        <div class="hash-display">
+                            <strong>Hash:</strong><br>
+                            ${user.passwordHash || 'NO HASH'}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            recentUsers.innerHTML = html;
+        }
+        
+        // Auto-run checks on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                checkAllUsers();
+                checkLocalStorage();
+                findRecentUsers();
+            }, 500);
+        });
+    </script>
+</body>
+</html>

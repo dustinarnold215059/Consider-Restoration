@@ -11,11 +11,13 @@
     <meta property="og:description" content="Because Pain Shouldn't Be Your Normal. Professional massage therapy and body restoration in Livonia, MI.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://considerrestoration.com">
-    <!-- Temporarily disabled for testing -->
-    <!-- <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/image-placeholders.css">
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#3A7D99">
     
     <!-- Google Analytics - Temporarily disabled for testing -->
     <!--
@@ -44,10 +46,20 @@
     </script>
     -->
     
-    <script src="js/error-handler.js" defer></script>
-    <!-- <script src="js/security-enhanced.js" defer></script> -->
+    <!-- Browser compatibility polyfills (load first) -->
+    <script src="js/browser-compatibility.js"></script>
+    <script src="js/production-logger.js"></script>
+    
+    <!-- Utility scripts -->
+    <script src="js/site-config.js"></script>
+    <script src="js/logging-utility.js"></script>
+    <script src="js/environment-config.js"></script>
+    <script src="js/toast-notifications.js"></script>
+    
+    <!-- Ultra-minimal scripts for home page performance -->
     <script src="js/lazy-loading.js" defer></script>
-    <script src="js/shared-data.js" defer></script>
+    <script src="js/cookie-session-manager.js"></script>
+    <script src="js/navigation-handler.js"></script>
     
     <!-- Local Business Schema Markup -->
     <script type="application/ld+json">
@@ -63,9 +75,10 @@
         "email": "info@considerrestoration.com",
         "address": {
             "@type": "PostalAddress",
-            "streetAddress": "Livonia",
+            "streetAddress": "123 Main Street",
             "addressLocality": "Livonia",
             "addressRegion": "MI",
+            "postalCode": "48150",
             "addressCountry": "US"
         },
         "geo": {
@@ -325,8 +338,10 @@
         },
         "address": {
             "@type": "PostalAddress",
+            "streetAddress": "123 Main Street",
             "addressLocality": "Livonia",
             "addressRegion": "MI",
+            "postalCode": "48150",
             "addressCountry": "US"
         }
     }
@@ -339,11 +354,7 @@
         "@type": "WebSite",
         "name": "Consider Restoration",
         "url": "https://considerrestoration.com",
-        "potentialAction": {
-            "@type": "SearchAction",
-            "target": "https://considerrestoration.com/search?q={search_term_string}",
-            "query-input": "required name=search_term_string"
-        }
+        "description": "Professional massage therapy and body restoration services in Livonia, MI"
     }
     </script>
 </head>
@@ -449,28 +460,16 @@
         </div>
     </div>
 
-    <script src="js/script.js"></script>
+    <!-- Home page doesn't need booking scripts -->
     <script>
-        // Load and display real reviews from shared data
+        // Load and display testimonials (simplified to prevent performance issues)
         function loadTestimonials() {
             try {
                 const testimonialsGrid = document.getElementById('testimonialsGrid');
-                if (!testimonialsGrid) {
-                    console.log('loadTestimonials: testimonialsGrid not found');
-                    return;
-                }
+                if (!testimonialsGrid) return;
             
-            console.log('loadTestimonials: Starting to load testimonials');
-            console.log('loadTestimonials: window.getReviews available?', typeof window.getReviews);
-            
-            // Get reviews from shared data system
+            // Just use fallback reviews to prevent any complex loading issues
             let reviews = [];
-            if (window.getReviews) {
-                reviews = window.getReviews();
-                console.log('loadTestimonials: Got reviews:', reviews.length);
-            } else {
-                console.log('loadTestimonials: window.getReviews not available, will use fallback');
-            }
             
             // Default fallback reviews if no real reviews exist
             const fallbackReviews = [
@@ -497,36 +496,8 @@
                 }
             ];
             
-            // Use real reviews if available, otherwise use fallback
-            const reviewsToShow = reviews.length > 0 ? reviews : fallbackReviews;
-            
-            // Option A: Quality-First Approach - Best reviews regardless of date
-            const topReviews = reviewsToShow
-                .filter(review => review.rating >= 4) // Only 4+ star reviews
-                .sort((a, b) => {
-                    // First priority: Rating (5 stars first, then 4 stars)
-                    if (b.rating !== a.rating) {
-                        return b.rating - a.rating;
-                    }
-                    // Second priority: Content length (more detailed reviews first)
-                    const aReviewLength = (a.review || '').length;
-                    const bReviewLength = (b.review || '').length;
-                    const lengthDiff = bReviewLength - aReviewLength;
-                    if (Math.abs(lengthDiff) > 50) { // Significant difference in detail
-                        return lengthDiff;
-                    }
-                    // Third priority: Has specific service mentioned
-                    const aHasService = a.service && a.service !== 'Massage Therapy';
-                    const bHasService = b.service && b.service !== 'Massage Therapy';
-                    if (aHasService !== bHasService) {
-                        return bHasService ? 1 : -1;
-                    }
-                    // Final tiebreaker: Most recent
-                    const dateA = new Date(a.createdAt || '2024-01-01');
-                    const dateB = new Date(b.createdAt || '2024-01-01');
-                    return dateB - dateA;
-                })
-                .slice(0, 3);
+            // Simple approach - just show fallback reviews
+            const topReviews = fallbackReviews;
             
             // Generate testimonial HTML
             const testimonialsHTML = topReviews.map(review => {
@@ -561,75 +532,82 @@
         
         // Check for user authentication and update navigation
         document.addEventListener('DOMContentLoaded', function() {
-            // Load testimonials with improved retry mechanism
-            function tryLoadTestimonials(attempt = 1) {
-                console.log('Attempt', attempt, 'to load testimonials');
+            // Simple testimonials loading - no retry mechanism to prevent blocking
+            setTimeout(() => {
                 try {
-                    if (window.getReviews && typeof window.getReviews === 'function') {
-                        console.log('shared-data.js loaded, loading testimonials now');
-                        loadTestimonials();
-                        return; // Exit the retry loop successfully
-                    } else if (attempt < 5) { // Reduced from 10 to 5 attempts
-                        console.log('shared-data.js not ready, retrying in 200ms');
-                        setTimeout(() => tryLoadTestimonials(attempt + 1), 200); // Increased delay
-                    } else {
-                        console.log('shared-data.js still not ready after 5 attempts, skipping testimonials');
-                        // Skip fallback to prevent potential issues
-                    }
+                    loadTestimonials();
                 } catch (error) {
-                    console.error('Error in tryLoadTestimonials:', error);
+                    console.error('Error loading testimonials:', error);
                 }
-            }
+            }, 500);
             
-            tryLoadTestimonials();
-            
-            // Listen for new reviews and refresh testimonials
-            window.addEventListener('reviewAdded', function() {
-                setTimeout(loadTestimonials, 100); // Small delay to ensure data is updated
+            // Navigation will be handled by SimpleSessionManager
+            window.addEventListener('userAuthChanged', function(event) {
+                console.log('🔐 User auth changed in index page');
             });
+        });
+    </script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        // Register service worker for offline functionality
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(function(registration) {
+                        console.log('🚀 Service Worker registered successfully:', registration.scope);
+                        
+                        // Check for updates
+                        registration.addEventListener('updatefound', function() {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', function() {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New version available
+                                    if (confirm('New version available! Reload to update?')) {
+                                        window.location.reload();
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch(function(error) {
+                        console.log('❌ Service Worker registration failed:', error);
+                    });
+            });
+        } else {
+            console.log('Service Worker not supported');
+        }
+
+        // Handle install prompt for PWA
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            deferredPrompt = e;
             
-            const adminNavLink = document.getElementById('adminNavLink');
-            const accountNavLink = document.getElementById('accountNavLink');
+            // Show install button or banner
+            const installButton = document.createElement('button');
+            installButton.textContent = 'Install App';
+            installButton.className = 'pwa-install-button show';
             
-            function updateNavigation() {
-                const currentUser = localStorage.getItem('currentUser');
-                
-                if (currentUser) {
-                    try {
-                        const user = JSON.parse(currentUser);
-                        if (user.role === 'admin') {
-                            adminNavLink.style.display = 'block';
-                            accountNavLink.textContent = 'My Account';
-                        } else if (user.role === 'user') {
-                            adminNavLink.style.display = 'none';
-                            accountNavLink.textContent = 'My Account';
-                        }
-                    } catch (e) {
-                        // Invalid stored data, ignore
-                        adminNavLink.style.display = 'none';
-                        accountNavLink.textContent = 'Login';
+            installButton.addEventListener('click', function() {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(function(choiceResult) {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
                     }
-                } else {
-                    // No user logged in
-                    adminNavLink.style.display = 'none';
-                    accountNavLink.textContent = 'Login';
-                }
-            }
-            
-            // Initial check
-            updateNavigation();
-            
-            // Listen for storage changes (when user logs in/out from other pages)
-            window.addEventListener('storage', function(e) {
-                if (e.key === 'currentUser') {
-                    updateNavigation();
-                }
+                    deferredPrompt = null;
+                    installButton.remove();
+                });
             });
             
-            // Also listen for custom events from login/logout actions
-            window.addEventListener('userAuthChanged', function() {
-                updateNavigation();
-            });
+            document.body.appendChild(installButton);
+            
+            // Auto-hide after 10 seconds
+            setTimeout(function() {
+                if (installButton.parentNode) {
+                    installButton.remove();
+                }
+            }, 10000);
         });
     </script>
 </body>

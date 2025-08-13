@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fix Test User</title>
+    <script src="js/shared-data.js"></script>
+</head>
+<body>
+    <h1>Fix Test User in localStorage</h1>
+    <button onclick="addTestUser()">Add Working Test User</button>
+    <button onclick="listUsers()">List Current Users</button>
+    <button onclick="clearUsers()">Clear All Users (Reset to Defaults)</button>
+    <div id="result"></div>
+    
+    <script>
+        function addTestUser() {
+            // Add a working test user to the current users
+            const testUser = {
+                id: 999,
+                username: 'test@test.com',
+                password: 'test123', // Plaintext for fallback
+                passwordHash: 'test123', // Will be handled by fallback logic  
+                name: 'Test User',
+                email: 'test@test.com',
+                phone: '(555) 999-0000',
+                role: 'user'
+            };
+            
+            // Get current users from localStorage or default
+            let users = [];
+            try {
+                const savedUsers = localStorage.getItem('massageUsers');
+                if (savedUsers) {
+                    users = JSON.parse(savedUsers);
+                } else {
+                    users = window.sharedUsers || [];
+                }
+            } catch (e) {
+                users = window.sharedUsers || [];
+            }
+            
+            // Remove any existing test user
+            users = users.filter(u => u.email !== 'test@test.com' && u.username !== 'test@test.com');
+            
+            // Add the new test user
+            users.push(testUser);
+            
+            // Save back to localStorage
+            try {
+                localStorage.setItem('massageUsers', JSON.stringify(users));
+                window.sharedUsers = users; // Update the global variable too
+                
+                document.getElementById('result').innerHTML = `
+                    <div style="background: #d4edda; color: #155724; padding: 15px; margin: 15px 0; border-radius: 5px;">
+                        ✅ Test user added successfully!<br>
+                        Email: test@test.com<br>
+                        Password: test123<br>
+                        <strong>You can now use these credentials to login.</strong>
+                    </div>
+                `;
+                
+                console.log('Test user added:', testUser);
+                listUsers();
+                
+            } catch (e) {
+                document.getElementById('result').innerHTML = `
+                    <div style="background: #f8d7da; color: #721c24; padding: 15px; margin: 15px 0; border-radius: 5px;">
+                        ❌ Error adding test user: ${e.message}
+                    </div>
+                `;
+            }
+        }
+        
+        function listUsers() {
+            const result = document.getElementById('result');
+            
+            let users = [];
+            try {
+                const savedUsers = localStorage.getItem('massageUsers');
+                if (savedUsers) {
+                    users = JSON.parse(savedUsers);
+                } else {
+                    users = window.sharedUsers || [];
+                }
+            } catch (e) {
+                users = window.sharedUsers || [];
+            }
+            
+            let userList = '<h3>Current Users:</h3><ul>';
+            users.forEach(user => {
+                userList += `<li>${user.name} - ${user.email || user.username} (${user.role})</li>`;
+            });
+            userList += '</ul>';
+            
+            result.innerHTML = userList + result.innerHTML;
+        }
+        
+        function clearUsers() {
+            if (confirm('This will remove all users from localStorage and reset to defaults. Continue?')) {
+                localStorage.removeItem('massageUsers');
+                window.location.reload(); // Reload to get fresh data
+            }
+        }
+        
+        // Auto-run
+        setTimeout(() => {
+            listUsers();
+        }, 500);
+    </script>
+</body>
+</html>

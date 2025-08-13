@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Secure Password Hashes</title>
+    <script src="js/password-security.js"></script>
+</head>
+<body>
+    <h1>Generate Secure Password Hashes</h1>
+    <div id="results"></div>
+    
+    <script>
+        async function generateHashes() {
+            const passwords = [
+                { user: 'admin', password: 'admin123' },
+                { user: 'john.doe', password: 'user123' },
+                { user: 'jane.smith', password: 'user123' }
+            ];
+            
+            const results = document.getElementById('results');
+            results.innerHTML = '<h2>Generating secure hashes...</h2>';
+            
+            for (const item of passwords) {
+                const hash = await window.hashPassword(item.password);
+                results.innerHTML += `<p><strong>${item.user}:</strong><br><code>'${hash}'</code></p>`;
+                console.log(`${item.user}: '${hash}'`);
+            }
+            
+            results.innerHTML += '<h3>Copy these hashes into shared-data.js</h3>';
+        }
+        
+        // Generate hashes when page loads
+        document.addEventListener('DOMContentLoaded', generateHashes);
+    </script>
+</body>
+</html>

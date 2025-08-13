@@ -4,56 +4,8 @@ console.log('🔍 DEBUG: user-portal.js starting to load...');
 // Import user data from admin.js (simulated database)
 let currentUser = null;
 
-// Sample users data (matches shared-data.js)
-const users = [
-    {
-        id: 1,
-        username: 'admin@test.com',
-        password: 'admin123',
-        name: 'Christopher Admin',
-        email: 'admin@test.com',
-        phone: '(555) 123-4567',
-        role: 'admin',
-        totalAppointments: 0,
-        lastVisit: null
-    },
-    {
-        id: 2,
-        username: 'john.doe@email.com',
-        password: 'user123',
-        name: 'John Doe',
-        email: 'john.doe@email.com',
-        phone: '(555) 234-5678',
-        role: 'user',
-        totalAppointments: 12,
-        lastVisit: '2024-01-10',
-        preferences: 'Prefers deep tissue massage, focus on shoulders and neck'
-    },
-    {
-        id: 3,
-        username: 'jane.smith@email.com',
-        password: 'user123',
-        name: 'Jane Smith',
-        email: 'jane.smith@email.com',
-        phone: '(555) 345-6789',
-        role: 'user',
-        totalAppointments: 8,
-        lastVisit: '2024-01-08',
-        preferences: 'Likes relaxing Swedish massage, sensitive to pressure'
-    },
-    {
-        id: 4,
-        username: 'dustin@email.com',
-        password: 'user123',
-        name: 'Dustin',
-        email: 'dustin@email.com',
-        phone: '(555) 456-7890',
-        role: 'user',
-        totalAppointments: 5,
-        lastVisit: '2024-01-12',
-        preferences: 'Prefers deep tissue massage, athletic recovery focus'
-    }
-];
+// Users are now managed securely through shared-data.js
+// No hardcoded passwords in client-side code
 
 // Sample appointments data (matches admin.js)
 const appointments = [
@@ -165,6 +117,65 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('🔍 DEBUG: DOMContentLoaded fired');
     console.log('🔍 DEBUG: window.sharedAppointments:', window.sharedAppointments ? window.sharedAppointments.length : 'undefined');
     console.log('🔍 DEBUG: window.sharedUsers:', window.sharedUsers ? window.sharedUsers.length : 'undefined');
+
+    // Simple session check - no complex waiting
+    function checkAndRestoreSession() {
+        let user = window.getCurrentUser ? window.getCurrentUser() : null;
+        
+        // Fallback: check localStorage directly if SimpleSessionManager fails
+        if (!user) {
+            console.log('🔐 SimpleSessionManager returned null, checking localStorage directly...');
+            const storedUser = localStorage.getItem('currentUser');
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            
+            if (storedUser && isLoggedIn === 'true') {
+                try {
+                    user = JSON.parse(storedUser);
+                    console.log('🔐 Direct localStorage session found:', user.name);
+                    
+                    // Basic validation
+                    if (user.id && user.email) {
+                        // Check if session is not too old (7 days)
+                        if (user.loginTime) {
+                            const loginTime = new Date(user.loginTime);
+                            const now = new Date();
+                            const sessionAge = now - loginTime;
+                            const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+                            
+                            if (sessionAge > maxAge) {
+                                console.log('🔐 Session expired, clearing...');
+                                localStorage.removeItem('currentUser');
+                                localStorage.removeItem('isLoggedIn');
+                                user = null;
+                            }
+                        }
+                    } else {
+                        console.log('🔐 Invalid session data, clearing...');
+                        localStorage.removeItem('currentUser');
+                        localStorage.removeItem('isLoggedIn');
+                        user = null;
+                    }
+                } catch (error) {
+                    console.error('🔐 Error parsing session data:', error);
+                    localStorage.removeItem('currentUser');
+                    localStorage.removeItem('isLoggedIn');
+                    user = null;
+                }
+            }
+        }
+        
+        if (user) {
+            console.log('🔐 Session restored for user:', user.name);
+            currentUser = user;
+            showUserPortal();
+        } else {
+            console.log('🔐 No valid session found, showing auth screen');
+            showAuthScreen();
+        }
+    }
+
+    // Start session check with minimal delay
+    setTimeout(checkAndRestoreSession, 300);
     
     // Clear any stale data and ensure fresh data load
     if (window.loadFromStorage) {
@@ -260,45 +271,96 @@ function switchAuthTab(tabName) {
     registerError.textContent = '';
 }
 
-function handleLogin(e) {
+// Show user portal (logged in state)
+function showUserPortal() {
+    authScreen.style.display = 'none';
+    userPortal.style.display = 'block';
+    
+    // Load user data and appointments
+    updateAccountSummary();
+    loadUserAppointments();
+}
+
+// Show authentication screen (not logged in state)
+function showAuthScreen() {
+    authScreen.style.display = 'flex';
+    userPortal.style.display = 'none';
+    
+    // Initialize auth screen
+    initializeAuthScreen();
+}
+
+async function handleLogin(e) {
     e.preventDefault();
     console.log('🔍 DEBUG handleLogin() called');
     
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     
-    // Get users from shared data
-    const allUsers = window.getUsers ? window.getUsers() : users;
-    console.log('Login attempt - Available users:', allUsers);
-    console.log('Login attempt - Looking for email:', email, 'password:', password);
-    const user = allUsers.find(u => (u.username === email || u.email === email) && u.password === password);
-    console.log('Login attempt - Found user:', user);
+    // Show loading state
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Signing in...';
+    submitBtn.disabled = true;
     
-    if (user) {
-        currentUser = user;
+    try {
+        let user = null;
         
-        // Store user in localStorage for admin page protection
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        
-        // Check if user is admin
-        if (user.role === 'admin') {
-            // Redirect admin to admin panel silently
-            window.location.href = 'admin.html';
-            return;
-        } else {
-            // Regular user - check if they came from booking page
-            if (sessionStorage.getItem('pendingBooking')) {
-                // Redirect back to booking page to complete booking automatically
-                window.location.href = 'booking.html';
-            } else {
-                // Show user portal
-                showUserPortal();
+        // Try secure server-side authentication first
+        if (window.serverAvailable && window.authenticateUserSecure) {
+            try {
+                user = await window.authenticateUserSecure(email, password);
+                console.log('🔗 Server authentication successful');
+            } catch (error) {
+                console.warn('🔗 Server auth failed, trying fallback:', error.message);
             }
         }
         
-        loginError.textContent = '';
-    } else {
-        loginError.textContent = 'Invalid email or password';
+        // Fallback to client-side authentication if server not available
+        if (!user && window.authenticateUser) {
+            user = window.authenticateUser(email, password);
+            console.log('🔒 Using fallback client-side authentication');
+        }
+        
+        if (user) {
+            currentUser = user;
+            
+            // Use SimpleSessionManager to handle login
+            if (window.SimpleSessionManager) {
+                window.SimpleSessionManager.login(user);
+            } else {
+                // Fallback to direct localStorage
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                localStorage.setItem('isLoggedIn', 'true');
+            }
+            
+            // Check if user is admin
+            if (user.role === 'admin') {
+                // Redirect admin to admin panel silently
+                window.location.href = 'admin.html';
+                return;
+            } else {
+                // Regular user - check if they came from booking page
+                if (sessionStorage.getItem('pendingBooking')) {
+                    // Redirect back to booking page to complete booking automatically
+                    window.location.href = 'booking.html';
+                } else {
+                    // Show user portal
+                    showUserPortal();
+                }
+            }
+            
+            loginError.textContent = '';
+        } else {
+            loginError.textContent = 'Invalid email or password';
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        loginError.textContent = 'Login failed. Please try again.';
+    } finally {
+        // Restore button state
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
     }
 }
 
@@ -317,23 +379,40 @@ function handleRegister(e) {
         return;
     }
     
-    // Check both local users array and shared users
-    const allUsers = window.getUsers ? window.getUsers() : users;
+    // Get users from shared data system
+    const allUsers = window.getUsers ? window.getUsers() : [];
     if (allUsers.find(u => u.email === email)) {
         registerError.textContent = 'An account with this email already exists';
         return;
     }
     
-    // Create new user
+    // Create new user with secure password hash
+    let passwordHash;
+    try {
+        if (typeof dcodeIO !== 'undefined' && dcodeIO.bcrypt) {
+            // Generate secure bcrypt hash
+            const salt = dcodeIO.bcrypt.genSaltSync(12);
+            passwordHash = dcodeIO.bcrypt.hashSync(password, salt);
+            console.log('🔒 Generated secure bcrypt hash for new user registration');
+        } else {
+            // Fallback to simpleHash (INSECURE)
+            console.warn('🔒 bcrypt.js not available in user portal, using insecure fallback');
+            passwordHash = window.simpleHash ? window.simpleHash(password) : 'hashed_' + password + '_secure';
+        }
+    } catch (error) {
+        console.error('🔒 Password hashing error in user portal:', error);
+        passwordHash = window.simpleHash ? window.simpleHash(password) : 'hashed_' + password + '_secure';
+    }
+
     const newUserData = {
         username: email,
-        password: password,
+        passwordHash: passwordHash, // Use hashed password instead of plaintext
         name: name,
         email: email,
         phone: phone,
         role: 'user',
         totalAppointments: 0,
-        lastVisit: null,
+        lastVisit: new Date().toISOString(),
         preferences: ''
     };
     
@@ -342,22 +421,33 @@ function handleRegister(e) {
     if (window.addUser) {
         newUser = window.addUser(newUserData);
     } else {
-        // Fallback to local array if shared data not available
-        newUser = {
-            id: Math.max(...users.map(u => u.id)) + 1,
-            ...newUserData
-        };
-        users.push(newUser);
+        console.error('Shared data system not available for user registration');
+        registerError.textContent = 'Registration system temporarily unavailable';
+        return;
     }
     
-    currentUser = newUser;
+    // Create secure session user object
+    const sessionUser = {
+        ...newUser,
+        loginTime: new Date().toISOString(),
+        sessionToken: window.generateSecureSessionToken ? window.generateSecureSessionToken() : `fallback_${Date.now()}_${Math.random().toString(36).substr(2, 15)}`
+    };
+    
+    currentUser = sessionUser;
     
     // Debug log to verify user creation
     console.log('New user registered:', newUser);
+    console.log('Session user created:', sessionUser);
     console.log('All users after registration:', window.getUsers ? window.getUsers() : users);
     
-    // Store user in localStorage for session persistence
-    localStorage.setItem('currentUser', JSON.stringify(newUser));
+    // Use SimpleSessionManager to handle login
+    if (window.SimpleSessionManager) {
+        window.SimpleSessionManager.login(sessionUser);
+    } else {
+        // Fallback to direct localStorage
+        localStorage.setItem('currentUser', JSON.stringify(sessionUser));
+        localStorage.setItem('isLoggedIn', 'true');
+    }
     
     // Check if they came from booking page
     if (sessionStorage.getItem('pendingBooking')) {
@@ -373,11 +463,15 @@ function handleRegister(e) {
 function handleLogout() {
     currentUser = null;
     
-    // Clear stored user data
-    localStorage.removeItem('currentUser');
-    
-    // Dispatch event to update navigation
-    window.dispatchEvent(new CustomEvent('userAuthChanged'));
+    // Use SimpleSessionManager for logout
+    if (window.SimpleSessionManager) {
+        window.SimpleSessionManager.logout();
+    } else if (window.secureLogout) {
+        window.secureLogout();
+    } else {
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('isLoggedIn');
+    }
     
     authScreen.style.display = 'flex';
     userPortal.style.display = 'none';
@@ -385,31 +479,46 @@ function handleLogout() {
     registerForm.reset();
 }
 
-function checkAuthStatus() {
-    // Check if user is already logged in
-    const storedUser = localStorage.getItem('currentUser');
-    if (storedUser) {
-        try {
-            const user = JSON.parse(storedUser);
-            if (user && user.role === 'user') {
-                // User is logged in, show portal directly
-                currentUser = user;
-                showUserPortal();
-                return;
-            } else if (user && user.role === 'admin') {
-                // Admin user, redirect to admin panel
-                window.location.href = 'admin.html';
-                return;
+async function checkAuthStatus() {
+    try {
+        let user = null;
+        
+        // Try secure server-side session validation first
+        if (window.serverAvailable && window.validateSessionSecure) {
+            try {
+                user = await window.validateSessionSecure();
+                console.log('🔗 Server session validation successful');
+            } catch (error) {
+                console.warn('🔗 Server session validation failed:', error.message);
             }
-        } catch (e) {
-            // Invalid stored data, clear it
-            localStorage.removeItem('currentUser');
         }
+        
+        // Fallback to client-side validation if server not available
+        if (!user && window.validateSession) {
+            user = window.validateSession();
+            console.log('🔒 Using fallback client-side session validation');
+        }
+        
+        if (user && user.role === 'user') {
+            // User is logged in, show portal directly
+            currentUser = user;
+            showUserPortal();
+            return;
+        } else if (user && user.role === 'admin') {
+            // Admin user, redirect to admin panel
+            window.location.href = 'admin.html';
+            return;
+        }
+        
+        // No valid user found, show login screen
+        authScreen.style.display = 'flex';
+        userPortal.style.display = 'none';
+        
+    } catch (error) {
+        console.error('Auth status check error:', error);
+        authScreen.style.display = 'flex';
+        userPortal.style.display = 'none';
     }
-    
-    // No valid user found, show login screen
-    authScreen.style.display = 'flex';
-    userPortal.style.display = 'none';
 }
 
 function showUserPortal() {
@@ -625,10 +734,9 @@ function handleProfileUpdate(e) {
     currentUser.phone = document.getElementById('profilePhone').value;
     currentUser.preferences = document.getElementById('profilePreferences').value;
     
-    // Update the user in the users array
-    const userIndex = users.findIndex(u => u.id === currentUser.id);
-    if (userIndex !== -1) {
-        users[userIndex] = { ...users[userIndex], ...currentUser };
+    // Update the user in the shared data system
+    if (window.updateUser) {
+        window.updateUser(currentUser.id, currentUser);
     }
     
     // Update display

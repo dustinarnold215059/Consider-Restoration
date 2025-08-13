@@ -2,11 +2,15 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
-// Rate limiting removed
+const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 const session = require('express-session');
 const SequelizeStore = require('connect-session-sequelize')(session.Store);
 require('dotenv').config();
+
+// Import security configuration
+const { getSecurityConfig, isSecure, logSecurityEvent } = require('./config/security');
+const { ensureAdminExists, validateAdminSession } = require('./middleware/adminAuth');
 
 const { sequelize } = require('./models');
 const authRoutes = require('./routes/auth');
@@ -17,58 +21,37 @@ const contactRoutes = require('./routes/contact');
 const waitlistRoutes = require('./routes/waitlist');
 const analyticsRoutes = require('./routes/analytics');
 const healthRoutes = require('./routes/health');
+const adminRoutes = require('./routes/admin');
 const reminderService = require('./services/reminderService');
 
 const app = express();
 const PORT = process.env.PORT || 3050;
 
-// Security middleware
-app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com"],
-            scriptSrc: ["'self'", "https://js.stripe.com", "https://www.googletagmanager.com"],
-            connectSrc: ["'self'", "https://api.stripe.com"],
-            frameSrc: ["https://js.stripe.com"],
-            imgSrc: ["'self'", "data:", "https:"],
-        },
-    },
-}));
+// Get security configuration
+const securityConfig = getSecurityConfig();
 
-// All rate limiting code removed
+// Log startup security status
+console.log(`🔒 Starting server in ${process.env.NODE_ENV || 'development'} mode`);
+console.log(`🔒 Secure environment: ${isSecure() ? 'YES' : 'NO'}`);
+logSecurityEvent('server_startup', {
+    environment: process.env.NODE_ENV || 'development',
+    secure: isSecure(),
+    port: PORT
+});
+
+// Security middleware
+app.use(helmet(securityConfig.helmet));
+
+// Rate limiting middleware
+const generalLimiter = rateLimit(securityConfig.rateLimit);
+const authLimiter = rateLimit(securityConfig.authRateLimit);
+
+app.use(generalLimiter);
 
 // Middleware
 app.use(compression());
 app.use(morgan('combined'));
-app.use(cors({
-    origin: function (origin, callback) {
-        // Allow requests from specific origins or no origin (for mobile apps, etc.)
-        const allowedOrigins = [
-            'http://localhost:3050',
-            'http://localhost:3050',
-            'https://considerrestoration.com',
-            'https://www.considerrestoration.com',
-            process.env.FRONTEND_URL
-        ].filter(Boolean); // Remove undefined/null values
-        
-        // Allow requests with no origin (mobile apps, Postman, etc.)
-        if (!origin) return callback(null, true);
-        
-        if (allowedOrigins.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            // In development, allow all origins
-            if (process.env.NODE_ENV === 'development') {
-                callback(null, true);
-            } else {
-                callback(new Error('Not allowed by CORS'));
-            }
-        }
-    },
-    credentials: true
-}));
+app.use(cors(securityConfig.cors));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -78,22 +61,19 @@ const sessionStore = new SequelizeStore({
 });
 
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-super-secret-session-key-consider-restoration-2024',
-    store: sessionStore,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
+    ...securityConfig.session,
+    store: sessionStore
 }));
+
+// Admin session validation middleware
+app.use(validateAdminSession);
 
 // Static files
 app.use('/uploads', express.static('uploads'));
 
-// API Routes
-app.use('/api/auth', authRoutes);
+// API Routes with rate limiting
+app.use('/api/auth', authLimiter, authRoutes); // Stricter rate limiting for auth
+app.use('/api/admin', authLimiter, adminRoutes); // Secure admin routes with rate limiting
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/payments', paymentRoutes);
@@ -171,16 +151,30 @@ async function startServer() {
         // Create session store table
         sessionStore.sync();
         
+        // Ensure at least one admin user exists
+        await ensureAdminExists();
+        
         app.listen(PORT, () => {
             console.log(`✅ Server running on port ${PORT}`);
             console.log(`🌐 Environment: ${process.env.NODE_ENV}`);
             console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+            
+            // Log security status
+            logSecurityEvent('server_ready', {
+                port: PORT,
+                environment: process.env.NODE_ENV,
+                secure: isSecure()
+            });
             
             // Start the appointment reminder service
             reminderService.start();
         });
     } catch (error) {
         console.error('Failed to start server:', error);
+        logSecurityEvent('server_startup_failed', {
+            error: error.message,
+            stack: error.stack
+        });
         process.exit(1);
     }
 }

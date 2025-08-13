@@ -6,7 +6,34 @@
     <title>User Portal - Christopher's Massage Therapy</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/user-portal.css">
+    <script>
+        // Only load manifest for HTTP/HTTPS protocols
+        if (location.protocol === 'http:' || location.protocol === 'https:') {
+            document.write('<link rel="manifest" href="/manifest.json">');
+        }
+    </script>
+    <meta name="theme-color" content="#3A7D99">
+    <script src="js/enhanced-error-handler.js"></script>
+    <script src="js/api-client.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+    <script>
+        // Create compatibility wrapper for bcrypt
+        setTimeout(() => {
+            if (typeof dcodeIO !== 'undefined' && dcodeIO.bcrypt && !window.bcrypt) {
+                window.bcrypt = dcodeIO.bcrypt;
+                console.log('🔒 Created window.bcrypt reference to dcodeIO.bcrypt');
+            }
+        }, 100);
+    </script>
+    <script src="js/secure-tokens.js"></script>
+    <script src="js/auth-security.js"></script>
+    <script src="js/secure-init.js"></script>
+    <script src="js/data-persistence-fixed.js"></script>
     <script src="js/shared-data.js"></script>
+    <script src="js/cookie-session-manager.js"></script>
+    <!-- Email automation optimized and made non-blocking -->
+    <script src="js/email-automation-optimized.js" defer></script>
+    <script src="js/performance-optimizer.js" defer></script>
 </head>
 <body>
     <!-- Login/Register Screen -->
@@ -62,11 +89,11 @@
                 <div id="registerError" class="error-message"></div>
             </form>
             
-            <div class="demo-credentials">
-                <h4>Demo User Accounts:</h4>
-                <p><strong>John Doe:</strong> john.doe@email.com / user123</p>
-                <p><strong>Jane Smith:</strong> jane.smith@email.com / user123</p>
-                <p><strong>Dustin:</strong> dustin@email.com / user123</p>
+            <div class="production-notice">
+                <h4>🔒 Secure Access</h4>
+                <p><strong>Account Access:</strong> Create a new account or log in with your existing credentials</p>
+                <p><em>Note: All passwords are securely encrypted with bcrypt</em></p>
+                <p style="color: #666; font-size: 0.9em;">For security, demo credentials are not displayed in production</p>
             </div>
         </div>
     </div>
@@ -217,6 +244,15 @@
         </div>
     </div>
 
-    <script src="js/user-portal.js"></script>
+    <script src="js/user-portal-secure.js"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => console.log('🚀 Service Worker registered for user portal'))
+                .catch(error => console.log('❌ Service Worker registration failed:', error));
+        }
+    </script>
 </body>
 </html>

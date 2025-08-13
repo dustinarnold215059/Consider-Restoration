@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fix Login Now</title>
+    <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+    <script>
+        setTimeout(() => {
+            if (typeof dcodeIO !== 'undefined' && dcodeIO.bcrypt && !window.bcrypt) {
+                window.bcrypt = dcodeIO.bcrypt;
+            }
+        }, 100);
+    </script>
+    <script src="js/shared-data.js"></script>
+</head>
+<body>
+    <h1>🔧 Fix Login Issue NOW</h1>
+    <button onclick="fixLogin()">Fix Test User Login</button>
+    <button onclick="testLogin()">Test Login</button>
+    <div id="result"></div>
+    
+    <script>
+        function log(msg) {
+            document.getElementById('result').innerHTML += '<div style="margin: 5px 0; padding: 10px; background: #f5f5f5; border-radius: 3px;">' + msg + '</div>';
+        }
+        
+        function fixLogin() {
+            log('🔧 Fixing test user login...');
+            
+            setTimeout(() => {
+                if (typeof dcodeIO !== 'undefined' && dcodeIO.bcrypt) {
+                    // Generate new hash for "test123"
+                    const salt = dcodeIO.bcrypt.genSaltSync(12);
+                    const newHash = dcodeIO.bcrypt.hashSync('test123', salt);
+                    
+                    log(`✅ Generated new hash: ${newHash}`);
+                    
+                    // Get current users
+                    let users = [];
+                    try {
+                        const savedUsers = localStorage.getItem('massageUsers');
+                        if (savedUsers) {
+                            users = JSON.parse(savedUsers);
+                        } else {
+                            users = window.sharedUsers || [];
+                        }
+                    } catch (e) {
+                        users = window.sharedUsers || [];
+                    }
+                    
+                    // Find and update test user
+                    let testUserFound = false;
+                    users = users.map(user => {
+                        if (user.email === 'test@example.com' || user.username === 'test@example.com') {
+                            testUserFound = true;
+                            return {
+                                ...user,
+                                passwordHash: newHash,
+                                password: undefined // Remove plaintext
+                            };
+                        }
+                        return user;
+                    });
+                    
+                    // If no test user found, add one
+                    if (!testUserFound) {
+                        users.push({
+                            id: 999,
+                            username: 'test@example.com',
+                            passwordHash: newHash,
+                            name: 'Test User',
+                            email: 'test@example.com',
+                            phone: '(555) 999-0000',
+                            role: 'user'
+                        });
+                        log('➕ Added new test user');
+                    } else {
+                        log('🔄 Updated existing test user');
+                    }
+                    
+                    // Save back to localStorage
+                    localStorage.setItem('massageUsers', JSON.stringify(users));
+                    window.sharedUsers = users;
+                    
+                    log('✅ Test user fixed! Credentials: test@example.com / test123');
+                    
+                } else {
+                    log('❌ Bcrypt not available');
+                }
+            }, 1000);
+        }
+        
+        function testLogin() {
+            // Load auth system
+            const authScript = document.createElement('script');
+            authScript.src = 'js/auth-security.js';
+            authScript.onload = () => {
+                setTimeout(() => {
+                    if (window.authenticateUser) {
+                        log('🧪 Testing login...');
+                        const result = window.authenticateUser('test@example.com', 'test123');
+                        if (result) {
+                            log(`✅ LOGIN SUCCESS: ${result.name} (${result.email})`);
+                        } else {
+                            log('❌ LOGIN FAILED');
+                        }
+                    } else {
+                        log('❌ authenticateUser not available');
+                    }
+                }, 500);
+            };
+            document.head.appendChild(authScript);
+        }
+        
+        // Auto-fix
+        setTimeout(fixLogin, 1000);
+    </script>
+</body>
+</html>

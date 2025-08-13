@@ -5,28 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Consider Restoration</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/admin.css">
-    <script src="js/error-handler.js"></script>
+    <!-- Modular admin CSS for better performance -->
+    <link rel="stylesheet" href="css/admin-base.css">
+    <link rel="stylesheet" href="css/admin-components.css">
+    <link rel="stylesheet" href="css/admin-dashboard.css">
+    <link rel="stylesheet" href="css/admin-appointments.css">
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#3A7D99">
+    <!-- Browser compatibility polyfills (load first) -->
+    <script src="js/browser-compatibility.js"></script>
+    <script src="js/production-logger.js"></script>
+    
+    <!-- Core utility scripts -->
+    <script src="js/site-config.js"></script>
+    <script src="js/logging-utility.js"></script>
+    <script src="js/environment-config.js"></script>
+    
+    <script src="js/enhanced-error-handler.js"></script>
+    <script src="js/api-client.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+    <script src="js/secure-tokens.js"></script>
+    <script src="js/auth-security.js"></script>
+    <script src="js/secure-init.js"></script>
+    <script src="js/data-persistence-fixed.js"></script>
     <script src="js/shared-data.js"></script>
-    <script>
-        // Admin page protection - redirect non-admin users
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check if user is accessing admin page directly
-            const currentUser = localStorage.getItem('currentUser');
-            if (currentUser) {
-                const user = JSON.parse(currentUser);
-                if (user.role !== 'admin') {
-                    // Non-admin user trying to access admin page
-                    alert('Access denied. This page is for administrators only.');
-                    window.location.href = 'index.html';
-                    return;
-                }
-            }
-            
-            // If no user is logged in, show login screen normally
-            // The admin login will handle authentication
-        });
-    </script>
+    <script src="js/cookie-session-manager.js"></script>
+    <script src="js/navigation-handler.js"></script>
+    <!-- Email services removed to prevent performance issues -->
+    <!-- <script src="js/email-service.js"></script> -->
+    <!-- <script src="js/email-automation.js"></script> -->
+    <!-- Admin login handled by admin-secure.js -->
 </head>
 <body>
     <div id="loginScreen" class="login-screen">
@@ -37,8 +45,8 @@
             </div>
             <form id="adminLoginForm">
                 <div class="form-group">
-                    <label for="username">Username:</label>
-                    <input type="text" id="username" name="username" required>
+                    <label for="username">Email:</label>
+                    <input type="email" id="username" name="username" required>
                 </div>
                 <div class="form-group">
                     <label for="password">Password:</label>
@@ -47,12 +55,27 @@
                 <button type="submit">Login</button>
                 <div id="loginError" class="error-message"></div>
             </form>
-            <div class="demo-credentials">
-                <h4>Demo Credentials:</h4>
-                <p><strong>Admin:</strong> admin@test.com / admin123</p>
-                <p><strong>User 1:</strong> john.doe@email.com / user123</p>
-                <p><strong>User 2:</strong> jane.smith@email.com / user123</p>
-                <p><strong>User 3:</strong> dustin@email.com / user123</p>
+            <div class="security-notice">
+                <h4>🔒 Administrator Access</h4>
+                <div class="security-info">
+                    <p><strong>Security Features:</strong></p>
+                    <ul>
+                        <li>✅ Server-side authentication with bcrypt encryption</li>
+                        <li>✅ Session-based access control</li>
+                        <li>✅ Production environment validation</li>
+                        <li>✅ Automatic timeout protection</li>
+                    </ul>
+                </div>
+                <div class="login-help">
+                    <p><strong>First Time Setup:</strong></p>
+                    <p>1. Contact system administrator for credentials</p>
+                    <p>2. Change password immediately after first login</p>
+                    <p>3. Enable two-factor authentication if available</p>
+                </div>
+                <div class="environment-warning" style="display: none;" id="devModeWarning">
+                    <p style="color: #d63384; font-weight: bold;">⚠️ DEVELOPMENT MODE DETECTED</p>
+                    <p style="color: #666; font-size: 0.9em;">This system is running in development mode. Do not use in production.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -68,6 +91,7 @@
                 <button class="nav-btn" data-section="appointments">Appointments</button>
                 <button class="nav-btn" data-section="schedule">Schedule</button>
                 <button class="nav-btn" data-section="clients">Clients</button>
+                <button class="nav-btn" data-section="memberships">Memberships</button>
                 <button class="nav-btn" data-section="cash-register">Cash Register</button>
                 <button class="nav-btn" data-section="reviews">Reviews</button>
                 <button class="nav-btn" data-section="messages">Messages</button>
@@ -312,6 +336,132 @@
                             <!-- Users will be populated here -->
                         </tbody>
                     </table>
+                </div>
+            </section>
+
+            <!-- Memberships Section -->
+            <section id="memberships" class="admin-section">
+                <div class="section-header">
+                    <h2>Membership Management</h2>
+                    <div class="membership-stats">
+                        <div class="stat-card">
+                            <div class="stat-number" id="activeMembersCount">0</div>
+                            <div class="stat-label">Active Members</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="monthlyMembershipRevenue">$0</div>
+                            <div class="stat-label">Monthly Revenue</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="memberRetentionRate">0%</div>
+                            <div class="stat-label">Retention Rate</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Membership Filters -->
+                <div class="section-controls">
+                    <div class="filter-group">
+                        <label for="membershipStatusFilter">Status:</label>
+                        <select id="membershipStatusFilter">
+                            <option value="all">All Statuses</option>
+                            <option value="active">Active</option>
+                            <option value="expired">Expired</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="membershipTypeFilter">Type:</label>
+                        <select id="membershipTypeFilter">
+                            <option value="all">All Types</option>
+                            <option value="monthly-starter">Monthly Starter</option>
+                            <option value="monthly-premium">Monthly Premium</option>
+                            <option value="monthly-elite">Monthly Elite</option>
+                        </select>
+                    </div>
+                    <button id="exportMembershipsBtn" class="btn-secondary">Export Data</button>
+                </div>
+
+                <!-- Memberships Table -->
+                <div class="table-container">
+                    <table class="data-table" id="membershipsTable">
+                        <thead>
+                            <tr>
+                                <th>Member</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Sessions</th>
+                                <th>Next Payment</th>
+                                <th>Monthly Revenue</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="membershipsTableBody">
+                            <!-- Membership rows will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Financial Summary -->
+                <div class="financial-summary">
+                    <h3>Financial Overview</h3>
+                    <div class="summary-grid">
+                        <div class="summary-card">
+                            <h4>This Month</h4>
+                            <div class="summary-stat">
+                                <span class="summary-amount" id="thisMonthMembershipRevenue">$0</span>
+                                <span class="summary-label">Revenue</span>
+                            </div>
+                            <div class="summary-stat">
+                                <span class="summary-amount" id="thisMonthNewMembers">0</span>
+                                <span class="summary-label">New Members</span>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <h4>Last Month</h4>
+                            <div class="summary-stat">
+                                <span class="summary-amount" id="lastMonthMembershipRevenue">$0</span>
+                                <span class="summary-label">Revenue</span>
+                            </div>
+                            <div class="summary-stat">
+                                <span class="summary-amount" id="lastMonthChurn">0</span>
+                                <span class="summary-label">Cancelled</span>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <h4>Yearly Total</h4>
+                            <div class="summary-stat">
+                                <span class="summary-amount" id="yearlyMembershipRevenue">$0</span>
+                                <span class="summary-label">Revenue</span>
+                            </div>
+                            <div class="summary-stat">
+                                <span class="summary-amount" id="totalMembers">0</span>
+                                <span class="summary-label">Total Members</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment History -->
+                <div class="payment-history">
+                    <h3>Recent Membership Payments</h3>
+                    <div class="table-container">
+                        <table class="data-table" id="membershipPaymentsTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Member</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Payment ID</th>
+                                </tr>
+                            </thead>
+                            <tbody id="membershipPaymentsTableBody">
+                                <!-- Payment history rows will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
@@ -689,6 +839,80 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="js/admin.js"></script>
+    <script src="js/admin-secure.js"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+                .then(registration => {
+                    console.log('🚀 Service Worker registered for admin panel');
+                    
+                    // Load dashboard module dynamically when available
+                    if (window.AdminDashboard) {
+                        console.log('📊 Admin dashboard module available');
+                    } else {
+                        // Try to load the modular dashboard
+                        import('./js/modules/admin/dashboard.js')
+                            .then(module => {
+                                window.AdminDashboard = module.AdminDashboard;
+                                console.log('📊 Admin dashboard module loaded dynamically');
+                            })
+                            .catch(error => console.log('Dashboard module not available:', error));
+                    }
+                })
+                .catch(error => console.log('❌ Service Worker registration failed:', error));
+        }
+        
+        // Environment Detection and Security Warnings
+        document.addEventListener('DOMContentLoaded', function() {
+            const devModeWarning = document.getElementById('devModeWarning');
+            
+            // Check if we're in development mode
+            const isDevelopment = typeof EnvConfig !== 'undefined' ? 
+                EnvConfig.isDevelopment() : 
+                (window.location.hostname === 'localhost' || 
+                 window.location.hostname === '127.0.0.1' || 
+                 window.location.protocol === 'file:');
+            
+            // Show development warning if applicable
+            if (isDevelopment && devModeWarning) {
+                devModeWarning.style.display = 'block';
+                
+                if (typeof logger !== 'undefined') {
+                    logger.warn('🚨 Admin panel running in development mode');
+                }
+            }
+            
+            // Add additional security checks
+            if (window.location.protocol === 'http:' && 
+                window.location.hostname !== 'localhost' && 
+                window.location.hostname !== '127.0.0.1') {
+                
+                // Show insecure connection warning for non-localhost HTTP
+                const securityNotice = document.querySelector('.security-notice');
+                if (securityNotice) {
+                    const warningDiv = document.createElement('div');
+                    warningDiv.className = 'environment-warning';
+                    warningDiv.style.display = 'block';
+                    warningDiv.innerHTML = `
+                        <p style="color: #d63384; font-weight: bold;">⚠️ INSECURE CONNECTION</p>
+                        <p style="color: #666; font-size: 0.9em;">This admin panel should only be accessed over HTTPS in production.</p>
+                    `;
+                    securityNotice.appendChild(warningDiv);
+                }
+                
+                if (typeof logger !== 'undefined') {
+                    logger.error('🚨 Admin panel accessed over insecure HTTP connection');
+                }
+            }
+            
+            // Hide old production notice if it exists
+            const oldNotice = document.querySelector('.production-notice');
+            if (oldNotice) {
+                oldNotice.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>

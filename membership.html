@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="css/style.css">
     <script src="https://js.stripe.com/v3/"></script>
     <script src="js/shared-data.js"></script>
+    <script src="js/cookie-session-manager.js"></script>
+    <script src="js/navigation-handler.js"></script>
     <style>
         /* Membership Modal Specific Styles */
         .modal {
@@ -452,16 +454,9 @@
                         <button type="submit" class="auth-btn">Register & Join Membership</button>
                     </form>
                     
-                    <div class="demo-accounts">
-                        <h4>Demo Accounts (for testing):</h4>
-                        <div class="demo-account">
-                            <strong>User:</strong> john.doe@email.com / user123
-                            <button onclick="fillDemoLogin('john.doe@email.com', 'user123')">Use This Account</button>
-                        </div>
-                        <div class="demo-account">
-                            <strong>User:</strong> jane.smith@email.com / user123
-                            <button onclick="fillDemoLogin('jane.smith@email.com', 'user123')">Use This Account</button>
-                        </div>
+                    <div class="security-notice">
+                        <h4>🔒 Secure Membership Access:</h4>
+                        <p>Log in with your existing account or create a new account to purchase a membership. All passwords are encrypted with bcrypt for maximum security.</p>
                     </div>
                 </div>
             </div>
@@ -476,6 +471,7 @@
 
     <script src="js/script.js"></script>
     <script>
+        
         // Global variables for membership
         let selectedMembershipPlan = null;
         let currentUser = null;
@@ -502,97 +498,46 @@
             }
         };
         
+        // Helper function to get sessions based on membership type
+        function getMembershipSessions(planType) {
+            switch(planType) {
+                case 'wellness': return 1;
+                case 'restoration-plus': return 2; 
+                case 'therapeutic-elite': return 3;
+                default: return 1;
+            }
+        }
+        
         // Show membership modal
         function showMembershipModal(planType) {
             console.log('🚀 showMembershipModal() called for plan:', planType);
             selectedMembershipPlan = planType;
             
-            // Debug: Check ALL localStorage content at this moment
-            console.log('🔍 DEBUGGING: All localStorage at button click:', Object.keys(localStorage));
-            localStorage.keys?.forEach?.((key, index) => {
-                console.log(`${index}: ${key} = ${localStorage.getItem(key)?.substring(0, 100)}...`);
-            });
-            
-            // Alternative way to check all localStorage
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                const value = localStorage.getItem(key);
-                console.log(`🗂️ ${key}:`, value?.substring(0, 100) + '...');
-                
-                // If we find user data under any key, try to use it
-                if (key === 'currentUser' || (value && value.includes('john.doe@email.com'))) {
-                    console.log('🎯 Found user data under key:', key);
-                }
-            }
-            
             // Check if user is already logged in
-            let currentUserData = localStorage.getItem('currentUser');
-            console.log('🔍 Checking localStorage for currentUser:', currentUserData);
-            
-            // Fallback: Check if user data is in massageUsers and isLoggedIn is true
-            if (!currentUserData && localStorage.getItem('isLoggedIn') === 'true') {
-                console.log('🔍 currentUser missing, checking massageUsers for logged in user...');
-                const massageUsersData = localStorage.getItem('massageUsers');
-                if (massageUsersData) {
-                    try {
-                        const users = JSON.parse(massageUsersData);
-                        // Look for john.doe user specifically, or the most recently active user
-                        const loggedInUser = users.find(u => u.email === 'john.doe@email.com' || u.username === 'john.doe@email.com');
-                        if (loggedInUser) {
-                            console.log('✅ Found user in massageUsers:', loggedInUser);
-                            currentUserData = JSON.stringify(loggedInUser);
-                            // Restore the currentUser in localStorage
-                            localStorage.setItem('currentUser', currentUserData);
-                        }
-                    } catch (error) {
-                        console.error('❌ Error parsing massageUsers:', error);
-                    }
-                }
-            }
+            const currentUserData = localStorage.getItem('currentUser');
+            console.log('🔍 Checking for currentUser:', currentUserData ? 'Found' : 'Not found');
             
             if (currentUserData) {
-                console.log('🔧 Raw localStorage data:', currentUserData);
-                console.log('🔧 Data type:', typeof currentUserData);
-                console.log('🔧 Data length:', currentUserData.length);
-                
                 try {
                     const user = JSON.parse(currentUserData);
-                    console.log('✅ JSON parsing successful');
-                    console.log('✅ User found in localStorage:', user);
-                    console.log('👤 User details - Name:', user.name, 'Email:', user.email, 'Role:', user.role);
-                    
-                    // Check if it's a valid user (has required fields)
-                    if (user.name && user.email) {
-                        console.log('✅ User is valid, proceeding directly to payment');
-                        // User is logged in, go directly to payment
-                        proceedToMembershipPayment(planType, user);
-                        return;
-                    } else {
-                        console.warn('⚠️ User data incomplete:', user);
-                    }
+                    console.log('✅ User found:', user.name, 'Going to payment...');
+                    currentUser = user;
+                    proceedToMembershipPayment(planType, user);
+                    return;
                 } catch (error) {
-                    console.error('❌ Error parsing user data from localStorage:', error);
-                    console.error('❌ Raw data that caused error:', currentUserData);
-                    console.error('❌ Error details:', error.message);
-                    // DON'T clear the data automatically - let's see what's wrong first
-                    // localStorage.removeItem('currentUser');
+                    console.error('❌ Error parsing user data:', error);
                 }
-            } else {
-                console.log('❌ No user found in localStorage');
             }
             
+            // No user logged in - show login modal
+            console.log('❌ No user found, showing login modal');
             const modal = document.getElementById('membershipModal');
-            console.log('Modal element:', modal);
             if (!modal) {
-                console.error('❌ Membership modal element not found!');
-                alert('Membership modal not found. Please check the page setup.');
+                alert('Modal not found!');
                 return;
             }
             
-            // Show membership preview
             displayMembershipPreview(planType);
-            
-            // Show modal
             modal.classList.add('show');
             document.body.style.overflow = 'hidden';
             
@@ -612,8 +557,11 @@
             selectedMembershipPlan = planType;
             currentUser = user; // Set the global currentUser variable
             
-            // Store current user in localStorage (in case it's not there)
-            localStorage.setItem('currentUser', JSON.stringify(user));
+            // Store current user in CookieSessionManager (preserve login state)
+            if (window.CookieSessionManager && !window.CookieSessionManager.getCurrentUser()) {
+                window.CookieSessionManager.login(user);
+                console.log('🍪 Stored user in CookieSessionManager for membership flow');
+            }
             
             // Call the same completion function that login/register would call
             completeMembershipSignup();
@@ -634,19 +582,19 @@
             const preview = document.getElementById('membershipPreview');
             if (!preview || !membershipPlans[planType]) return;
             
-            const plan = membershipPlans[planType];
+            const selectedPlan = membershipPlans[planType];
             
             preview.innerHTML = `
                 <h4>Selected Membership:</h4>
                 <div class="membership-detail">
-                    <span class="plan-name">${plan.name}</span>
-                    <span class="plan-pricing">${plan.price} ${plan.period}</span>
+                    <span class="plan-name">${selectedPlan.name}</span>
+                    <span class="plan-pricing">${selectedPlan.price} ${selectedPlan.period}</span>
                 </div>
                 <div class="features-summary">
                     <strong>Key Benefits:</strong>
                     <ul>
-                        ${plan.features.slice(0, 3).map(feature => `<li>✓ ${feature}</li>`).join('')}
-                        ${plan.features.length > 3 ? '<li>... and more!</li>' : ''}
+                        ${selectedPlan.features.slice(0, 3).map(feature => `<li>✓ ${feature}</li>`).join('')}
+                        ${selectedPlan.features.length > 3 ? '<li>... and more!</li>' : ''}
                     </ul>
                 </div>
             `;
@@ -678,13 +626,18 @@
             showLoginTab();
         }
         
-        // Authentication functions
-        function authenticateUser(email, password) {
-            const users = window.sharedUsers || [];
-            const user = users.find(u => u.username === email && u.password === password);
+        // Authentication functions - use the main auth system
+        function authenticateMembershipUser(email, password) {
+            // Use the main authentication system from auth-security.js
+            const user = window.authenticateUser ? window.authenticateUser(email, password) : null;
             
             if (user) {
                 currentUser = user;
+                // Log the user into CookieSessionManager
+                if (window.CookieSessionManager) {
+                    window.CookieSessionManager.login(user);
+                    console.log('🍪 User logged in via CookieSessionManager in membership flow');
+                }
                 return { success: true, user: user };
             }
             
@@ -722,6 +675,13 @@
             }
             
             currentUser = newUser;
+            
+            // Log the new user into CookieSessionManager
+            if (window.CookieSessionManager) {
+                window.CookieSessionManager.login(newUser);
+                console.log('🍪 New user registered and logged in via CookieSessionManager');
+            }
+            
             return { success: true, user: newUser };
         }
         
@@ -740,7 +700,7 @@
         
         // Show Stripe payment modal
         function showPaymentModal() {
-            const plan = membershipPlans[selectedMembershipPlan];
+            const membershipPlan = membershipPlans[selectedMembershipPlan];
             
             // Create payment modal
             const paymentModal = document.createElement('div');
@@ -757,8 +717,8 @@
                     <div class="modal-body">
                         <div class="membership-summary" style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
                             <h4 style="margin: 0 0 0.5rem 0; color: #2c3e50;">Membership Summary</h4>
-                            <p style="margin: 0.25rem 0;"><strong>Plan:</strong> ${plan.name}</p>
-                            <p style="margin: 0.25rem 0;"><strong>Price:</strong> ${plan.price} ${plan.period}</p>
+                            <p style="margin: 0.25rem 0;"><strong>Plan:</strong> ${membershipPlan.name}</p>
+                            <p style="margin: 0.25rem 0;"><strong>Price:</strong> ${membershipPlan.price} ${membershipPlan.period}</p>
                             <p style="margin: 0.25rem 0;"><strong>Member:</strong> ${currentUser.name}</p>
                             <p style="margin: 0.25rem 0;"><strong>Email:</strong> ${currentUser.email}</p>
                         </div>
@@ -792,7 +752,7 @@
                                 cursor: pointer;
                                 transition: background 0.3s;
                             ">
-                                <span id="button-text">💳 Subscribe for ${plan.price}/month</span>
+                                <span id="button-text">💳 Subscribe for ${membershipPlan.price}/month</span>
                                 <span id="spinner" style="display: none;">Processing...</span>
                             </button>
                         </form>
@@ -912,26 +872,69 @@
         function handlePaymentSuccess() {
             console.log('🎉 Payment successful!');
             
-            // Update user's membership
+            // Get plan details
+            const currentPlan = membershipPlans[selectedMembershipPlan];
+            const priceNum = parseInt(currentPlan.price.replace('$', ''));
+            
+            // Update user's membership info
             currentUser.membershipPlan = selectedMembershipPlan;
             currentUser.membershipStartDate = new Date().toISOString();
             currentUser.membershipStatus = 'active';
             currentUser.paymentStatus = 'paid';
             
-            // Store user data
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            // Store user data in CookieSessionManager
+            if (window.CookieSessionManager) {
+                window.CookieSessionManager.login(currentUser);
+                console.log('🍪 Updated user session with membership info');
+            } else {
+                // Fallback to localStorage if CookieSessionManager not available
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                console.log('⚠️ Using localStorage fallback for user data');
+            }
             
             // Update in shared data if available
             if (window.updateUser) {
                 window.updateUser(currentUser.id, currentUser);
             }
             
+            // Create actual membership record in the shared membership system
+            if (window.addMembership) {
+                const startDate = new Date();
+                const endDate = new Date();
+                endDate.setMonth(endDate.getMonth() + 1); // Add one month
+                
+                const membershipRecord = {
+                    userId: currentUser.id,
+                    type: selectedMembershipPlan,
+                    typeName: currentPlan.name,
+                    price: priceNum,
+                    sessionsIncluded: getMembershipSessions(selectedMembershipPlan),
+                    sessionsUsed: 0,
+                    status: 'active',
+                    startDate: startDate.toISOString().slice(0, 10),
+                    endDate: endDate.toISOString().slice(0, 10),
+                    paymentDate: startDate.toISOString().slice(0, 10),
+                    autoRenew: true,
+                    stripeSubscriptionId: 'sub_live_' + Date.now(),
+                    paymentHistory: [{
+                        id: Date.now(),
+                        amount: priceNum,
+                        date: startDate.toISOString().slice(0, 10),
+                        status: 'paid',
+                        stripePaymentId: 'pi_live_' + Date.now()
+                    }]
+                };
+                
+                window.addMembership(membershipRecord);
+                console.log('✅ Membership record created:', membershipRecord);
+            }
+            
             // Close payment modal
             closePaymentModal();
             
             // Show success message
-            const plan = membershipPlans[selectedMembershipPlan];
-            showPaymentSuccessModal(plan);
+            const successPlan = membershipPlans[selectedMembershipPlan];
+            showPaymentSuccessModal(successPlan);
         }
         
         // Show payment success modal
@@ -1007,47 +1010,44 @@
         
         // Update page for logged-in users
         function updatePageForLoggedInUser() {
-            const currentUserData = localStorage.getItem('currentUser');
-            console.log('🔍 updatePageForLoggedInUser - localStorage data:', currentUserData);
+            // Use CookieSessionManager instead of localStorage
+            let user = null;
+            if (window.CookieSessionManager) {
+                user = window.CookieSessionManager.getCurrentUser();
+            }
             
-            if (currentUserData) {
-                try {
-                    const user = JSON.parse(currentUserData);
-                    console.log('✅ User is logged in:', user.name, 'Role:', user.role);
-                    console.log('👤 Full user object:', user);
+            console.log('🔍 updatePageForLoggedInUser - currentUser:', user ? 'Found' : 'Not found');
+            
+            if (user) {
+                console.log('✅ updatePageForLoggedInUser - User:', user.name);
                 
-                // Update all "Join Now" buttons to show personalized text
+                // Update navigation (this is now handled by navigation-handler.js)
+                // const accountNavLink = document.getElementById('accountNavLink');
+                // if (accountNavLink) {
+                //     accountNavLink.textContent = 'My Account';
+                // }
+                
+                // Update buttons
                 const joinButtons = document.querySelectorAll('.membership-btn');
                 joinButtons.forEach(button => {
-                    button.innerHTML = `Join Now - ${user.name}`;
-                    button.style.background = '#27ae60'; // Green color to indicate ready to proceed
+                    if (!button.innerHTML.includes(user.name)) {
+                        button.innerHTML = `Join Now - ${user.name}`;
+                        button.style.background = '#27ae60';
+                    }
                 });
                 
-                // Add a welcome message at the top
-                const heroSection = document.querySelector('.membership-intro');
-                if (heroSection && !document.getElementById('logged-in-notice')) {
-                    const welcomeDiv = document.createElement('div');
-                    welcomeDiv.id = 'logged-in-notice';
-                    welcomeDiv.style.cssText = `
-                        background: #d4edda;
-                        border: 1px solid #c3e6cb;
-                        color: #155724;
-                        padding: 1rem;
-                        border-radius: 8px;
-                        margin-bottom: 2rem;
-                        text-align: center;
-                    `;
-                    welcomeDiv.innerHTML = `
-                        <strong>Welcome back, ${user.name}!</strong><br>
-                        You're already signed in. Click any "Join Now" button below to proceed directly to payment.
-                    `;
-                    heroSection.appendChild(welcomeDiv);
-                }
-                } catch (error) {
-                    console.error('❌ Error in updatePageForLoggedInUser:', error);
-                }
+                console.log('✅ Updated buttons for user:', user.name);
             } else {
-                console.log('❌ No user data found for page updates');
+                console.log('❌ updatePageForLoggedInUser - No currentUser found');
+                
+                // Reset buttons when logged out
+                const joinButtons = document.querySelectorAll('.membership-btn');
+                joinButtons.forEach(button => {
+                    if (button.innerHTML.includes(' - ')) {
+                        button.innerHTML = 'Join Now';
+                        button.style.background = '';
+                    }
+                });
             }
         }
         
@@ -1079,11 +1079,17 @@
         
         // Event listeners
         document.addEventListener('DOMContentLoaded', function() {
-            // Debug localStorage content first
-            debugLocalStorage();
+            // Delay to ensure CookieSessionManager is ready
+            setTimeout(updatePageForLoggedInUser, 300);
             
-            // Check if user is logged in and update the page accordingly
-            updatePageForLoggedInUser();
+            // Listen for authentication events
+            window.addEventListener('userAuthChanged', () => {
+                setTimeout(updatePageForLoggedInUser, 100);
+            });
+            
+            window.addEventListener('userLoggedOut', () => {
+                setTimeout(updatePageForLoggedInUser, 100);
+            });
             // Login form
             const loginForm = document.getElementById('loginForm');
             if (loginForm) {
@@ -1093,7 +1099,7 @@
                     const email = document.getElementById('loginEmail').value;
                     const password = document.getElementById('loginPassword').value;
                     
-                    const result = authenticateUser(email, password);
+                    const result = authenticateMembershipUser(email, password);
                     
                     if (result.success) {
                         completeMembershipSignup();

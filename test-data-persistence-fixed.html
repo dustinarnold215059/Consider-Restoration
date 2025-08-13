@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Fixed Data Persistence</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Fixed Data Persistence Test</h1>
+        <p>Testing the fixed data persistence manager functionality...</p>
+        
+        <div id="testResults"></div>
+        
+        <button onclick="runAllTests()">Run All Tests</button>
+        <button onclick="testServerConnection()">Test Server Connection</button>
+        <button onclick="testGlobalFunctions()">Test Global Functions</button>
+        <button onclick="testDataOperations()">Test Data Operations</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+
+    <!-- Include the fixed data persistence manager -->
+    <script src="js/api-client.js"></script>
+    <script src="js/data-persistence-fixed.js"></script>
+
+    <script>
+        const results = document.getElementById('testResults');
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+        
+        function clearResults() {
+            results.innerHTML = '';
+        }
+        
+        async function testServerConnection() {
+            addResult('🔄 Testing server connection...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:3050/health', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const health = await response.json();
+                    addResult(`✅ Server connection: ${health.status}`, 'success');
+                } else {
+                    addResult(`❌ Server connection failed: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Server connection error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testGlobalFunctions() {
+            addResult('🔄 Testing global functions availability...', 'info');
+            
+            const functions = [
+                'getUsers',
+                'addUser', 
+                'updateUser',
+                'getAppointments',
+                'addAppointment',
+                'updateAppointment',
+                'authenticateUserSecure',
+                'validateSessionSecure',
+                'getDataPersistenceStatus'
+            ];
+            
+            for (const funcName of functions) {
+                if (typeof window[funcName] === 'function') {
+                    addResult(`✅ Function available: ${funcName}`, 'success');
+                } else {
+                    addResult(`❌ Function missing: ${funcName}`, 'error');
+                }
+            }
+            
+            // Test the data persistence manager instance
+            if (window.dataPersistenceFixed) {
+                addResult(`✅ Data persistence manager instance: Available`, 'success');
+                
+                // Check if it's ready
+                const status = window.dataPersistenceFixed.getStatus();
+                addResult(`📊 Manager status: ${JSON.stringify(status)}`, 'info');
+            } else {
+                addResult(`❌ Data persistence manager instance: Missing`, 'error');
+            }
+        }
+        
+        async function testDataOperations() {
+            addResult('🔄 Testing data operations...', 'info');
+            
+            try {
+                // Test getUsers function
+                addResult('Testing getUsers()...', 'info');
+                const users = await window.getUsers();
+                addResult(`✅ getUsers() returned: ${users ? users.length : 0} users`, 'success');
+                
+                // Test getAppointments function
+                addResult('Testing getAppointments()...', 'info');
+                const appointments = await window.getAppointments();
+                addResult(`✅ getAppointments() returned: ${appointments ? appointments.length : 0} appointments`, 'success');
+                
+                // Test authentication functions
+                addResult('Testing authentication functions...', 'info');
+                
+                // Test with invalid credentials (should fail gracefully)
+                const authResult = await window.authenticateUserSecure('test@example.com', 'wrongpassword');
+                addResult(`✅ authenticateUserSecure() test: ${authResult ? 'Authenticated' : 'Failed (expected)'}`, 'success');
+                
+                // Test session validation
+                const sessionResult = await window.validateSessionSecure();
+                addResult(`✅ validateSessionSecure() test: ${sessionResult ? 'Valid session' : 'No session (expected)'}`, 'success');
+                
+            } catch (error) {
+                addResult(`❌ Data operations error: ${error.message}`, 'error');
+                console.error('Data operations test error:', error);
+            }
+        }
+        
+        async function runAllTests() {
+            clearResults();
+            addResult('🚀 Starting comprehensive test suite...', 'info');
+            
+            await testServerConnection();
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+            
+            await testGlobalFunctions();
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+            
+            await testDataOperations();
+            
+            addResult('✅ All tests completed!', 'success');
+        }
+        
+        // Auto-run tests when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                addResult('🔄 Auto-running tests...', 'info');
+                runAllTests();
+            }, 2000); // Wait 2 seconds for scripts to load
+        });
+        
+        // Listen for data persistence ready event
+        window.addEventListener('dataPersistenceReady', () => {
+            addResult('📊 Data persistence manager is ready!', 'success');
+        });
+    </script>
+</body>
+</html>

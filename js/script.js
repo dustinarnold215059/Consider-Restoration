@@ -2,22 +2,9 @@
 const stripe = Stripe('pk_test_51234567890abcdef'); // Replace with your actual publishable key
 const elements = stripe.elements();
 
-// Available time slots based on Christopher's actual business hours
-const timeSlots = {
-    // Monday: 10:00 AM - 4:00 PM
-    1: ['10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM'],
-    // Tuesday: By appointment only (limited)
-    2: ['11:00 AM', '2:00 PM'],
-    // Wednesday: 9:45 AM - 5:30 PM
-    3: ['10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'],
-    // Thursday: 12:00 PM - 7:00 PM
-    4: ['12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM'],
-    // Friday: 10:00 AM - 6:00 PM
-    5: ['10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'],
-    // Saturday/Sunday: Closed
-    6: [],
-    0: []
-};
+// Available time slots will be loaded from SiteConfig
+// This is now dynamically populated from the configuration
+let timeSlots = {};
 
 // Dynamic availability data - generated based on Christopher's actual business hours
 let availability = {};
@@ -27,22 +14,46 @@ let selectedPrice = 0;
 let selectedDate = null;
 let selectedTime = null;
 
-// DOM Elements (initialize as null, will be set when DOM is ready)
+// DOM Elements (will be set when DOM is ready)
 let serviceSelect = null;
-const dateInput = document.getElementById('date');
-const timeSelect = document.getElementById('time');
-const totalPriceElement = document.getElementById('totalPrice');
-const bookingForm = document.getElementById('bookingForm');
-const paymentModal = document.getElementById('paymentModal');
-const closeModal = document.querySelector('.close');
+let dateInput = null;
+let timeSelect = null;
+let totalPriceElement = null;
+let bookingForm = null;
+let paymentModal = null;
+let closeModal = null;
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Page loaded, initializing...');
+    logger.info('🚀 Page loaded, initializing...');
     
-    // Initialize serviceSelect (the only one that was null)
+    // Load configuration-based time slots
+    if (typeof SiteConfig !== 'undefined') {
+        timeSlots = Object.keys(SiteConfig.businessHours).reduce((acc, day) => {
+            acc[day] = SiteConfig.businessHours[day].hours;
+            return acc;
+        }, {});
+        logger.debug('📅 Time slots loaded from configuration:', timeSlots);
+    }
+    
+    // Initialize all DOM elements
     serviceSelect = document.getElementById('service');
-    console.log('📝 Service select initialized:', serviceSelect);
+    dateInput = document.getElementById('date');
+    timeSelect = document.getElementById('time');
+    totalPriceElement = document.getElementById('totalPrice');
+    bookingForm = document.getElementById('bookingForm');
+    paymentModal = document.getElementById('paymentModal');
+    closeModal = document.querySelector('.close');
+    
+    logger.debug('📝 DOM elements initialized:', {
+        serviceSelect: !!serviceSelect,
+        dateInput: !!dateInput,
+        timeSelect: !!timeSelect,
+        totalPriceElement: !!totalPriceElement,
+        bookingForm: !!bookingForm,
+        paymentModal: !!paymentModal,
+        closeModal: !!closeModal
+    });
     
     setupEventListeners();
     setupDateInput();
@@ -57,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Also try on window load as backup
 window.addEventListener('load', function() {
-    console.log('🌟 Window fully loaded, checking auto-populate again...');
+    logger.debug('🌟 Window fully loaded, checking auto-populate again...');
     // Only run if we haven't already populated
     const serviceSelect = document.getElementById('service');
     if (serviceSelect && !serviceSelect.value) {
@@ -845,7 +856,8 @@ function checkUserAuthentication() {
             const user = JSON.parse(currentUser);
             return user && user.role === 'user'; // Only regular users, not admin
         } catch (e) {
-            localStorage.removeItem('currentUser');
+            console.error('❌ script.js: Error parsing currentUser, NOT clearing:', e);
+            // localStorage.removeItem('currentUser'); // DISABLED - too aggressive
             return false;
         }
     }
@@ -970,7 +982,8 @@ function populateUserInfo() {
                 addLoggedInNote();
             }
         } catch (e) {
-            localStorage.removeItem('currentUser');
+            console.error('❌ script.js: Another error parsing currentUser, NOT clearing:', e);
+            // localStorage.removeItem('currentUser'); // DISABLED - too aggressive
         }
     }
 }

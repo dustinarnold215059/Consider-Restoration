@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Authentication</title>
+    <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+</head>
+<body>
+    <h1>Authentication Debug Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        function log(msg) {
+            document.getElementById('results').innerHTML += '<div>' + msg + '</div>';
+            console.log(msg);
+        }
+        
+        // Wait for bcrypt to load
+        setTimeout(() => {
+            log('=== Bcrypt Library Check ===');
+            log('dcodeIO available: ' + (typeof dcodeIO !== 'undefined'));
+            
+            if (typeof dcodeIO !== 'undefined') {
+                log('dcodeIO.bcrypt available: ' + (typeof dcodeIO.bcrypt !== 'undefined'));
+                
+                if (dcodeIO.bcrypt) {
+                    // The hash from shared-data.js
+                    const testHash = '$2a$12$acf09WFgZBMo8AJYQNE3n.aNnJp.RxCAdcdSr0FeQALXmaR4c5/VO';
+                    
+                    // Test various passwords
+                    const passwords = ['user123', 'password', 'test123', 'admin123', '123', 'Password123', 'USER123'];
+                    
+                    log('=== Testing Passwords ===');
+                    log('Hash: ' + testHash);
+                    
+                    passwords.forEach(pwd => {
+                        try {
+                            const result = dcodeIO.bcrypt.compareSync(pwd, testHash);
+                            log(`Password "${pwd}": ${result ? '✅ SUCCESS' : '❌ FAILED'}`);
+                        } catch (error) {
+                            log(`Password "${pwd}": ❌ ERROR - ${error.message}`);
+                        }
+                    });
+                }
+            }
+            
+            // Also test admin hash
+            setTimeout(() => {
+                if (dcodeIO && dcodeIO.bcrypt) {
+                    log('=== Testing Admin Hash ===');
+                    const adminHash = '$2a$12$6eXN8j6ylNu6iF3usMK2vuMlTNsIarmuFPyNaMjwdYssGxizTYprG';
+                    const adminPasswords = ['admin123', 'password', 'Admin123', 'ADMIN123', 'christopher'];
+                    
+                    adminPasswords.forEach(pwd => {
+                        try {
+                            const result = dcodeIO.bcrypt.compareSync(pwd, adminHash);
+                            log(`Admin password "${pwd}": ${result ? '✅ SUCCESS' : '❌ FAILED'}`);
+                        } catch (error) {
+                            log(`Admin password "${pwd}": ❌ ERROR - ${error.message}`);
+                        }
+                    });
+                }
+            }, 500);
+            
+        }, 1000);
+    </script>
+</body>
+</html>

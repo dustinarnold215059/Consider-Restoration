@@ -1,0 +1,47 @@
+LOGIN TEST INSTRUCTIONS
+======================
+
+To test the user login persistence:
+
+1. OPEN USER PORTAL:
+   - Open: user-portal.html
+   - Try logging in with one of these test accounts:
+
+2. WORKING TEST ACCOUNT (VERIFIED):
+   Email: test@example.com
+   Password: test123
+   
+3. OTHER TEST ACCOUNTS (may need password verification):
+   Email: john.doe@email.com
+   Password: user123
+   
+   Email: jane.smith@email.com  
+   Password: user123
+
+4. ADMIN ACCOUNT (for admin panel):
+   Email: admin@considerrestoration.com
+   Password: admin123
+
+4. TESTING STEPS:
+   a) Login with one of the test accounts
+   b) Navigate to different pages (index.html, services.html, about.html)
+   c) Check if the navigation shows "My Account" instead of "Login"
+   d) Verify the session persists across page navigation
+   
+5. LOGGED-IN USER FEATURES TO TEST:
+   a) BOOKING PAGE: User details auto-populate (name, email, phone)
+   b) MEMBERSHIP PAGE: Buttons show "Join Now - [User Name]" 
+   c) REVIEWS PAGE: Review form becomes available, name used automatically
+   d) ALL PAGES: Navigation shows "My Account" instead of "Login"
+
+5. DEBUGGING:
+   - Open browser console (F12) to see login debugging messages
+   - Look for messages starting with 🔒 for authentication
+   - Look for messages starting with 🍪 for cookie session management
+
+6. TROUBLESHOOTING:
+   - If login button becomes unresponsive, wait 10 seconds for timeout
+   - Check browser console for any JavaScript errors
+   - Try refreshing the page and logging in again
+
+The login should now work and persist across pages using the new cookie-based session management system.

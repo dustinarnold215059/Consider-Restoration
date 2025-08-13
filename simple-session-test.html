@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Session Test</title>
+</head>
+<body>
+    <h1>Simple Session Test</h1>
+    <div id="output"></div>
+    
+    <button onclick="testSession()">Test Session</button>
+    
+    <script>
+        function log(msg) {
+            document.getElementById('output').innerHTML += '<div>' + msg + '</div>';
+            console.log(msg);
+        }
+        
+        log('Page loaded');
+    </script>
+    
+    <script src="js/cookie-session-manager.js"></script>
+    
+    <script>
+        function testSession() {
+            log('Testing session...');
+            log('CookieSessionManager type: ' + typeof window.CookieSessionManager);
+            if (window.CookieSessionManager) {
+                log('✅ CookieSessionManager is available!');
+                log('Initialized: ' + window.CookieSessionManager.initialized);
+            } else {
+                log('❌ CookieSessionManager not available');
+            }
+        }
+        
+        // Test immediately
+        setTimeout(() => {
+            testSession();
+        }, 1000);
+    </script>
+</body>
+</html>
