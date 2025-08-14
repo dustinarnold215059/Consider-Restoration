@@ -3,11 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Book Massage Appointment Online - Consider Restoration | Livonia, MI</title>
     <meta name="description" content="Book your massage appointment online with Christopher Rembisz, LMT in Livonia, MI. Available services include Swedish, deep tissue, prenatal massage, and applied neurology consultations.">
     <meta name="keywords" content="book massage appointment, online booking, massage therapy Livonia, Swedish massage, deep tissue massage, prenatal massage">
     <link rel="stylesheet" href="css/style.css">
     <link rel="manifest" href="./manifest.json">
+    <script src="js/logger.js"></script>
+    <script src="js/secure-session.js"></script>
+    <style>
+        /* Time blocking styles */
+        option.blocked-time {
+            color: #999 !important;
+            font-weight: bold !important;
+            background-color: #f8f8f8 !important;
+            font-style: italic !important;
+        }
+        option.available-time {
+            color: #333 !important;
+        }
+        /* Additional styling for disabled options */
+        option:disabled {
+            color: #999 !important;
+            background-color: #f0f0f0 !important;
+            font-style: italic !important;
+        }
+    </style>
     <meta name="theme-color" content="#3A7D99">
     <style>
         /* Modal Styles - Emergency approach that works */
@@ -515,7 +538,7 @@
     <script src="js/enhanced-error-handler.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
     <script src="js/secure-tokens.js" defer></script>
-    <script src="js/auth-security.js" defer></script>
+    <script src="js/auth-security.js?v=20250813b" defer></script>
     <script src="js/secure-init.js" defer></script>
     <script src="js/api-client.js" defer></script>
     <script src="js/data-persistence-fixed.js" defer></script>
@@ -611,8 +634,6 @@
                         </div>
                         
                         <button type="submit" class="book-button" onclick="handleBookingSubmit(event)">Book & Pay Now</button>
-                        <button type="button" onclick="debugSharedDataStatus()" style="background: #17a2b8; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-top: 10px; cursor: pointer;">🔍 Debug Shared Data</button>
-                        <button type="button" onclick="createTestAppointment()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-top: 10px; cursor: pointer;">🧪 Create Test Appointment</button>
                     </form>
                     
                     <div class="availability-calendar">
@@ -758,6 +779,13 @@
                     return;
                 }
                 
+                // Validate that the selected date is not blocked
+                if (date && isDateBlocked(date)) {
+                    Toast.error('Sorry, the selected date is not available for appointments. Please choose a different date.', 'Date Not Available');
+                    isSubmitting = false;
+                    return;
+                }
+                
                 // Store booking data
                 window.pendingBookingData = {
                     clientName: clientName,
@@ -780,8 +808,12 @@
                 console.log('window.addUser:', typeof window.addUser);
                 
                 // Check if user is already logged in
-                if (shouldSkipLoginModal()) {
-                    // User is logged in, booking completed directly
+                console.log('🔍 About to check shouldSkipLoginModal()...');
+                const skipLogin = shouldSkipLoginModal();
+                console.log('🔍 shouldSkipLoginModal() returned:', skipLogin);
+                
+                if (skipLogin) {
+                    console.log('✅ User is logged in, payment modal should have been shown');
                     return;
                 }
                 
@@ -1159,6 +1191,9 @@
                     const justSaved = allAppointments.find(apt => apt.id === (savedAppointment && savedAppointment.id));
                     if (justSaved) {
                         console.log('✅ Verification: Appointment found in shared data:', justSaved);
+                        // Refresh the calendar to show updated availability
+                        console.log('🔄 Refreshing calendar after appointment save...');
+                        generateMonthlyCalendar();
                     } else {
                         console.error('❌ Verification failed: Appointment not found in shared data!');
                     }
@@ -1179,6 +1214,10 @@
                 window.sharedAppointments.push(savedAppointment);
                 console.log('✅ Appointment saved via fallback:', savedAppointment);
                 console.log('📊 Total appointments in array:', window.sharedAppointments.length);
+                
+                // Refresh the calendar to show updated availability
+                console.log('🔄 Refreshing calendar after fallback appointment save...');
+                generateMonthlyCalendar();
                 
                 // Save to localStorage
                 try {
@@ -1227,6 +1266,10 @@
                 } catch (e) {
                     console.error('❌ Failed to dispatch event:', e);
                 }
+                
+                // Update available times to reflect new booking
+                console.log('🔄 Refreshing available times after new appointment');
+                updateAvailableTimes();
             }
             return savedAppointment;
         }
@@ -1499,67 +1542,259 @@
             return false;
         }
         
+        // Time conversion helper functions
+        function convertTo12Hour(time24) {
+            if (!time24 || time24.includes('AM') || time24.includes('PM')) {
+                console.log(`🔄 convertTo12Hour: "${time24}" already in 12-hour format or invalid`);
+                return time24; // Already in 12-hour format or invalid
+            }
+            
+            const [hours, minutes] = time24.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+            const result = `${hour12}:${minutes} ${ampm}`;
+            console.log(`🔄 convertTo12Hour: "${time24}" => "${result}"`);
+            return result;
+        }
+        
+        function convertTo24Hour(time12) {
+            if (!time12 || (!time12.includes('AM') && !time12.includes('PM'))) {
+                console.log(`🔄 convertTo24Hour: "${time12}" already in 24-hour format or invalid`);
+                return time12; // Already in 24-hour format or invalid
+            }
+            
+            const [time, ampm] = time12.split(' ');
+            const [hours, minutes] = time.split(':');
+            let hour = parseInt(hours);
+            
+            if (ampm === 'AM' && hour === 12) hour = 0;
+            else if (ampm === 'PM' && hour !== 12) hour += 12;
+            
+            const result = `${hour.toString().padStart(2, '0')}:${minutes}`;
+            console.log(`🔄 convertTo24Hour: "${time12}" => "${result}"`);
+            return result;
+        }
+
+        // Initialize appointment data for time blocking
+        function initializeAppointmentData() {
+            console.log('🔄 Initializing appointment data for time blocking...');
+            
+            // Load appointments from the data system
+            if (window.getAppointments) {
+                const allAppointments = window.getAppointments();
+                window.sharedAppointments = allAppointments;
+                console.log('✅ Loaded', allAppointments.length, 'appointments for time blocking');
+                console.log('📋 Appointment data:', allAppointments);
+                
+                // Refresh calendar when appointment data changes
+                console.log('🔄 Refreshing calendar after appointment data initialization...');
+                generateMonthlyCalendar();
+            } else {
+                console.warn('⚠️ getAppointments function not available, time blocking may not work');
+                window.sharedAppointments = [];
+            }
+        }
+
         // Time slot availability functions
         function getBookedTimesForDate(date) {
             console.log('🔍 Checking booked times for date:', date);
             
+            // Ensure appointment data is loaded
+            if (!window.sharedAppointments && window.getAppointments) {
+                console.log('🔄 Appointment data not loaded, loading now...');
+                initializeAppointmentData();
+            }
+            
             // Get appointments from shared data
             const appointments = window.sharedAppointments || [];
             console.log('📅 Total appointments in system:', appointments.length);
+            logger.debug('Sample appointments loaded:', appointments.length);
+            
+            // Normalize the input date to YYYY-MM-DD format
+            const normalizedDate = normalizeDate(date);
+            console.log('🔄 Normalized target date:', normalizedDate);
             
             // Filter appointments for the specific date and confirmed/pending status
             const bookedTimes = appointments
                 .filter(appointment => {
-                    const matches = appointment.date === date && 
-                           (appointment.status === 'confirmed' || appointment.status === 'pending');
+                    const aptNormalizedDate = normalizeDate(appointment.date);
+                    const dateMatches = aptNormalizedDate === normalizedDate;
+                    const statusMatches = (appointment.status === 'confirmed' || appointment.status === 'pending');
+                    const matches = dateMatches && statusMatches;
+                    
+                    logger.debug('Appointment check:', {
+                        date: appointment.date,
+                        matches: matches,
+                        status: appointment.status
+                    });
+                    
                     if (matches) {
-                        console.log('📍 Found booking:', appointment);
+                        console.log('📍 Found booking for', normalizedDate, ':', appointment.time, appointment.service, '(original date:', appointment.date + ')');
                     }
                     return matches;
                 })
                 .map(appointment => appointment.time);
             
-            console.log('⛔ Booked times for', date, ':', bookedTimes);
+            logger.debug('Booked times calculated:', { date, count: bookedTimes.length });
             return bookedTimes;
+        }
+        
+        // Helper function to normalize dates to YYYY-MM-DD format
+        function normalizeDate(dateStr) {
+            if (!dateStr) return '';
+            
+            // If already in YYYY-MM-DD format, return as is
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                return dateStr;
+            }
+            
+            // Try to parse different formats
+            let date;
+            
+            // Handle MM/DD/YYYY format
+            if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
+                const [month, day, year] = dateStr.split('/');
+                date = new Date(year, month - 1, day);
+            }
+            // Handle DD/MM/YYYY format
+            else if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
+                // Ambiguous - assume MM/DD/YYYY for US format
+                const [month, day, year] = dateStr.split('/');
+                date = new Date(year, month - 1, day);
+            }
+            // Handle other formats by letting Date constructor parse
+            else {
+                date = new Date(dateStr);
+            }
+            
+            // Convert to YYYY-MM-DD
+            if (date && !isNaN(date.getTime())) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            
+            console.warn('⚠️ Could not normalize date:', dateStr);
+            return dateStr; // Return original if can't parse
         }
         
         function updateAvailableTimes() {
             const dateInput = document.getElementById('date');
             const timeSelect = document.getElementById('time');
             
-            if (!timeSelect || !dateInput) return;
+            if (!timeSelect || !dateInput) {
+                console.warn('⚠️ Missing time select or date input elements');
+                return;
+            }
             
             const selectedDate = dateInput.value;
+            if (!selectedDate) {
+                console.log('🔄 No date selected, skipping time update');
+                timeSelect.innerHTML = '<option value="">Select a date first</option>';
+                return;
+            }
+            
             console.log('🔄 Updating available times for:', selectedDate);
             
             // Clear existing options
-            timeSelect.innerHTML = '<option value="">Select a time</option>';
+            timeSelect.innerHTML = '<option value="">Loading times...</option>';
+            
+            // Force refresh appointment data
+            initializeAppointmentData();
             
             // Available time slots (simplified for demo)
             const allTimes = ['10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM'];
             
             // Get booked times for this date
             const bookedTimes = getBookedTimesForDate(selectedDate);
+            console.log('🔍 Raw booked times for', selectedDate, ':', bookedTimes);
+            
+            // Clear loading message
+            timeSelect.innerHTML = '<option value="">Select a time</option>';
+            
+            let blockedCount = 0;
             
             // Add time options (excluding booked times)
             allTimes.forEach(time => {
-                const isBooked = bookedTimes.includes(time);
+                // Check both the exact format and alternative formats
+                const exactMatch = bookedTimes.includes(time);
+                const time24 = convertTo24Hour(time);
+                const has24Match = bookedTimes.includes(time24);
+                const hasConvertedMatch = bookedTimes.some(bookedTime => convertTo12Hour(bookedTime) === time);
+                
+                const isBooked = exactMatch || has24Match || hasConvertedMatch;
+                
+                if (isBooked) {
+                    blockedCount++;
+                    console.log(`🚫 BLOCKING: ${time} (exact=${exactMatch}, 24hr(${time24})=${has24Match}, converted=${hasConvertedMatch})`);
+                }
                 
                 const option = document.createElement('option');
                 option.value = time;
-                option.textContent = isBooked ? `${time} (Unavailable)` : time;
-                option.disabled = isBooked;
-                option.style.color = isBooked ? '#999' : '';
+                
+                if (isBooked) {
+                    // Make it super obvious with emojis and different text
+                    option.textContent = `🚫 ${time} (UNAVAILABLE)`;
+                    option.disabled = true;
+                    option.className = 'blocked-time';
+                    
+                    // Try multiple styling approaches
+                    option.style.cssText = 'color: #999 !important; font-weight: bold !important; background-color: #f8f8f8 !important; font-style: italic !important;';
+                    option.setAttribute('style', 'color: #999 !important; font-weight: bold !important; background-color: #f8f8f8 !important; font-style: italic !important;');
+                    
+                    // Set individual style properties as backup
+                    option.style.color = '#999';
+                    option.style.fontWeight = 'bold';
+                    option.style.backgroundColor = '#f8f8f8';
+                    option.style.fontStyle = 'italic';
+                    
+                    console.log(`🎨 Created BLOCKED option for ${time}:`, {
+                        text: option.textContent,
+                        disabled: option.disabled,
+                        className: option.className,
+                        styles: option.style.cssText,
+                        computedColor: window.getComputedStyle ? 'will check after append' : 'n/a'
+                    });
+                } else {
+                    option.textContent = `✅ ${time}`;
+                    option.className = 'available-time';
+                    option.style.cssText = 'color: #333 !important;';
+                    console.log(`✅ Created available option for ${time}`);
+                }
                 
                 timeSelect.appendChild(option);
             });
             
-            console.log('✅ Time options updated');
+            console.log(`✅ Time options updated: ${allTimes.length} total, ${blockedCount} blocked, ${allTimes.length - blockedCount} available`);
+            
+            // Force DOM refresh to ensure styles are applied
+            timeSelect.style.display = 'none';
+            setTimeout(() => {
+                timeSelect.style.display = '';
+                console.log('🔄 Forced DOM refresh for time select styling');
+            }, 10);
+            
+            // Add visual indicator if there are blocked times
+            if (blockedCount > 0) {
+                const timeLabel = document.querySelector('label[for="time"]');
+                if (timeLabel) {
+                    timeLabel.style.color = '#e74c3c';
+                    timeLabel.innerHTML = `Preferred Time: <small style="color: #e74c3c;">(${blockedCount} unavailable)</small>`;
+                    
+                    // Reset after 3 seconds
+                    setTimeout(() => {
+                        timeLabel.style.color = '';
+                        timeLabel.innerHTML = 'Preferred Time:';
+                    }, 3000);
+                }
+            }
         }
         
         // Basic form setup since external script is disabled
         function setupBasicForm() {
-            // Set minimum date to today
+            // Set minimum date to today and restrict blocked dates
             const dateInput = document.getElementById('date');
             if (dateInput) {
                 const today = new Date().toISOString().split('T')[0];
@@ -1568,10 +1803,30 @@
                 // Auto-select today as default
                 dateInput.value = today;
                 
-                // Add date change listener
+                // Set up blocked dates restriction using a more aggressive approach
+                setBlockedDatesRestriction(dateInput);
+                
+                // Add date change listener with blocked date validation
                 dateInput.addEventListener('change', function() {
-                    console.log('📅 Date changed to:', this.value);
+                    const selectedDate = this.value;
+                    console.log('📅 Date changed to:', selectedDate);
+                    
+                    // Check if the selected date is blocked
+                    if (selectedDate && isDateBlocked(selectedDate)) {
+                        // Show error message and reset to today
+                        const today = new Date().toISOString().split('T')[0];
+                        alert('❌ Sorry, this date is not available for appointments. Please select a different date.');
+                        this.value = today;
+                        
+                        // Update times for today instead
+                        console.log('🔄 Resetting to today and updating times...');
+                        updateAvailableTimes();
+                        return;
+                    }
+                    
+                    console.log('🔄 About to call updateAvailableTimes...');
                     updateAvailableTimes();
+                    console.log('✅ updateAvailableTimes call completed');
                 });
             }
             
@@ -1582,25 +1837,142 @@
                 updateAvailableTimes();
             }
             
-            // Auto-update price when service changes
+            // Auto-update price when service changes (improved logic)
             const serviceSelect = document.getElementById('service');
             const priceSpan = document.getElementById('totalPrice');
             if (serviceSelect && priceSpan) {
-                serviceSelect.addEventListener('change', function() {
-                    const selectedOption = this.options[this.selectedIndex];
-                    const price = selectedOption.getAttribute('data-price') || '0';
-                    priceSpan.textContent = price;
-                });
-                
-                // Set initial price
-                if (serviceSelect.selectedIndex > 0) {
+                function updatePrice() {
                     const selectedOption = serviceSelect.options[serviceSelect.selectedIndex];
-                    const price = selectedOption.getAttribute('data-price') || '70';
+                    const price = selectedOption.getAttribute('data-price') || '0';
+                    
+                    console.log('🔧 BEFORE UPDATE - Display shows:', priceSpan.textContent);
                     priceSpan.textContent = price;
+                    console.log('🔧 AFTER UPDATE - Should show:', price, 'Actually shows:', priceSpan.textContent);
+                    console.log('💰 Price updated to:', price, 'for service:', selectedOption.text);
+                    
+                    // Force a visual update
+                    priceSpan.style.color = '#28a745';
+                    priceSpan.style.fontWeight = 'bold';
+                    
+                    // Check if there are multiple elements with same content
+                    const allPriceElements = document.querySelectorAll('*[id*="price"], *[class*="price"], span');
+                    console.log('🔍 Found', allPriceElements.length, 'potential price elements');
+                    allPriceElements.forEach((el, index) => {
+                        if (el.textContent && el.textContent.match(/\d+/)) {
+                            console.log(`🔍 Element ${index}:`, el.tagName, el.id, el.className, '→', el.textContent);
+                        }
+                    });
                 }
+                
+                serviceSelect.addEventListener('change', updatePrice);
+                
+                // Set initial price based on current selection
+                if (serviceSelect.selectedIndex > 0) {
+                    updatePrice();
+                } else {
+                    // Default to first service price if none selected
+                    priceSpan.textContent = '0';
+                }
+                
+                // Trigger price update on page load if service is pre-selected
+                setTimeout(updatePrice, 100);
+                
             }
         }
         
+        // Check if a date is blocked by admin
+        function isDateBlocked(date) {
+            console.log('🔍 Checking if date is blocked:', date);
+            
+            // Get blocked dates from shared data
+            const blockedDates = window.getBlockedDates ? window.getBlockedDates() : [];
+            console.log('🔍 Available blocked dates:', blockedDates);
+            
+            // Check if the date is in the blocked dates list
+            const isBlocked = blockedDates.some(blocked => {
+                // Handle different date formats
+                const blockedDate = blocked.date || blocked;
+                return blockedDate === date;
+            });
+            
+            if (isBlocked) {
+                console.log('🚫 Date is blocked:', date);
+            } else {
+                console.log('✅ Date is available:', date);
+            }
+            
+            return isBlocked;
+        }
+        
+        // Set up blocked dates restriction for native date input
+        function setBlockedDatesRestriction(dateInput) {
+            console.log('🔧 Setting up blocked dates restriction for native date picker');
+            
+            // Unfortunately, we cannot directly gray out dates in the native HTML5 date picker
+            // The best we can do is prevent selection and show feedback
+            
+            // Add input event listener to catch any date input changes
+            dateInput.addEventListener('input', function() {
+                const selectedDate = this.value;
+                if (selectedDate && isDateBlocked(selectedDate)) {
+                    // Clear the invalid selection
+                    this.value = '';
+                    // Show a tooltip-like message
+                    showDateBlockedMessage(this);
+                }
+            });
+            
+            // Add blur event to catch manual typing
+            dateInput.addEventListener('blur', function() {
+                const selectedDate = this.value;
+                if (selectedDate && isDateBlocked(selectedDate)) {
+                    const today = new Date().toISOString().split('T')[0];
+                    this.value = today;
+                    alert('❌ Sorry, the selected date is not available for appointments.');
+                }
+            });
+        }
+        
+        // Show a temporary message for blocked dates
+        function showDateBlockedMessage(dateInput) {
+            // Create or update message element
+            let messageEl = document.getElementById('date-blocked-message');
+            if (!messageEl) {
+                messageEl = document.createElement('div');
+                messageEl.id = 'date-blocked-message';
+                messageEl.style.cssText = `
+                    position: absolute;
+                    background: #fee;
+                    border: 1px solid #fcc;
+                    color: #c66;
+                    padding: 8px 12px;
+                    border-radius: 4px;
+                    font-size: 14px;
+                    z-index: 1000;
+                    white-space: nowrap;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                `;
+                dateInput.parentNode.style.position = 'relative';
+                dateInput.parentNode.appendChild(messageEl);
+            }
+            
+            messageEl.textContent = 'This date is not available';
+            messageEl.style.display = 'block';
+            
+            // Position it below the input
+            const rect = dateInput.getBoundingClientRect();
+            const parentRect = dateInput.parentNode.getBoundingClientRect();
+            messageEl.style.top = (rect.bottom - parentRect.top + 5) + 'px';
+            messageEl.style.left = (rect.left - parentRect.left) + 'px';
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                if (messageEl) {
+                    messageEl.style.display = 'none';
+                }
+            }, 3000);
+        }
+
         // Auto-populate service from URL parameter
         function autoPopulateServiceFromURL() {
             console.log('🔍 Auto-populate function called');
@@ -1668,9 +2040,21 @@
         // Generate full monthly calendar
         function generateMonthlyCalendar() {
             const calendarDiv = document.getElementById('calendar');
-            if (!calendarDiv) return;
+            if (!calendarDiv) {
+                console.warn('❌ Calendar div not found!');
+                return;
+            }
             
-            console.log('📅 Generating monthly calendar for:', currentCalendarDate.toLocaleDateString());
+            console.log('📅 🔄 GENERATING MONTHLY CALENDAR for:', currentCalendarDate.toLocaleDateString());
+            console.log('📅 🔄 Current appointments in system:', window.sharedAppointments?.length || 0);
+            
+            // Force fresh appointment data load to ensure calendar accuracy
+            console.log('📅 🔄 FORCING FRESH DATA LOAD for calendar generation...');
+            if (window.getAppointments) {
+                const freshAppointments = window.getAppointments();
+                window.sharedAppointments = freshAppointments;
+                console.log('📅 🔄 Refreshed appointment data:', freshAppointments.length, 'appointments loaded');
+            }
             
             const year = currentCalendarDate.getFullYear();
             const month = currentCalendarDate.getMonth();
@@ -1718,7 +2102,7 @@
                 if (isToday) dayClass += ' today';
                 
                 // Check if date is blocked by admin
-                const isBlocked = window.getBlockedDates ? window.getBlockedDates().some(blocked => blocked.date === dateStr) : false;
+                const isBlocked = isDateBlocked(dateStr);
                 if (isBlocked) {
                     dayClass += ' blocked';
                     console.log('🚫 Date blocked by admin:', dateStr);
@@ -1727,8 +2111,12 @@
                 // Check availability for current month dates
                 let availabilityInfo = '';
                 if (isCurrentMonth && !isPast && !isBlocked) {
+                    logger.debug('Calendar slot calculation for:', dateStr);
+                    
                     const availableTimes = getAvailableTimesForDate(dateStr);
                     const isAvailable = availableTimes.length > 0;
+                    
+                    logger.debug('Calendar availability calculated:', { date: dateStr, slots: availableTimes.length });
                     
                     if (isAvailable) {
                         dayClass += ' available';
@@ -1763,15 +2151,87 @@
             generateMonthlyCalendar();
         }
         
+        // Test function to force calendar refresh
+        function forceCalendarRefresh() {
+            console.log('🔄 FORCING CALENDAR REFRESH...');
+            initializeAppointmentData();
+            generateMonthlyCalendar();
+            console.log('✅ Calendar refresh completed');
+        }
+        
+        // Make it globally available for testing
+        window.forceCalendarRefresh = forceCalendarRefresh;
+        
+        // Monitor for appointment changes and refresh calendar
+        let lastAppointmentCount = 0;
+        let lastAppointmentHash = '';
+        
+        function monitorAppointmentChanges() {
+            const currentCount = window.sharedAppointments?.length || 0;
+            
+            // Create a hash of appointment data to detect any changes, not just count
+            const appointmentHash = window.sharedAppointments ? 
+                JSON.stringify(window.sharedAppointments.map(apt => `${apt.date}-${apt.time}-${apt.status}`).sort()) : '';
+            
+            if (currentCount !== lastAppointmentCount || appointmentHash !== lastAppointmentHash) {
+                console.log('🚨 APPOINTMENT DATA CHANGED!');
+                console.log('🚨 Count change:', lastAppointmentCount, '=>', currentCount);
+                console.log('🚨 Data change detected:', lastAppointmentHash !== appointmentHash);
+                console.log('🚨 Triggering calendar refresh...');
+                
+                lastAppointmentCount = currentCount;
+                lastAppointmentHash = appointmentHash;
+                
+                // Force immediate calendar refresh
+                setTimeout(() => {
+                    generateMonthlyCalendar();
+                }, 100); // Small delay to ensure data is settled
+            }
+        }
+        
+        // Check for appointment changes frequently
+        setInterval(monitorAppointmentChanges, 500); // Check every half second for faster updates
+        
         function getAvailableTimesForDate(date) {
             // Use the same time slots as the booking form
             const allTimes = ['10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM'];
-            const bookedTimes = getBookedTimesForDate(date);
-            return allTimes.filter(time => !bookedTimes.includes(time));
+            
+            // Force fresh data load to ensure synchronization
+            if (!window.sharedAppointments && window.getAppointments) {
+                console.log('🔄 📅 CALENDAR: Loading fresh appointment data...');
+                initializeAppointmentData();
+            }
+            
+            const bookedTimes24hr = getBookedTimesForDate(date);
+            
+            // Convert booked times from 24-hour format to 12-hour format for comparison
+            const bookedTimes12hr = bookedTimes24hr.map(time24 => {
+                return convertTo12Hour(time24);
+            });
+            
+            const availableTimes = allTimes.filter(time => !bookedTimes12hr.includes(time));
+            
+            console.log('🕒 📅 CALENDAR AVAILABILITY CHECK for', date);
+            console.log('🕒 📅 All times:', allTimes);
+            console.log('🕒 📅 Booked times (24hr):', bookedTimes24hr);
+            console.log('🕒 📅 Booked times (12hr):', bookedTimes12hr);
+            console.log('🕒 📅 Available times:', availableTimes);
+            console.log('🕒 📅 RESULT:', availableTimes.length, 'slots available');
+            console.log('🕒 📅 Current appointment count in system:', window.sharedAppointments?.length || 0);
+            
+            return availableTimes;
         }
         
         function selectDate(dateStr) {
             console.log('📅 Date selected:', dateStr);
+            
+            // Check if the selected date is blocked
+            if (isDateBlocked(dateStr)) {
+                alert('❌ Sorry, this date is not available for appointments. Please select a different date.');
+                console.log('🚫 Blocked date selection prevented:', dateStr);
+                return;
+            }
+            
             const dateInput = document.getElementById('date');
             if (dateInput) {
                 dateInput.value = dateStr;
@@ -1787,13 +2247,31 @@
         
         // Setup login form handling
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Setting up login form handlers...');
+            console.log('Setting up login form handlers... - v' + Date.now());
+            
+            // Initialize appointment data for time blocking
+            initializeAppointmentData();
             
             // Setup basic form functionality
             setupBasicForm();
             
+            // Force a time update for today's date on load
+            const dateInput = document.getElementById('date');
+            if (dateInput) {
+                const today = new Date().toISOString().split('T')[0];
+                dateInput.value = today;
+                console.log('🔄 Auto-setting date to today and updating times');
+                setTimeout(updateAvailableTimes, 500);
+            }
+            
             // Generate initial calendar
             generateMonthlyCalendar();
+            
+            // Set up periodic calendar refresh to catch any missed updates
+            setInterval(() => {
+                console.log('🔄 Periodic calendar refresh...');
+                generateMonthlyCalendar();
+            }, 10000); // Refresh every 10 seconds
             
             // Auto-populate service if coming from services page
             setTimeout(() => {
@@ -1837,6 +2315,14 @@
                     // Simple demo authentication
                     const authenticatedUser = window.authenticateUser ? window.authenticateUser(email, password) : null;
                     if (authenticatedUser) {
+                        // Store user in CookieSessionManager for consistency
+                        if (window.CookieSessionManager) {
+                            window.CookieSessionManager.login(authenticatedUser);
+                        }
+                        
+                        // Dispatch authentication event for auto-population
+                        window.dispatchEvent(new CustomEvent('userAuthChanged', { detail: { user: authenticatedUser } }));
+                        
                         Toast.success('Login successful! Your booking has been confirmed:\n' + 
                               `• Service: ${window.pendingBookingData?.service || 'N/A'}\n` +
                               `• Date: ${window.pendingBookingData?.date || 'N/A'}\n` +
@@ -1844,6 +2330,11 @@
                               `• Total: $${window.pendingBookingData?.price || '0'}\n\n` +
                               'Appointment ID: ' + Date.now());
                         closeLoginModal();
+                        
+                        // Trigger form auto-population refresh
+                        setTimeout(() => {
+                            window.dispatchEvent(new CustomEvent('refreshBookingForm'));
+                        }, 100);
                     } else {
                         Toast.error('Invalid credentials. Please check your email and password, or create a new account.', 'Login Failed');
                     }
@@ -1896,34 +2387,494 @@
         function createTestAppointment() {
             console.log('🧪 Creating test appointment...');
             
+            // Use today's date for the test
+            const today = new Date().toISOString().split('T')[0];
+            
             const testAppointment = {
                 userId: 2, // John Doe's ID
                 clientName: 'Test User',
                 email: 'test@example.com',
                 phone: '(555) 123-4567',
                 service: 'Swedish Massage',
-                date: '2025-08-10',
+                date: today,
                 time: '2:00 PM',
                 price: 120,
                 status: 'confirmed',
-                notes: 'Test appointment',
+                notes: 'Test appointment for time blocking',
                 paymentStatus: 'paid',
                 paymentMethod: 'Test',
                 transactionId: 'test_123'
             };
             
-            console.log('Test appointment data:', testAppointment);
+            console.log('🧪 Test appointment data:', testAppointment);
+            
+            // Ensure appointment data is loaded first
+            initializeAppointmentData();
             
             try {
                 const savedAppointment = saveAppointment(testAppointment);
                 console.log('✅ Test appointment saved:', savedAppointment);
-                alert('Test appointment created! Check admin panel and console.');
+                
+                // Test the time blocking immediately
+                const bookedTimes = getBookedTimesForDate(today);
+                console.log('🧪 Booked times for', today, ':', bookedTimes);
+                
+                // Auto-select today's date to show the blocked time
+                const dateInput = document.getElementById('date');
+                if (dateInput) {
+                    dateInput.value = today;
+                    updateAvailableTimes();
+                }
+                
+                if (bookedTimes.includes('2:00 PM')) {
+                    alert(`✅ Test appointment created for ${today} at 2:00 PM!\n\nTime blocking is working correctly - 2:00 PM should now be unavailable.`);
+                } else {
+                    alert(`⚠️ Test appointment created for ${today} at 2:00 PM, but time blocking may not be working correctly.`);
+                }
+                
             } catch (error) {
                 console.error('❌ Failed to create test appointment:', error);
                 alert('Failed to create test appointment: ' + error.message);
             }
         }
         
+        // Test function to verify date blocking works
+        function testDateBlocking() {
+            console.log('🚫 Testing date blocking functionality...');
+            
+            const today = new Date().toISOString().split('T')[0];
+            
+            // First, check current available times for today
+            const dateInput = document.getElementById('date');
+            const timeSelect = document.getElementById('time');
+            
+            if (dateInput) {
+                dateInput.value = today;
+                updateAvailableTimes();
+            }
+            
+            console.log('🚫 Current time options before test appointment:');
+            if (timeSelect) {
+                Array.from(timeSelect.options).forEach((option, index) => {
+                    console.log(`  ${index}: ${option.value} - ${option.textContent} (disabled: ${option.disabled})`);
+                });
+            }
+            
+            // Create a test appointment for 11:00 AM
+            const testAppointment = {
+                id: Date.now(),
+                clientName: 'Date Blocking Test',
+                email: 'test@blocking.com',
+                phone: '(555) 999-0000',
+                service: 'Thai Stretch',
+                date: today,
+                time: '11:00 AM',
+                price: 120,
+                status: 'confirmed',
+                notes: 'Test appointment for date blocking verification',
+                paymentStatus: 'paid',
+                paymentMethod: 'Test',
+                transactionId: 'blocking_test_123'
+            };
+            
+            console.log('🚫 Creating test appointment:', testAppointment);
+            
+            // Initialize and save the appointment
+            initializeAppointmentData();
+            const savedAppointment = saveAppointment(testAppointment);
+            
+            if (savedAppointment) {
+                console.log('🚫 Test appointment saved, checking if 11:00 AM is now blocked...');
+                
+                // Refresh times and check
+                updateAvailableTimes();
+                
+                console.log('🚫 Time options after creating test appointment:');
+                let elevenAmBlocked = false;
+                if (timeSelect) {
+                    Array.from(timeSelect.options).forEach((option, index) => {
+                        console.log(`  ${index}: ${option.value} - ${option.textContent} (disabled: ${option.disabled})`);
+                        if (option.value === '11:00 AM' && option.disabled) {
+                            elevenAmBlocked = true;
+                        }
+                    });
+                }
+                
+                // Test the getBookedTimesForDate function directly
+                const bookedTimes = getBookedTimesForDate(today);
+                console.log('🚫 Direct booked times check:', bookedTimes);
+                
+                const isBlocked = bookedTimes.includes('11:00 AM');
+                
+                if (isBlocked && elevenAmBlocked) {
+                    alert(`✅ Date blocking test PASSED!\n\n11:00 AM on ${today} is now properly blocked.\n\nCheck the time dropdown - 11:00 AM should show as "Unavailable".`);
+                } else {
+                    alert(`❌ Date blocking test FAILED!\n\nExpected: 11:00 AM blocked\nActual: ${isBlocked ? 'Blocked in data' : 'Not blocked in data'}, ${elevenAmBlocked ? 'Disabled in UI' : 'Not disabled in UI'}\n\nCheck console for details.`);
+                }
+            } else {
+                alert('❌ Failed to create test appointment for date blocking test');
+            }
+        }
+
+        // Test function to simulate the full booking flow
+        function testFullBookingFlow() {
+            console.log('🔄 Testing full booking flow...');
+            
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Step 1: Create appointment with pending status (like normal booking)
+            const pendingAppointment = {
+                id: Date.now(),
+                clientName: 'Full Flow Test',
+                email: 'fullflow@test.com',
+                phone: '(555) 777-8888',
+                service: 'Deep Tissue',
+                date: today,
+                time: '12:00 PM',
+                price: 130,
+                status: 'pending',
+                paymentStatus: 'pending',
+                notes: 'Full booking flow test'
+            };
+            
+            console.log('🔄 Step 1: Creating pending appointment:', pendingAppointment);
+            
+            // Initialize and save the pending appointment
+            initializeAppointmentData();
+            const savedPendingAppointment = saveAppointment(pendingAppointment);
+            
+            if (!savedPendingAppointment) {
+                alert('❌ Failed to create pending appointment');
+                return;
+            }
+            
+            console.log('🔄 Step 1 Complete: Pending appointment saved:', savedPendingAppointment);
+            
+            // Step 2: Check if 12:00 PM is blocked (should be, since we check for 'pending' status)
+            let bookedTimes = getBookedTimesForDate(today);
+            console.log('🔄 Step 2: Booked times after pending appointment:', bookedTimes);
+            
+            const isPendingBlocked = bookedTimes.includes('12:00 PM');
+            console.log('🔄 Step 2 Result: 12:00 PM blocked after pending save:', isPendingBlocked);
+            
+            // Step 3: Simulate payment success - update to confirmed
+            console.log('🔄 Step 3: Simulating payment success...');
+            
+            let finalAppointment;
+            if (window.updateAppointment && savedPendingAppointment.id) {
+                finalAppointment = window.updateAppointment(savedPendingAppointment.id, {
+                    paymentStatus: 'paid',
+                    paymentMethod: 'Stripe',
+                    transactionId: `test_${Date.now()}`,
+                    status: 'confirmed'
+                });
+                console.log('🔄 Step 3: Appointment updated to confirmed:', finalAppointment);
+            }
+            
+            if (!finalAppointment) {
+                alert('❌ Failed to update appointment to confirmed');
+                return;
+            }
+            
+            // Step 4: Refresh and check blocking again
+            console.log('🔄 Step 4: Refreshing data and checking time blocking...');
+            initializeAppointmentData();
+            updateAvailableTimes();
+            
+            bookedTimes = getBookedTimesForDate(today);
+            console.log('🔄 Step 4: Booked times after confirmed update:', bookedTimes);
+            
+            const isConfirmedBlocked = bookedTimes.includes('12:00 PM');
+            console.log('🔄 Step 4 Result: 12:00 PM blocked after confirmed update:', isConfirmedBlocked);
+            
+            // Step 5: Check for duplicates
+            console.log('🔄 Step 5: Checking for duplicate appointments...');
+            const allAppointments = window.getAppointments();
+            const testAppointments = allAppointments.filter(apt => 
+                apt.date === today && apt.time === '12:00 PM' && apt.email === 'fullflow@test.com'
+            );
+            console.log('🔄 Step 5: Found', testAppointments.length, 'matching appointments:', testAppointments);
+            
+            // Auto-select today's date to show the UI
+            const dateInput = document.getElementById('date');
+            if (dateInput) {
+                dateInput.value = today;
+                updateAvailableTimes();
+            }
+            
+            // Results
+            const results = {
+                pendingCreated: !!savedPendingAppointment,
+                pendingBlocked: isPendingBlocked,
+                confirmedUpdated: !!finalAppointment,
+                confirmedBlocked: isConfirmedBlocked,
+                duplicateCount: testAppointments.length
+            };
+            
+            console.log('🔄 Full Flow Test Results:', results);
+            
+            let message = `🔄 Full Booking Flow Test Results:\n\n`;
+            message += `✅ Pending appointment created: ${results.pendingCreated}\n`;
+            message += `${results.pendingBlocked ? '✅' : '❌'} Time blocked after pending: ${results.pendingBlocked}\n`;
+            message += `✅ Appointment updated to confirmed: ${results.confirmedUpdated}\n`;
+            message += `${results.confirmedBlocked ? '✅' : '❌'} Time blocked after confirmed: ${results.confirmedBlocked}\n`;
+            message += `${results.duplicateCount === 1 ? '✅' : '❌'} No duplicates (found ${results.duplicateCount})\n\n`;
+            
+            if (results.pendingBlocked && results.confirmedBlocked && results.duplicateCount === 1) {
+                message += `🎉 ALL TESTS PASSED! Time blocking is working correctly.`;
+            } else {
+                message += `⚠️ Some tests failed. Check console for details.`;
+            }
+            
+            alert(message);
+        }
+
+        // Test function to bypass security and verify date blocking works
+        function bypassSecurityTest() {
+            console.log('🚨 Testing appointment booking with security bypass...');
+            
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Temporarily store the original localStorage.setItem
+            const originalSetItem = localStorage.setItem;
+            
+            // Bypass security for this test
+            localStorage.setItem = function(key, value) {
+                console.log('🚨 BYPASS: localStorage.setItem called for:', key);
+                return originalSetItem.call(this, key, value);
+            };
+            
+            // Create test appointment
+            const testAppointment = {
+                id: Date.now(),
+                clientName: 'Security Bypass Test',
+                email: 'bypass@test.com',
+                phone: '(555) 999-1111',
+                service: 'Applied Neurology',
+                date: today,
+                time: '1:00 PM',
+                price: 150,
+                status: 'confirmed',
+                paymentStatus: 'paid',
+                notes: 'Security bypass test for time blocking'
+            };
+            
+            console.log('🚨 Creating bypass appointment:', testAppointment);
+            
+            try {
+                // Use direct array manipulation to bypass security
+                if (!window.sharedAppointments) {
+                    window.sharedAppointments = [];
+                }
+                
+                window.sharedAppointments.push(testAppointment);
+                console.log('🚨 Appointment added directly to array');
+                
+                // Manually save to localStorage with bypass
+                originalSetItem.call(localStorage, 'massageAppointments', JSON.stringify(window.sharedAppointments));
+                console.log('🚨 Saved to localStorage with bypass');
+                
+                // Test time blocking
+                initializeAppointmentData();
+                const bookedTimes = getBookedTimesForDate(today);
+                console.log('🚨 Booked times after bypass:', bookedTimes);
+                
+                // Update UI
+                const dateInput = document.getElementById('date');
+                if (dateInput) {
+                    dateInput.value = today;
+                    updateAvailableTimes();
+                }
+                
+                const isBlocked = bookedTimes.includes('1:00 PM');
+                
+                if (isBlocked) {
+                    alert(`✅ Security bypass test PASSED!\n\n1:00 PM on ${today} is properly blocked.\n\nThis confirms the time blocking logic works - the issue is with the security system.`);
+                } else {
+                    alert(`❌ Security bypass test FAILED!\n\nTime blocking is not working even with security bypassed.`);
+                }
+                
+            } catch (error) {
+                console.error('🚨 Bypass test error:', error);
+                alert('❌ Bypass test failed: ' + error.message);
+            } finally {
+                // Restore original localStorage.setItem
+                localStorage.setItem = originalSetItem;
+                console.log('🚨 Security system restored');
+            }
+        }
+
+        // Function to check which security version is loaded
+        function checkSecurityVersion() {
+            console.log('🔍 Checking security module version...');
+            console.log('🔍 window.securityModuleVersion:', window.securityModuleVersion);
+            console.log('🔍 validateSession function exists:', typeof window.validateSession);
+            console.log('🔍 simpleHash function exists:', typeof window.simpleHash);
+            
+            // Check if the user validation bypass is working
+            let currentUser = null;
+            if (window.CookieSessionManager) {
+                currentUser = window.CookieSessionManager.getCurrentUser();
+            }
+            console.log('🔍 Current user from CookieSessionManager:', currentUser);
+            
+            let message = '🔍 Security Version Check:\n\n';
+            message += `Version: ${window.securityModuleVersion || 'Unknown/Old'}\n`;
+            message += `validateSession: ${typeof window.validateSession}\n`;
+            message += `Current User: ${currentUser?.name || 'None'}\n\n`;
+            
+            if (window.securityModuleVersion && window.securityModuleVersion.includes('2025.08.13')) {
+                message += '✅ Updated security module is loaded!';
+            } else {
+                message += '❌ Old security module still cached. Try hard refresh (Ctrl+F5).';
+            }
+            
+            alert(message);
+        }
+
+        // Function to clean up test appointments and duplicates
+        function cleanupTestAppointments() {
+            console.log('🧹 Cleaning up test appointments...');
+            
+            if (!window.sharedAppointments) {
+                alert('No appointment data to clean');
+                return;
+            }
+            
+            const beforeCount = window.sharedAppointments.length;
+            console.log('🧹 Before cleanup:', beforeCount, 'appointments');
+            
+            // Remove test appointments (any appointment with test-related emails or names)
+            const testEmails = ['test@test.com', 'test@example.com', 'fullflow@test.com', 'bypass@test.com', 'test@blocking.com'];
+            const testNames = ['Test Appointment', 'Full Flow Test', 'Security Bypass Test', 'Date Blocking Test'];
+            
+            const cleanedAppointments = window.sharedAppointments.filter(apt => {
+                const isTestEmail = testEmails.includes(apt.email);
+                const isTestName = testNames.includes(apt.clientName);
+                const isTestUser = apt.clientName === 'Test User' && apt.email === 'test@example.com';
+                
+                return !(isTestEmail || isTestName || isTestUser);
+            });
+            
+            // Remove duplicates based on date, time, and email combination
+            const uniqueAppointments = cleanedAppointments.filter((apt, index, self) => 
+                index === self.findIndex(a => 
+                    a.date === apt.date && 
+                    a.time === apt.time && 
+                    a.email === apt.email
+                )
+            );
+            
+            window.sharedAppointments = uniqueAppointments;
+            
+            const afterCount = window.sharedAppointments.length;
+            const removed = beforeCount - afterCount;
+            
+            console.log('🧹 After cleanup:', afterCount, 'appointments');
+            console.log('🧹 Removed:', removed, 'test/duplicate appointments');
+            
+            // Save to localStorage
+            if (window.saveToStorage) {
+                window.saveToStorage();
+            }
+            
+            // Refresh time slots
+            initializeAppointmentData();
+            updateAvailableTimes();
+            
+            alert(`🧹 Cleanup complete!\n\nRemoved: ${removed} test/duplicate appointments\nRemaining: ${afterCount} appointments\n\nTime slots refreshed.`);
+        }
+
+        // Debug function to diagnose time blocking issues
+        function debugTimeBlocking() {
+            console.log('🔍 === TIME BLOCKING DIAGNOSTIC ===');
+            
+            const dateInput = document.getElementById('date');
+            const timeSelect = document.getElementById('time');
+            
+            // Use the current date from the input, or ask user
+            let testDate = dateInput?.value;
+            if (!testDate) {
+                testDate = prompt('Enter date to test (YYYY-MM-DD):', '2025-08-14') || '2025-08-14';
+            }
+            
+            console.log('🔍 Testing date:', testDate);
+            console.log('🔍 Current date input value:', dateInput?.value);
+            
+            // Set the date input and trigger change
+            if (dateInput) {
+                dateInput.value = testDate;
+                // Trigger the change event to update times
+                dateInput.dispatchEvent(new Event('change'));
+            }
+            
+            // Get appointment data
+            initializeAppointmentData();
+            const allAppointments = window.getAppointments ? window.getAppointments() : [];
+            console.log('🔍 Total appointments:', allAppointments.length);
+            
+            // Filter for test date
+            const testDateAppointments = allAppointments.filter(apt => apt.date === testDate);
+            console.log('🔍 Appointments for test date (' + testDate + '):', testDateAppointments.length);
+            testDateAppointments.forEach(apt => {
+                console.log('  📍', apt.time, apt.service, apt.status, apt.clientName);
+            });
+            
+            // Get booked times
+            const bookedTimes = getBookedTimesForDate(testDate);
+            console.log('🔍 Booked times array:', bookedTimes);
+            
+            // Check current time options in dropdown
+            updateAvailableTimes();
+            console.log('🔍 Time dropdown options:');
+            if (timeSelect) {
+                Array.from(timeSelect.options).forEach((option, index) => {
+                    console.log(`  ${index}: "${option.value}" - "${option.textContent}" (disabled: ${option.disabled})`);
+                });
+            }
+            
+            // Test specific times
+            const testTimes = ['10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM'];
+            console.log('🔍 Checking if times should be blocked:');
+            testTimes.forEach(time => {
+                // Use the same logic as the main blocking function
+                const exactMatch = bookedTimes.includes(time);
+                const time24 = convertTo24Hour(time);
+                const has24Match = bookedTimes.includes(time24);
+                const hasConvertedMatch = bookedTimes.some(bookedTime => convertTo12Hour(bookedTime) === time);
+                const shouldBeBlocked = exactMatch || has24Match || hasConvertedMatch;
+                
+                console.log(`  ${time}: should be blocked = ${shouldBeBlocked} (exact=${exactMatch}, 24hr=${has24Match}, converted=${hasConvertedMatch})`);
+            });
+            
+            let message = `🔍 Time Blocking Diagnostic:\n\n`;
+            message += `Date: ${testDate}\n`;
+            message += `Total appointments: ${allAppointments.length}\n`;
+            message += `Appointments for this date: ${testDateAppointments.length}\n`;
+            message += `Booked times: ${bookedTimes.length}\n`;
+            message += `Dropdown options: ${timeSelect ? timeSelect.options.length : 'N/A'}\n\n`;
+            
+            if (testDateAppointments.length > 0) {
+                message += `Appointments for ${testDate}:\n`;
+                testDateAppointments.forEach(apt => {
+                    message += `• ${apt.time} - ${apt.service} (${apt.status})\n`;
+                });
+                
+                message += `\nTime slot status:\n`;
+                if (timeSelect) {
+                    Array.from(timeSelect.options).forEach((option, index) => {
+                        if (option.value) {
+                            message += `• ${option.value}: ${option.disabled ? 'BLOCKED' : 'Available'}\n`;
+                        }
+                    });
+                }
+            } else {
+                message += `No appointments found for ${testDate}.\n`;
+            }
+            
+            alert(message);
+        }
+
         // Function to clean up duplicate appointments
         function cleanupDuplicateAppointments() {
             if (!window.sharedAppointments) return;
@@ -2044,7 +2995,7 @@
             const email = document.getElementById('emergencyEmail').value;
             const password = document.getElementById('emergencyPassword').value;
             
-            console.log('Emergency login attempt:', email);
+            logger.security('Emergency login attempt', { email: email.substring(0, 5) + '***' });
             
             // Use secure authentication system
             
@@ -2251,8 +3202,17 @@
                 // Don't save appointment yet - will save after payment
                 // const savedAppointment = saveAppointment(newAppointment);
                 
-                localStorage.setItem('currentUser', JSON.stringify(userSession));
-                localStorage.setItem('isLoggedIn', 'true');
+                // Use secure session manager instead of localStorage
+                if (window.secureSession) {
+                    const loginResult = await window.secureSession.login(userSession.email, 'secure_session');
+                    if (!loginResult.success) {
+                        logger.error('Secure session creation failed');
+                    }
+                } else {
+                    logger.warn('Secure session manager not available, using fallback');
+                    localStorage.setItem('sessionToken', 'fallback_' + Date.now());
+                    localStorage.setItem('isLoggedIn', 'true');
+                }
                 
                 // Update SimpleSessionManager if available
                 if (window.SimpleSessionManager) {
@@ -2388,9 +3348,17 @@
                 console.error('❌ CookieSessionManager not available');
             }
             
+            // Dispatch authentication event for auto-population
+            window.dispatchEvent(new CustomEvent('userAuthChanged', { detail: { user: newUserSession } }));
+            
             // Instead of immediately confirming, show payment modal
             console.log('✅ Account created successfully, proceeding to payment...');
             closeEmergencyModal();
+            
+            // Trigger form auto-population refresh for future bookings
+            setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('refreshBookingForm'));
+            }, 100);
             
             // Store data for payment processing
             window.pendingAppointment = newAppointment;
@@ -2403,12 +3371,23 @@
             updateNavigationForLoggedInUser(newUserSession);
         }
         
-        // Show Stripe payment modal for booking
+        // Show Stripe payment modal for booking (using membership payment logic)
         function showBookingPaymentModal(appointment, isNewAccount = false, newUserName = '') {
-            console.log('💳 Showing booking payment modal');
+            console.log('💳 Showing booking payment modal for appointment:', appointment);
             
             // Store appointment data for payment success handler
             window.pendingAppointment = appointment;
+            
+            // Ensure we have the correct price from the appointment data
+            const appointmentPrice = parseFloat(appointment.price) || 0;
+            console.log('💳 Appointment price:', appointmentPrice);
+            
+            // Validate that we have a valid price
+            if (appointmentPrice <= 0) {
+                console.error('❌ Invalid appointment price:', appointment.price);
+                alert('Error: Invalid service price. Please try booking again.');
+                return;
+            }
             
             // Create payment modal
             const paymentModal = document.createElement('div');
@@ -2499,9 +3478,17 @@
             initializeBookingStripePayment();
         }
         
-        // Initialize demo payment form for booking (exact copy from membership page)
+        // Initialize demo payment form for booking (using membership page logic)
         function initializeBookingStripePayment() {
             console.log('🧪 Initializing demo payment form for booking...');
+            
+            // Verify appointment data exists
+            if (!window.pendingAppointment) {
+                console.error('❌ No pending appointment data found');
+                return;
+            }
+            
+            console.log('💳 Processing payment for appointment:', window.pendingAppointment);
             
             // Create demo card input fields instead of using real Stripe Elements
             const cardElementContainer = document.getElementById('booking-card-element');
@@ -2595,7 +3582,7 @@
             });
         }
         
-        // Handle successful booking payment
+        // Handle successful booking payment (using membership page success logic)
         function handleBookingPaymentSuccess() {
             console.log('🎉 Booking payment successful!');
             
@@ -2609,6 +3596,12 @@
             
             console.log('📋 Processing payment for appointment:', appointment);
             
+            // Ensure price is correctly formatted
+            const appointmentPrice = parseFloat(appointment.price) || 0;
+            console.log('💰 Final appointment price:', appointmentPrice);
+            
+            console.log('📋 Processing payment for appointment:', appointment);
+            
             console.log('💾 Saving appointment with payment completed');
             
             // Update appointment payment status
@@ -2617,8 +3610,34 @@
             appointment.transactionId = `stripe_${Date.now()}`;
             appointment.status = 'confirmed';
             
-            // Save the final appointment (first and only save)
-            const finalAppointment = saveAppointment(appointment);
+            // Get current user for debugging
+            let currentUser = null;
+            if (window.CookieSessionManager) {
+                currentUser = window.CookieSessionManager.getCurrentUser();
+            }
+            
+            // Debug: Log appointment data before saving
+            console.log('💾 About to save appointment with data:', appointment);
+            console.log('💾 Current user for verification:', currentUser);
+            
+            // Update the existing appointment instead of creating a new one
+            console.log('💾 Updating existing appointment with ID:', appointment.id);
+            
+            let finalAppointment;
+            if (window.updateAppointment && appointment.id) {
+                // Use updateAppointment to modify the existing appointment
+                finalAppointment = window.updateAppointment(appointment.id, {
+                    paymentStatus: 'paid',
+                    paymentMethod: 'Stripe',
+                    transactionId: appointment.transactionId,
+                    status: 'confirmed'
+                });
+                console.log('✅ Appointment updated via updateAppointment:', finalAppointment);
+            } else {
+                // Fallback to saveAppointment if updateAppointment not available
+                console.log('⚠️ updateAppointment not available, using saveAppointment fallback');
+                finalAppointment = saveAppointment(appointment);
+            }
             
             if (!finalAppointment) {
                 console.error('❌ Failed to save appointment');
@@ -2626,10 +3645,22 @@
                 return;
             }
             
-            // Ensure session is properly maintained after payment
-            let currentUser = null;
-            if (window.CookieSessionManager) {
+            console.log('✅ Final appointment saved:', finalAppointment);
+            console.log('✅ Appointment userId:', finalAppointment.userId, 'Current user ID:', currentUser?.id);
+            
+            // Refresh appointment data and time blocking
+            console.log('🔄 Refreshing appointment data for time blocking...');
+            initializeAppointmentData();
+            updateAvailableTimes();
+            
+            // Refresh the calendar to show updated availability
+            console.log('🔄 Refreshing calendar after appointment completion...');
+            generateMonthlyCalendar();
+            
+            // Verify the current user is still available
+            if (!currentUser && window.CookieSessionManager) {
                 currentUser = window.CookieSessionManager.getCurrentUser();
+                console.log('🔄 Refreshed current user:', currentUser);
             }
             
             // Verify and refresh session data
@@ -2653,9 +3684,12 @@
             }
             
             const userSession = {
-                name: currentUser.name || 'User',
-                isNewUser: currentUser.isNewUser || false
+                name: currentUser?.name || 'User',
+                isNewUser: currentUser?.isNewUser || false
             };
+            
+            // Note: appointmentAdded event is already dispatched by saveAppointment() function
+            // No need to dispatch it again here to avoid duplication
             
             // Close payment modal
             closeBookingPaymentModal();
@@ -2769,11 +3803,12 @@
             if (currentUser) {
                 console.log('  - User data valid:', currentUser.name, currentUser.email);
                 
-                // Refresh session before navigation
-                if (window.CookieSessionManager) {
-                    console.log('🔐 Refreshing CookieSessionManager before navigation...');
-                    window.CookieSessionManager.refreshSession();
-                }
+                try {
+                    // Refresh session before navigation
+                    if (window.CookieSessionManager) {
+                        console.log('🔐 Refreshing CookieSessionManager before navigation...');
+                        window.CookieSessionManager.refreshSession();
+                    }
                     
                     // Small delay to ensure all data is committed
                     setTimeout(() => {
@@ -2803,11 +3838,22 @@
     
     <!-- Modular Booking System -->
     <script src="js/modules/booking/booking-form-handler.js" defer></script>
-    <script src="js/modules/booking/booking-ui-manager.js" defer></script>
+    <!-- <script src="js/modules/booking/booking-ui-manager.js" defer></script> Disabled - conflicts with inline time blocking logic -->
     <script src="js/booking-modular.js" defer></script>
 
     <!-- Service Worker Registration -->
     <script>
+        // Force cache refresh for development
+        if ('caches' in window) {
+            console.log('🔄 Clearing caches to ensure latest version loads...');
+            caches.keys().then(names => {
+                names.forEach(name => {
+                    console.log('🗑️ Deleting cache:', name);
+                    caches.delete(name);
+                });
+            });
+        }
+        
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js')
                 .then(registration => {
@@ -2833,6 +3879,49 @@
                     });
                 })
                 .catch(error => console.log('❌ Service Worker registration failed:', error));
+        }
+        
+        // Specific test for August 21st issue
+        function testDate21st() {
+            console.log('🎯 === TESTING AUGUST 21ST SPECIFICALLY ===');
+            
+            const dateInput = document.getElementById('date');
+            if (dateInput) {
+                console.log('📅 Setting date to 2025-08-21...');
+                dateInput.value = '2025-08-21';
+                
+                console.log('🔄 Triggering change event...');
+                dateInput.dispatchEvent(new Event('change'));
+                
+                console.log('⏳ Waiting 1 second for processing...');
+                setTimeout(() => {
+                    console.log('🔍 Checking results...');
+                    
+                    // Check what appointments exist for this date
+                    const appointments = window.sharedAppointments || [];
+                    const aug21Appointments = appointments.filter(apt => {
+                        const normalized = normalizeDate(apt.date);
+                        const target = normalizeDate('2025-08-21');
+                        console.log(`Comparing: "${normalized}" vs "${target}"`);
+                        return normalized === target;
+                    });
+                    
+                    console.log('📋 Appointments for Aug 21:', aug21Appointments);
+                    
+                    // Check dropdown state
+                    const timeSelect = document.getElementById('time');
+                    if (timeSelect) {
+                        console.log('🔍 Current dropdown options:');
+                        Array.from(timeSelect.options).forEach((option, index) => {
+                            console.log(`  ${index}: "${option.textContent}" (disabled: ${option.disabled}, value: "${option.value}")`);
+                        });
+                    }
+                    
+                    alert(`August 21st Test Results:\n\nAppointments found: ${aug21Appointments.length}\nDropdown options: ${timeSelect ? timeSelect.options.length : 'N/A'}\n\nCheck console for details.`);
+                }, 1000);
+            } else {
+                console.error('❌ Date input not found');
+            }
         }
     </script>
 </body>

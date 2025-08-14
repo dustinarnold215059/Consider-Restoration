@@ -6,6 +6,139 @@
     <title>User Portal - Christopher's Massage Therapy</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/user-portal.css">
+    <style>
+        /* Membership Management Styles */
+        .membership-management {
+            margin-top: 1.5rem;
+        }
+        
+        .membership-details .membership-info {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .membership-details .membership-info h4 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        .membership-details .membership-info p {
+            margin: 0.5rem 0;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #545b62;
+            text-decoration: none;
+            color: white;
+        }
+        
+        /* Modal styles for membership cancellation */
+        .warning-message {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        .warning-message h4 {
+            color: #856404;
+            margin: 0.5rem 0 1rem 0;
+        }
+        
+        .warning-message ul {
+            text-align: left;
+            margin: 1rem 0;
+            padding-left: 2rem;
+        }
+        
+        .warning-message li {
+            margin: 0.5rem 0;
+            color: #856404;
+        }
+        
+        .cancellation-reason {
+            margin: 1.5rem 0;
+        }
+        
+        .cancellation-reason label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .cancellation-reason select,
+        .cancellation-reason textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        
+        .cancellation-reason select:focus,
+        .cancellation-reason textarea:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+    </style>
     <script>
         // Only load manifest for HTTP/HTTPS protocols
         if (location.protocol === 'http:' || location.protocol === 'https:') {
@@ -189,6 +322,16 @@
                         </div>
                     </div>
                 </section>
+
+                <!-- Membership Management -->
+                <section class="portal-section membership-management" id="membershipSection" style="display: none;">
+                    <div class="section-header">
+                        <h2>Membership Management</h2>
+                    </div>
+                    <div id="membershipDetails" class="membership-details">
+                        <!-- Membership details will be populated here -->
+                    </div>
+                </section>
             </div>
         </main>
     </div>
@@ -240,6 +383,47 @@
             <div class="modal-actions">
                 <button id="rescheduleBtn" class="btn-primary">Reschedule</button>
                 <button id="cancelBtn" class="btn-danger">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Membership Cancellation Modal -->
+    <div id="membershipCancelModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Cancel Membership</h3>
+            <div id="cancelMembershipContent">
+                <div class="warning-message">
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">⚠️</div>
+                    <h4>Are you sure you want to cancel your membership?</h4>
+                    <p>Cancelling your membership will:</p>
+                    <ul>
+                        <li>End your recurring monthly billing</li>
+                        <li>Allow you to use remaining sessions until expiration</li>
+                        <li>Remove priority booking access after expiration</li>
+                        <li>Remove member discounts after expiration</li>
+                    </ul>
+                    <p><strong>Note:</strong> You can reactivate your membership anytime by visiting our membership page.</p>
+                </div>
+                
+                <div class="cancellation-reason">
+                    <label for="cancellationReason">Reason for cancellation (optional):</label>
+                    <select id="cancellationReason">
+                        <option value="">Select a reason...</option>
+                        <option value="financial">Financial reasons</option>
+                        <option value="moving">Moving away</option>
+                        <option value="schedule">Schedule conflicts</option>
+                        <option value="health">Health issues</option>
+                        <option value="dissatisfied">Service dissatisfaction</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <textarea id="cancellationComments" placeholder="Additional comments (optional)" rows="3" style="margin-top: 0.5rem; width: 100%; padding: 0.5rem;"></textarea>
+                </div>
+                
+                <div class="modal-actions" style="margin-top: 1.5rem;">
+                    <button id="confirmCancelBtn" class="btn-danger">Yes, Cancel Membership</button>
+                    <button id="keepMembershipBtn" class="btn-secondary">Keep Membership</button>
+                </div>
             </div>
         </div>
     </div>

@@ -282,6 +282,37 @@ class BookingUIManager {
 
     getServiceDetails(serviceValue) {
         const services = {
+            'mindful-start': {
+                price: '70',
+                duration: '60',
+                description: 'Perfect introduction to massage therapy - Starting at $70'
+            },
+            'integrated-massage': {
+                price: '100',
+                duration: '60',
+                description: 'Comprehensive massage therapy - $100+'
+            },
+            'thai-stretch': {
+                price: '120',
+                duration: '75',
+                description: 'Thai-Stretch Fusion massage - $120+'
+            },
+            'applied-neurology': {
+                price: '150',
+                duration: '90',
+                description: 'Applied Neurology Consultation - $150+'
+            },
+            'prenatal': {
+                price: '90',
+                duration: '60',
+                description: 'Prenatal Massage - $90'
+            },
+            'neurology-training': {
+                price: '330',
+                duration: '180',
+                description: 'Applied Neurology Training - Up to $330'
+            },
+            // Legacy services
             'swedish': {
                 price: '80',
                 duration: '60',
@@ -301,15 +332,10 @@ class BookingUIManager {
                 price: '85',
                 duration: '60',
                 description: 'Targeted massage for athletic performance and recovery'
-            },
-            'prenatal': {
-                price: '85',
-                duration: '60',
-                description: 'Gentle massage specially designed for expectant mothers'
             }
         };
 
-        return services[serviceValue] || { price: '80', duration: '60', description: '' };
+        return services[serviceValue] || { price: '70', duration: '60', description: '' };
     }
 
     async updateAvailableTimes(selectedDate) {

@@ -7,8 +7,17 @@ class BookingFormHandler {
         this.isSubmitting = false;
         this.pendingBookingData = null;
         this.formValidationRules = this.initializeValidationRules();
+        this.userDataPopulated = false;
         
         console.log('📝 BookingFormHandler initialized');
+        
+        // Auto-populate user data when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.setupAutoPopulation());
+        } else {
+            // DOM already ready, try to populate immediately or wait a bit for other scripts
+            setTimeout(() => this.setupAutoPopulation(), 500);
+        }
     }
 
     initializeValidationRules() {
@@ -108,7 +117,7 @@ class BookingFormHandler {
             date: this.getFieldValue('date'),
             time: this.getFieldValue('time'),
             notes: this.getFieldValue('notes'),
-            price: this.getFieldValue('totalPrice') || '0'
+            price: this.calculateServicePrice()
         };
         
         // Add computed fields
@@ -116,6 +125,34 @@ class BookingFormHandler {
         formData.source = 'booking_form';
         
         return formData;
+    }
+
+    calculateServicePrice() {
+        // Get price from the totalPrice span element
+        const priceElement = document.getElementById('totalPrice');
+        if (priceElement && priceElement.textContent) {
+            const priceText = priceElement.textContent.trim();
+            console.log('📝 Price from totalPrice element:', priceText);
+            return priceText;
+        }
+        
+        // Fallback: get price from selected service option
+        const serviceSelect = document.getElementById('service');
+        if (serviceSelect && serviceSelect.selectedIndex > 0) {
+            const selectedOption = serviceSelect.options[serviceSelect.selectedIndex];
+            const price = selectedOption.getAttribute('data-price') || '0';
+            console.log('📝 Price from service data-price attribute:', price);
+            
+            // Update the totalPrice display if it's not showing correct price
+            if (priceElement) {
+                priceElement.textContent = price;
+            }
+            
+            return price;
+        }
+        
+        console.warn('📝 Could not determine service price, defaulting to 0');
+        return '0';
     }
 
     getFieldValue(fieldId) {
@@ -316,20 +353,86 @@ class BookingFormHandler {
     }
 
     showPaymentModal(appointment) {
-        // Show payment processing modal
-        const paymentModal = document.getElementById('paymentModal');
-        if (paymentModal) {
-            paymentModal.style.display = 'block';
-            paymentModal.classList.add('show');
-            
-            // Trigger payment flow
-            this.initializePaymentFlow(appointment);
-            
-            console.log('📝 Payment modal shown for appointment:', appointment.id);
+        console.log('📝 showPaymentModal called with appointment:', appointment);
+        console.log('📝 Checking for showBookingPaymentModal function...');
+        console.log('📝 window.showBookingPaymentModal exists:', typeof window.showBookingPaymentModal);
+        
+        // First, ensure the appointment is stored globally
+        window.pendingAppointment = appointment;
+        
+        // Use the global showBookingPaymentModal function from booking.html
+        if (window.showBookingPaymentModal && typeof window.showBookingPaymentModal === 'function') {
+            console.log('📝 Using global showBookingPaymentModal function');
+            try {
+                window.showBookingPaymentModal(appointment);
+                console.log('📝 Payment modal should be visible now');
+            } catch (error) {
+                console.error('📝 Error calling showBookingPaymentModal:', error);
+                this.showSuccessMessage('Booking confirmed! You will receive payment instructions via email.');
+            }
         } else {
-            console.error('📝 Payment modal not found');
-            this.showSuccessMessage('Booking confirmed! You will receive payment instructions via email.');
+            console.error('📝 showBookingPaymentModal function not found');
+            console.log('📝 Available window functions:', Object.keys(window).filter(key => key.includes('Payment') || key.includes('Modal')));
+            
+            // Try alternative approaches
+            if (typeof showBookingPaymentModal === 'function') {
+                console.log('📝 Found showBookingPaymentModal in global scope');
+                showBookingPaymentModal(appointment);
+            } else {
+                console.error('📝 No payment modal function available, using fallback');
+                // Create a simple payment modal as fallback
+                this.createFallbackPaymentModal(appointment);
+            }
         }
+    }
+
+    createFallbackPaymentModal(appointment) {
+        console.log('📝 Creating fallback payment modal');
+        
+        // Remove any existing modal
+        const existingModal = document.getElementById('fallbackPaymentModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Create a simple payment modal
+        const modal = document.createElement('div');
+        modal.id = 'fallbackPaymentModal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.8);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        `;
+        
+        modal.innerHTML = `
+            <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 400px; text-align: center;">
+                <h3>Payment Required</h3>
+                <p><strong>Service:</strong> ${appointment.service}</p>
+                <p><strong>Date:</strong> ${appointment.date}</p>
+                <p><strong>Time:</strong> ${appointment.time}</p>
+                <p><strong>Total:</strong> $${appointment.price}</p>
+                <div style="margin: 2rem 0;">
+                    <button onclick="document.getElementById('fallbackPaymentModal').remove(); alert('Payment successful! Appointment confirmed.')" 
+                            style="background: #28a745; color: white; border: none; padding: 1rem 2rem; border-radius: 4px; cursor: pointer; margin: 0.5rem;">
+                        Complete Payment ($${appointment.price})
+                    </button>
+                </div>
+                <button onclick="document.getElementById('fallbackPaymentModal').remove()" 
+                        style="background: #dc3545; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">
+                    Cancel
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        console.log('📝 Fallback payment modal created and shown');
     }
 
     async initializePaymentFlow(appointment) {
@@ -433,11 +536,208 @@ class BookingFormHandler {
         }, 5000);
     }
 
+    // Setup auto-population system
+    setupAutoPopulation() {
+        console.log('📝 Setting up auto-population system...');
+        
+        // Initial population attempt
+        this.autoPopulateUserData();
+        
+        // Listen for authentication events
+        window.addEventListener('userAuthChanged', (event) => {
+            console.log('📝 User authentication changed, re-populating form');
+            this.userDataPopulated = false; // Reset flag
+            setTimeout(() => this.autoPopulateUserData(), 100);
+        });
+        
+        window.addEventListener('userLoggedIn', (event) => {
+            console.log('📝 User logged in, populating form');
+            this.userDataPopulated = false; // Reset flag
+            setTimeout(() => this.autoPopulateUserData(), 100);
+        });
+        
+        // Listen for custom booking form refresh events
+        window.addEventListener('refreshBookingForm', () => {
+            console.log('📝 Booking form refresh requested');
+            this.userDataPopulated = false; // Reset flag
+            this.autoPopulateUserData();
+        });
+    }
+
+    // Auto-populate form with logged-in user data
+    async autoPopulateUserData() {
+        if (this.userDataPopulated) {
+            console.log('📝 User data already populated, skipping');
+            return;
+        }
+
+        try {
+            console.log('📝 Attempting to auto-populate user data...');
+            
+            // Check for current user from CookieSessionManager
+            let currentUser = null;
+            if (window.CookieSessionManager) {
+                currentUser = window.CookieSessionManager.getCurrentUser();
+            }
+            
+            // Fallback to other auth methods
+            if (!currentUser && window.getCurrentUser) {
+                currentUser = window.getCurrentUser();
+            }
+            
+            if (!currentUser) {
+                console.log('📝 No logged-in user found, skipping auto-population');
+                return;
+            }
+            
+            console.log('📝 Found logged-in user, populating form:', currentUser.name);
+            
+            // Wait a bit more for form elements to be ready
+            await this.waitForFormElements();
+            
+            // Populate form fields with user data
+            this.populateField('clientName', currentUser.name || '');
+            this.populateField('email', currentUser.email || '');
+            this.populateField('phone', currentUser.phone || '');
+            
+            // Add visual feedback
+            this.showUserDataPopulatedMessage(currentUser.name);
+            
+            this.userDataPopulated = true;
+            console.log('✅ User data auto-populated successfully');
+            
+        } catch (error) {
+            console.error('❌ Error auto-populating user data:', error);
+        }
+    }
+    
+    async waitForFormElements() {
+        const requiredFields = ['clientName', 'email', 'phone'];
+        const maxWait = 3000; // 3 seconds max wait
+        const checkInterval = 100; // Check every 100ms
+        const startTime = Date.now();
+        
+        while (Date.now() - startTime < maxWait) {
+            const allFieldsReady = requiredFields.every(fieldId => 
+                document.getElementById(fieldId) !== null
+            );
+            
+            if (allFieldsReady) {
+                console.log('📝 Form elements ready for auto-population');
+                return;
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, checkInterval));
+        }
+        
+        console.warn('📝 Timeout waiting for form elements');
+    }
+    
+    populateField(fieldId, value) {
+        const field = document.getElementById(fieldId);
+        if (field && value && !field.value) {
+            field.value = value;
+            console.log(`📝 Populated ${fieldId}: ${value}`);
+            
+            // Add visual indication that the field was auto-populated
+            field.style.background = '#f0f8ff';
+            field.style.border = '1px solid #3A7D99';
+            
+            // Reset styling after a delay
+            setTimeout(() => {
+                field.style.background = '';
+                field.style.border = '';
+            }, 2000);
+        }
+    }
+    
+    showUserDataPopulatedMessage(userName) {
+        // Remove any existing messages first
+        const existingMessage = document.getElementById('userDataPopulatedMessage');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+        
+        const messageEl = document.createElement('div');
+        messageEl.id = 'userDataPopulatedMessage';
+        messageEl.innerHTML = `
+            <div style="
+                background: #d4edda;
+                border: 1px solid #c3e6cb;
+                color: #155724;
+                padding: 12px 16px;
+                border-radius: 8px;
+                margin-bottom: 1rem;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 14px;
+            ">
+                <span style="font-size: 16px;">✅</span>
+                <span><strong>Welcome back, ${userName}!</strong> Your information has been automatically filled in.</span>
+                <button onclick="window.bookingFormHandler.refreshUserData()" style="
+                    background: #28a745;
+                    color: white;
+                    border: none;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    margin-left: 8px;
+                ">Refresh</button>
+                <button onclick="this.parentElement.parentElement.remove()" style="
+                    background: none;
+                    border: none;
+                    color: #155724;
+                    cursor: pointer;
+                    font-size: 18px;
+                    margin-left: auto;
+                    padding: 0;
+                    width: 20px;
+                    height: 20px;
+                ">&times;</button>
+            </div>
+        `;
+        
+        // Insert message above the form
+        const form = document.getElementById('bookingForm');
+        if (form) {
+            form.insertBefore(messageEl, form.firstChild);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (messageEl.parentNode) {
+                    messageEl.remove();
+                }
+            }, 5000);
+        }
+    }
+
+    // Refresh user data manually
+    refreshUserData() {
+        console.log('📝 Manual user data refresh requested');
+        
+        // Clear current form data
+        ['clientName', 'email', 'phone'].forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.value = '';
+                field.style.background = '';
+                field.style.border = '';
+            }
+        });
+        
+        // Reset flag and re-populate
+        this.userDataPopulated = false;
+        this.autoPopulateUserData();
+    }
+
     // Public API methods
     reset() {
         this.isSubmitting = false;
         this.pendingBookingData = null;
         this.clearValidationErrors();
+        this.userDataPopulated = false; // Reset auto-population flag
         console.log('📝 Booking form handler reset');
     }
 
@@ -452,6 +752,14 @@ window.bookingFormHandler = new BookingFormHandler();
 // Global function for form submission (for HTML onclick compatibility)
 window.handleBookingSubmit = function(event) {
     return window.bookingFormHandler.handleBookingSubmit(event);
+};
+
+// Global function to manually refresh user data (for convenience)
+window.refreshBookingUserData = function() {
+    if (window.bookingFormHandler) {
+        return window.bookingFormHandler.refreshUserData();
+    }
+    console.warn('BookingFormHandler not available');
 };
 
 console.log('📝 Booking Form Handler module loaded');

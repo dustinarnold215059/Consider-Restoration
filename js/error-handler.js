@@ -217,7 +217,18 @@ class ErrorHandler {
                 max-width: 400px;
                 width: 100%;
             `;
-            document.body.appendChild(container);
+            
+            // Ensure document.body exists before appending
+            if (document.body) {
+                document.body.appendChild(container);
+            } else {
+                // If body doesn't exist yet, wait for DOM to be ready
+                document.addEventListener('DOMContentLoaded', () => {
+                    if (document.body && !document.getElementById('error-container')) {
+                        document.body.appendChild(container);
+                    }
+                });
+            }
         }
         return container;
     }

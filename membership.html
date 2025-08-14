@@ -513,20 +513,18 @@
             console.log('🚀 showMembershipModal() called for plan:', planType);
             selectedMembershipPlan = planType;
             
-            // Check if user is already logged in
-            const currentUserData = localStorage.getItem('currentUser');
-            console.log('🔍 Checking for currentUser:', currentUserData ? 'Found' : 'Not found');
+            // Check if user is already logged in using CookieSessionManager
+            let user = null;
+            if (window.CookieSessionManager) {
+                user = window.CookieSessionManager.getCurrentUser();
+            }
+            console.log('🔍 Checking for logged-in user:', user ? 'Found' : 'Not found');
             
-            if (currentUserData) {
-                try {
-                    const user = JSON.parse(currentUserData);
-                    console.log('✅ User found:', user.name, 'Going to payment...');
-                    currentUser = user;
-                    proceedToMembershipPayment(planType, user);
-                    return;
-                } catch (error) {
-                    console.error('❌ Error parsing user data:', error);
-                }
+            if (user) {
+                console.log('✅ User found:', user.name, 'Going directly to payment...');
+                currentUser = user;
+                proceedToMembershipPayment(planType, user);
+                return;
             }
             
             // No user logged in - show login modal

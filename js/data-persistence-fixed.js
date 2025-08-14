@@ -350,6 +350,8 @@ class DataPersistenceManagerFixed {
 // Create global instance
 console.log('📊 Creating global data persistence instance...');
 window.dataPersistenceFixed = new DataPersistenceManagerFixed();
+// Backward compatibility alias
+window.dataPersistence = window.dataPersistenceFixed;
 
 // Enhanced global functions with immediate availability
 window.getUsers = async function() {

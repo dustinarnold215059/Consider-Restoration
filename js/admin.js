@@ -5,7 +5,6 @@ let appointments = [];
 let users = [];
 let blockedDates = [];
 let reviews = [];
-let memberships = [];
 
 let currentUser = null;
 let selectedAppointment = null;
@@ -30,9 +29,6 @@ function initializeSharedData() {
     }
     if (window.getReviews) {
         reviews = window.getReviews();
-    }
-    if (window.getMemberships) {
-        memberships = window.getMemberships();
     }
 }
 
@@ -693,11 +689,6 @@ function switchSection(sectionName) {
         section.classList.remove('active');
     });
     document.getElementById(sectionName).classList.add('active');
-    
-    // Load section-specific data
-    if (sectionName === 'memberships') {
-        loadMembershipSection();
-    }
 }
 
 function displayAppointments(appointmentsToShow) {
@@ -2147,8 +2138,7 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
         // Check if user is already logged in
         const storedUser = localStorage.getItem('currentUser');
-        const isLoggedIn = localStorage.getItem('isLoggedIn');
-        if (storedUser && isLoggedIn === 'true') {
+        if (storedUser) {
             try {
                 const user = JSON.parse(storedUser);
                 if (user.role === 'admin') {
@@ -2180,41 +2170,37 @@ document.addEventListener('DOMContentLoaded', function() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
-            // Simple hardcoded admin credentials for demo
-            console.log('Login attempt:', username, password);
-            // Use secure authentication
-    const user = window.authenticateUser ? window.authenticateUser(username, password) : null;
-    if (user && user.role === 'admin') {
-                console.log('Login successful, setting up admin panel');
-                currentUser = {
-                    ...user,
-                    loginTime: new Date().toISOString(),
-                    sessionToken: window.generateSecureSessionToken ? window.generateSecureSessionToken() : `fallback_${Date.now()}_${Math.random().toString(36).substr(2, 15)}`
-                };
-                
-                // Store login for all session managers
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                localStorage.setItem('isLoggedIn', 'true');
-                
-                // Update SimpleSessionManager if available
-                if (window.SimpleSessionManager) {
-                    window.SimpleSessionManager.login(currentUser);
-                }
-                
-                // Show admin panel - hide login screen
-                console.log('Hiding login screen, showing admin panel');
-                loginScreen.style.display = 'none';
-                adminPanel.style.display = 'block';
-                
-                // Initialize admin panel
-                console.log('Initializing admin panel');
-                initializeAdminPanel();
-                
-                loginError.textContent = '';
-                console.log('Login process completed');
+            // Use secure authentication system
+            logger.security('Admin login attempt', { email: username.substring(0, 5) + '***' });
+            
+            // Use secure session manager for authentication
+            if (window.secureSession) {
+                window.secureSession.login(username, password)
+                    .then(result => {
+                        if (result.success && result.user.role === 'admin') {
+                            logger.security('Admin login successful', { userId: result.user.id });
+                            
+                            // Hide login screen, show admin panel
+                            document.getElementById('loginScreen').style.display = 'none';
+                            document.getElementById('adminPanel').style.display = 'block';
+                            
+                            // Initialize admin panel
+                            initializeAdminPanel();
+                        } else {
+                            const errorMsg = result.user && result.user.role !== 'admin' 
+                                ? 'Admin access required' 
+                                : (result.error || 'Invalid credentials');
+                            document.getElementById('loginError').textContent = errorMsg;
+                            logger.security('Admin login failed', { email: username.substring(0, 5) + '***', reason: errorMsg });
+                        }
+                    })
+                    .catch(error => {
+                        logger.error('Admin login system error:', error);
+                        document.getElementById('loginError').textContent = 'Login system error. Please try again.';
+                    });
             } else {
-                console.log('Invalid credentials');
-                loginError.textContent = 'Invalid username or password';
+                document.getElementById('loginError').textContent = 'Secure authentication system not available';
+                logger.error('Secure session manager not available');
             }
         });
     }
@@ -2222,15 +2208,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Setup logout handler
     if (logoutBtn) {
         logoutBtn.addEventListener('click', function() {
-            // Clear both session systems
             localStorage.removeItem('currentUser');
-            localStorage.removeItem('isLoggedIn');
             currentUser = null;
-            
-            // Update SimpleSessionManager if available
-            if (window.SimpleSessionManager) {
-                window.SimpleSessionManager.logout();
-            }
             adminPanel.style.display = 'none';
             loginScreen.style.display = 'block';
             document.getElementById('username').value = '';
@@ -4111,365 +4090,4 @@ function calculateAnalyticsMetrics(appointments, users, reviews, thirtyDaysAgo, 
     
     console.log('🔍 Final calculated metrics:', finalMetrics);
     return finalMetrics;
-}
-
-// ===== MEMBERSHIP MANAGEMENT FUNCTIONS =====
-
-function loadMembershipSection() {
-    console.log('Loading membership section...');
-    
-    // Initialize membership data
-    if (window.getMemberships) {
-        memberships = window.getMemberships();
-    }
-    
-    // Update membership statistics
-    updateMembershipStats();
-    
-    // Display memberships table
-    displayMemberships();
-    
-    // Display financial summary
-    updateFinancialSummary();
-    
-    // Display payment history
-    displayMembershipPayments();
-    
-    // Setup event listeners
-    setupMembershipEventListeners();
-}
-
-function updateMembershipStats() {
-    const activeMemberships = memberships.filter(m => m.status === 'active');
-    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
-    
-    // Active members count
-    document.getElementById('activeMembersCount').textContent = activeMemberships.length;
-    
-    // Monthly revenue (current month)
-    const monthlyRevenue = activeMemberships.reduce((sum, m) => sum + m.price, 0);
-    document.getElementById('monthlyMembershipRevenue').textContent = `$${monthlyRevenue}`;
-    
-    // Retention rate (simplified calculation)
-    const totalMembers = memberships.length;
-    const retentionRate = totalMembers > 0 ? (activeMemberships.length / totalMembers) * 100 : 0;
-    document.getElementById('memberRetentionRate').textContent = `${retentionRate.toFixed(1)}%`;
-}
-
-function displayMemberships() {
-    const tableBody = document.getElementById('membershipsTableBody');
-    if (!tableBody) return;
-    
-    // Apply filters
-    const statusFilter = document.getElementById('membershipStatusFilter')?.value || 'all';
-    const typeFilter = document.getElementById('membershipTypeFilter')?.value || 'all';
-    
-    let filteredMemberships = memberships;
-    if (statusFilter !== 'all') {
-        filteredMemberships = filteredMemberships.filter(m => m.status === statusFilter);
-    }
-    if (typeFilter !== 'all') {
-        filteredMemberships = filteredMemberships.filter(m => m.type === typeFilter);
-    }
-    
-    if (filteredMemberships.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">No memberships found</td></tr>';
-        return;
-    }
-    
-    tableBody.innerHTML = filteredMemberships.map(membership => {
-        const user = users.find(u => u.id === membership.userId);
-        const userName = user ? user.name : `User ${membership.userId}`;
-        const userEmail = user ? user.email : 'Unknown';
-        
-        const nextPaymentDate = new Date(membership.endDate);
-        const isExpired = nextPaymentDate < new Date();
-        
-        const statusClass = membership.status === 'active' ? 'status-active' : 
-                           membership.status === 'expired' ? 'status-expired' : 'status-cancelled';
-        
-        return `
-            <tr>
-                <td>
-                    <div class="member-info">
-                        <strong>${userName}</strong>
-                        <div class="member-email">${userEmail}</div>
-                    </div>
-                </td>
-                <td>${membership.typeName}</td>
-                <td><span class="status-badge ${statusClass}">${membership.status.toUpperCase()}</span></td>
-                <td>${membership.sessionsUsed}/${membership.sessionsIncluded}</td>
-                <td>${isExpired ? 'Expired' : nextPaymentDate.toLocaleDateString()}</td>
-                <td>$${membership.price}</td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="btn-small btn-primary" onclick="viewMembershipDetails(${membership.id})">View</button>
-                        ${membership.status === 'active' ? 
-                            `<button class="btn-small btn-warning" onclick="cancelMembership(${membership.id})">Cancel</button>` :
-                            membership.status === 'expired' ? 
-                            `<button class="btn-small btn-success" onclick="renewMembership(${membership.id})">Renew</button>` : ''
-                        }
-                    </div>
-                </td>
-            </tr>
-        `;
-    }).join('');
-}
-
-function updateFinancialSummary() {
-    const now = new Date();
-    const thisMonth = now.toISOString().slice(0, 7);
-    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().slice(0, 7);
-    const thisYear = now.getFullYear().toString();
-    
-    // This month metrics
-    const thisMonthRevenue = getMembershipRevenueForMonth(thisMonth);
-    const thisMonthNewMembers = getMembershipCountForMonth(thisMonth);
-    
-    // Last month metrics  
-    const lastMonthRevenue = getMembershipRevenueForMonth(lastMonth);
-    const lastMonthCancellations = getMembershipCancellationsForMonth(lastMonth);
-    
-    // Yearly metrics
-    const yearlyRevenue = getMembershipRevenueForYear(thisYear);
-    const totalMembers = memberships.length;
-    
-    // Update display
-    document.getElementById('thisMonthMembershipRevenue').textContent = `$${thisMonthRevenue}`;
-    document.getElementById('thisMonthNewMembers').textContent = thisMonthNewMembers.toString();
-    document.getElementById('lastMonthMembershipRevenue').textContent = `$${lastMonthRevenue}`;
-    document.getElementById('lastMonthChurn').textContent = lastMonthCancellations.toString();
-    document.getElementById('yearlyMembershipRevenue').textContent = `$${yearlyRevenue}`;
-    document.getElementById('totalMembers').textContent = totalMembers.toString();
-}
-
-function getMembershipRevenueForMonth(monthStr) {
-    let revenue = 0;
-    memberships.forEach(membership => {
-        membership.paymentHistory.forEach(payment => {
-            if (payment.date.slice(0, 7) === monthStr && payment.status === 'paid') {
-                revenue += payment.amount;
-            }
-        });
-    });
-    return revenue;
-}
-
-function getMembershipCountForMonth(monthStr) {
-    return memberships.filter(m => m.startDate.slice(0, 7) === monthStr).length;
-}
-
-function getMembershipCancellationsForMonth(monthStr) {
-    return memberships.filter(m => 
-        m.status === 'cancelled' && 
-        m.endDate && 
-        m.endDate.slice(0, 7) === monthStr
-    ).length;
-}
-
-function getMembershipRevenueForYear(yearStr) {
-    let revenue = 0;
-    memberships.forEach(membership => {
-        membership.paymentHistory.forEach(payment => {
-            if (payment.date.slice(0, 4) === yearStr && payment.status === 'paid') {
-                revenue += payment.amount;
-            }
-        });
-    });
-    return revenue;
-}
-
-function displayMembershipPayments() {
-    const tableBody = document.getElementById('membershipPaymentsTableBody');
-    if (!tableBody) return;
-    
-    // Get all payments from all memberships and sort by date
-    const allPayments = [];
-    memberships.forEach(membership => {
-        const user = users.find(u => u.id === membership.userId);
-        const userName = user ? user.name : `User ${membership.userId}`;
-        
-        membership.paymentHistory.forEach(payment => {
-            allPayments.push({
-                ...payment,
-                memberName: userName,
-                membershipType: membership.typeName
-            });
-        });
-    });
-    
-    // Sort by date (most recent first)
-    allPayments.sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    // Show only recent payments (last 10)
-    const recentPayments = allPayments.slice(0, 10);
-    
-    if (recentPayments.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No payment history found</td></tr>';
-        return;
-    }
-    
-    tableBody.innerHTML = recentPayments.map(payment => {
-        const paymentDate = new Date(payment.date);
-        const statusClass = payment.status === 'paid' ? 'status-paid' : 
-                           payment.status === 'failed' ? 'status-failed' : 'status-pending';
-        
-        return `
-            <tr>
-                <td>${paymentDate.toLocaleDateString()}</td>
-                <td>${payment.memberName}</td>
-                <td>${payment.membershipType}</td>
-                <td>$${payment.amount}</td>
-                <td><span class="status-badge ${statusClass}">${payment.status.toUpperCase()}</span></td>
-                <td><code>${payment.stripePaymentId || 'N/A'}</code></td>
-            </tr>
-        `;
-    }).join('');
-}
-
-function setupMembershipEventListeners() {
-    // Filter event listeners
-    const statusFilter = document.getElementById('membershipStatusFilter');
-    const typeFilter = document.getElementById('membershipTypeFilter');
-    const exportBtn = document.getElementById('exportMembershipsBtn');
-    
-    if (statusFilter) {
-        statusFilter.addEventListener('change', displayMemberships);
-    }
-    if (typeFilter) {
-        typeFilter.addEventListener('change', displayMemberships);
-    }
-    if (exportBtn) {
-        exportBtn.addEventListener('click', exportMembershipData);
-    }
-}
-
-function viewMembershipDetails(membershipId) {
-    const membership = memberships.find(m => m.id === membershipId);
-    const user = users.find(u => u.id === membership.userId);
-    
-    if (!membership) {
-        alert('Membership not found');
-        return;
-    }
-    
-    const details = `
-Membership Details:
-================
-Member: ${user ? user.name : 'Unknown User'}
-Email: ${user ? user.email : 'Unknown'}
-Type: ${membership.typeName}
-Price: $${membership.price}/month
-Status: ${membership.status.toUpperCase()}
-Sessions: ${membership.sessionsUsed}/${membership.sessionsIncluded}
-Start Date: ${new Date(membership.startDate).toLocaleDateString()}
-End Date: ${new Date(membership.endDate).toLocaleDateString()}
-Auto-Renew: ${membership.autoRenew ? 'Yes' : 'No'}
-Stripe ID: ${membership.stripeSubscriptionId || 'N/A'}
-
-Payment History:
-${membership.paymentHistory.map(p => 
-    `${new Date(p.date).toLocaleDateString()} - $${p.amount} (${p.status})`
-).join('\n')}
-    `.trim();
-    
-    alert(details);
-}
-
-function cancelMembership(membershipId) {
-    if (!confirm('Are you sure you want to cancel this membership?')) {
-        return;
-    }
-    
-    const membership = memberships.find(m => m.id === membershipId);
-    if (membership) {
-        membership.status = 'cancelled';
-        membership.autoRenew = false;
-        
-        // Update display
-        displayMemberships();
-        updateMembershipStats();
-        updateFinancialSummary();
-        
-        // Trigger event
-        if (window.updateMembership) {
-            window.updateMembership(membershipId, { status: 'cancelled', autoRenew: false });
-        }
-        
-        showNotification('Membership cancelled successfully', 'success');
-    }
-}
-
-function renewMembership(membershipId) {
-    const membership = memberships.find(m => m.id === membershipId);
-    if (!membership) {
-        alert('Membership not found');
-        return;
-    }
-    
-    if (confirm(`Renew ${membership.typeName} membership for $${membership.price}?`)) {
-        // Update membership dates
-        const startDate = new Date();
-        const endDate = new Date();
-        endDate.setMonth(endDate.getMonth() + 1);
-        
-        membership.status = 'active';
-        membership.startDate = startDate.toISOString().slice(0, 10);
-        membership.endDate = endDate.toISOString().slice(0, 10);
-        membership.sessionsUsed = 0;
-        
-        // Add payment record
-        const payment = {
-            id: Date.now(),
-            amount: membership.price,
-            date: startDate.toISOString().slice(0, 10),
-            status: 'paid',
-            stripePaymentId: 'pi_renewed_' + Date.now()
-        };
-        membership.paymentHistory.push(payment);
-        
-        // Update display
-        displayMemberships();
-        updateMembershipStats();
-        updateFinancialSummary();
-        displayMembershipPayments();
-        
-        // Trigger event
-        if (window.updateMembership) {
-            window.updateMembership(membershipId, membership);
-        }
-        
-        showNotification('Membership renewed successfully', 'success');
-    }
-}
-
-function exportMembershipData() {
-    const csvData = [
-        ['Member Name', 'Email', 'Type', 'Status', 'Price', 'Sessions Used', 'Sessions Included', 'Start Date', 'End Date', 'Auto-Renew']
-    ];
-    
-    memberships.forEach(membership => {
-        const user = users.find(u => u.id === membership.userId);
-        csvData.push([
-            user ? user.name : 'Unknown',
-            user ? user.email : 'Unknown',
-            membership.typeName,
-            membership.status,
-            membership.price,
-            membership.sessionsUsed,
-            membership.sessionsIncluded,
-            membership.startDate,
-            membership.endDate,
-            membership.autoRenew ? 'Yes' : 'No'
-        ]);
-    });
-    
-    const csvContent = csvData.map(row => row.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `membership-data-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
 }

@@ -401,6 +401,48 @@ function showUserPortal() {
     // Load user data
     updateAccountSummary();
     loadUserAppointments();
+    
+    // Listen for membership changes
+    window.addEventListener('membershipAdded', () => {
+        console.log('🔒 Membership added event received, updating display');
+        setTimeout(updateMembershipStatus, 100);
+    });
+    
+    window.addEventListener('membershipUpdated', () => {
+        console.log('🔒 Membership updated event received, updating display');
+        setTimeout(updateMembershipStatus, 100);
+    });
+    
+    window.addEventListener('userUpdated', (event) => {
+        if (event.detail && event.detail.id === currentUser.id) {
+            console.log('🔒 Current user updated, refreshing data');
+            currentUser = event.detail;
+            setTimeout(updateMembershipStatus, 100);
+        }
+    });
+    
+    window.addEventListener('membershipCancelled', () => {
+        console.log('🔒 Membership cancelled event received, updating display');
+        setTimeout(updateMembershipStatus, 100);
+    });
+    
+    window.addEventListener('membershipReactivated', () => {
+        console.log('🔒 Membership reactivated event received, updating display');
+        setTimeout(updateMembershipStatus, 100);
+    });
+    
+    // Listen for new appointments (prevent duplicate listeners)
+    if (!window.appointmentAddedListenerAdded) {
+        window.addEventListener('appointmentAdded', (event) => {
+            console.log('🔒 New appointment added, refreshing appointments display');
+            console.log('🔒 New appointment details:', event.detail);
+            setTimeout(() => {
+                loadUserAppointments();
+                updateAccountSummary();
+            }, 100);
+        });
+        window.appointmentAddedListenerAdded = true;
+    }
 }
 
 function showAuthScreen() {
@@ -452,6 +494,9 @@ async function updateAccountSummary() {
         
         updateElement('favoriteService', serviceCounts[favoriteService] ? favoriteService : 'None');
         
+        // Update membership status
+        updateMembershipStatus();
+        
     } catch (error) {
         console.error('🔒 Error updating account summary:', error);
     }
@@ -459,14 +504,24 @@ async function updateAccountSummary() {
 
 async function loadUserAppointments() {
     console.log('🔒 Loading user appointments...');
+    console.log('🔒 Current user for appointment filtering:', currentUser);
     
     try {
         if (window.getAppointments) {
             const allAppointments = await window.getAppointments();
-            const userAppointments = allAppointments.filter(apt => 
-                apt.userId === currentUser.id || 
-                apt.email === currentUser.email
-            );
+            console.log('🔒 Total appointments in system:', allAppointments.length);
+            console.log('🔒 All appointments:', allAppointments);
+            
+            const userAppointments = allAppointments.filter(apt => {
+                const matchesUserId = apt.userId === currentUser.id;
+                const matchesEmail = apt.email === currentUser.email;
+                console.log(`🔒 Appointment ${apt.id}: userId match=${matchesUserId}, email match=${matchesEmail}`);
+                console.log(`🔒   apt.userId=${apt.userId}, currentUser.id=${currentUser.id}`);
+                console.log(`🔒   apt.email=${apt.email}, currentUser.email=${currentUser.email}`);
+                return matchesUserId || matchesEmail;
+            });
+            
+            console.log('🔒 Filtered user appointments:', userAppointments.length, userAppointments);
             
             displayUpcomingAppointments(userAppointments);
             displayRecentAppointments(userAppointments);
@@ -480,7 +535,12 @@ function displayUpcomingAppointments(appointments) {
     const upcomingContainer = document.getElementById('upcomingAppointments');
     if (!upcomingContainer) return;
     
-    const upcoming = appointments.filter(apt => 
+    // Remove duplicates by ID before filtering
+    const uniqueAppointments = appointments.filter((apt, index, self) => 
+        index === self.findIndex(a => a.id === apt.id)
+    );
+    
+    const upcoming = uniqueAppointments.filter(apt => 
         apt.status === 'confirmed' && new Date(apt.date) > new Date()
     ).sort((a, b) => new Date(a.date) - new Date(b.date));
     
@@ -568,5 +628,231 @@ window.showHistory = function() {
     console.log('🔒 Show full history modal');
     // Implement history modal logic
 };
+
+// Update membership status display
+function updateMembershipStatus() {
+    try {
+        if (!currentUser) {
+            console.log('🔒 No current user for membership check');
+            return;
+        }
+        
+        console.log('🔒 Checking membership status for user:', currentUser.id);
+        
+        // Check membership records using getUserMemberships function
+        if (window.getUserMemberships) {
+            const userMemberships = window.getUserMemberships(currentUser.id);
+            console.log('🔒 Found membership records:', userMemberships);
+            
+            // Find any membership (active or cancelled)
+            const membership = userMemberships.find(m => m.status === 'active' || m.status === 'cancelled');
+            
+            if (membership) {
+                console.log('🔒 Membership found:', membership.typeName, 'Status:', membership.status);
+                
+                if (membership.status === 'active') {
+                    updateElement('membershipStatus', membership.typeName);
+                    updateMembershipCard('#d4edda', '2px solid #28a745');
+                    showMembershipManagement(membership);
+                } else if (membership.status === 'cancelled') {
+                    updateElement('membershipStatus', 'Cancelled');
+                    updateMembershipCard('#fff3cd', '2px solid #ffc107');
+                    showMembershipManagement(membership);
+                } else {
+                    updateElement('membershipStatus', 'None');
+                    updateMembershipCard('', '');
+                    hideMembershipManagement();
+                }
+                return;
+            }
+        }
+        
+        // Check if user has membership data in their profile (fallback)
+        if (currentUser.membershipPlan && currentUser.membershipStatus === 'active') {
+            console.log('🔒 Found membership in user profile:', currentUser.membershipPlan);
+            const membershipNames = {
+                'wellness': 'Wellness Member',
+                'restoration-plus': 'Restoration Plus',
+                'therapeutic-elite': 'Therapeutic Elite'
+            };
+            const displayName = membershipNames[currentUser.membershipPlan] || currentUser.membershipPlan;
+            updateElement('membershipStatus', displayName);
+            updateMembershipCard('#d4edda', '2px solid #28a745');
+            return;
+        }
+        
+        // No membership found
+        console.log('🔒 No membership found');
+        updateElement('membershipStatus', 'None');
+        updateMembershipCard('', '');
+        hideMembershipManagement();
+        
+    } catch (error) {
+        console.error('🔒 Error updating membership status:', error);
+        updateElement('membershipStatus', 'Error loading');
+    }
+}
+
+// Helper function to update membership card styling
+function updateMembershipCard(background, border) {
+    const membershipCard = document.querySelector('.membership-card');
+    if (membershipCard) {
+        membershipCard.style.background = background;
+        membershipCard.style.border = border;
+    }
+}
+
+// Show membership management section
+function showMembershipManagement(membership) {
+    const membershipSection = document.getElementById('membershipSection');
+    const membershipDetails = document.getElementById('membershipDetails');
+    
+    if (membershipSection && membershipDetails) {
+        membershipSection.style.display = 'block';
+        
+        const isActive = membership.status === 'active';
+        const isCancelled = membership.status === 'cancelled';
+        
+        let statusDisplay = isActive ? 
+            '<span style="color: #28a745; font-weight: bold;">Active ✅</span>' :
+            '<span style="color: #ffc107; font-weight: bold;">Cancelled ⚠️</span>';
+        
+        let actionButtons = '';
+        if (isActive) {
+            actionButtons = `
+                <button onclick="showCancelMembershipModal(${membership.id})" class="btn-danger" style="margin-top: 1rem;">
+                    Cancel Membership
+                </button>
+            `;
+        } else if (isCancelled) {
+            actionButtons = `
+                <button onclick="handleMembershipReactivation(${membership.id})" class="btn-primary" style="margin-top: 1rem;">
+                    Reactivate Membership
+                </button>
+                <a href="membership.html" class="btn-secondary" style="margin-top: 1rem; margin-left: 0.5rem;">
+                    Choose New Plan
+                </a>
+            `;
+        }
+        
+        let remainingInfo = '';
+        if (membership.remainingSessions && membership.remainingSessions > 0) {
+            remainingInfo = `<p><strong>Remaining Sessions:</strong> ${membership.remainingSessions}</p>`;
+        }
+        
+        membershipDetails.innerHTML = `
+            <div class="membership-info" style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border: 1px solid #e9ecef;">
+                <h4 style="margin-top: 0; color: #2c3e50;">${membership.typeName}</h4>
+                <p><strong>Status:</strong> ${statusDisplay}</p>
+                <p><strong>Price:</strong> $${membership.price}/month</p>
+                <p><strong>Sessions Included:</strong> ${membership.sessionsIncluded} per month</p>
+                <p><strong>Sessions Used:</strong> ${membership.sessionsUsed || 0}</p>
+                ${remainingInfo}
+                <p><strong>Start Date:</strong> ${membership.startDate}</p>
+                <p><strong>End Date:</strong> ${membership.endDate}</p>
+                ${membership.cancelDate ? `<p><strong>Cancelled Date:</strong> ${membership.cancelDate}</p>` : ''}
+                <p><strong>Auto-Renew:</strong> ${membership.autoRenew ? 'Yes' : 'No'}</p>
+                ${actionButtons}
+            </div>
+        `;
+    }
+}
+
+// Hide membership management section
+function hideMembershipManagement() {
+    const membershipSection = document.getElementById('membershipSection');
+    if (membershipSection) {
+        membershipSection.style.display = 'none';
+    }
+}
+
+// Show cancel membership modal
+function showCancelMembershipModal(membershipId) {
+    const modal = document.getElementById('membershipCancelModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // Store membership ID for later use
+        modal.dataset.membershipId = membershipId;
+        
+        // Setup modal close functionality
+        setupMembershipCancelModal();
+    }
+}
+
+// Setup membership cancel modal functionality
+function setupMembershipCancelModal() {
+    const modal = document.getElementById('membershipCancelModal');
+    const confirmBtn = document.getElementById('confirmCancelBtn');
+    const keepBtn = document.getElementById('keepMembershipBtn');
+    const closeBtn = modal.querySelector('.close');
+    
+    // Close modal function
+    const closeModal = () => {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+        
+        // Reset form
+        document.getElementById('cancellationReason').value = '';
+        document.getElementById('cancellationComments').value = '';
+    };
+    
+    // Event listeners
+    closeBtn.onclick = closeModal;
+    keepBtn.onclick = closeModal;
+    
+    // Close when clicking outside
+    modal.onclick = (event) => {
+        if (event.target === modal) {
+            closeModal();
+        }
+    };
+    
+    // Confirm cancellation
+    confirmBtn.onclick = () => {
+        const membershipId = modal.dataset.membershipId;
+        const reason = document.getElementById('cancellationReason').value;
+        const comments = document.getElementById('cancellationComments').value;
+        
+        if (window.cancelMembership) {
+            const result = window.cancelMembership(membershipId, reason, comments);
+            if (result) {
+                console.log('🔒 Membership cancelled successfully');
+                closeModal();
+                
+                // Show success message
+                alert('Your membership has been cancelled successfully. You can still use your remaining sessions until the end of your billing period.');
+                
+                // Refresh membership display
+                setTimeout(updateMembershipStatus, 100);
+            } else {
+                alert('Failed to cancel membership. Please try again.');
+            }
+        }
+    };
+}
+
+// Reactivate membership function (for user portal)
+function handleMembershipReactivation(membershipId) {
+    if (confirm('Are you sure you want to reactivate your membership? Billing will resume next month.')) {
+        if (window.reactivateMembership) {
+            const result = window.reactivateMembership(membershipId);
+            if (result) {
+                console.log('🔒 Membership reactivated successfully');
+                alert('Your membership has been reactivated! Billing will resume and you have full member benefits.');
+                setTimeout(updateMembershipStatus, 100);
+            } else {
+                alert('Failed to reactivate membership. Please try again.');
+            }
+        }
+    }
+}
+
+// Make function globally available
+window.handleMembershipReactivation = handleMembershipReactivation;
+
+// Make function globally available
+window.showCancelMembershipModal = showCancelMembershipModal;
 
 console.log('🔒 Secure User Portal loaded successfully');

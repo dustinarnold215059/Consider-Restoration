@@ -59,6 +59,17 @@ window.sharedUsers = [
     },
     {
         id: 2,
+        username: 'test@example.com',
+        passwordHash: 'simple_password123', // Simple password for easy testing
+        name: 'Test User',
+        email: 'test@example.com',
+        phone: '(555) 123-4567',
+        role: 'user',
+        totalAppointments: 5,
+        lastVisit: '2024-01-15'
+    },
+    {
+        id: 3,
         username: 'john.doe@email.com',
         passwordHash: '$2a$12$acf09WFgZBMo8AJYQNE3n.aNnJp.RxCAdcdSr0FeQALXmaR4c5/VO',
         name: 'John Doe',
@@ -196,6 +207,94 @@ window.getMembershipRevenue = function(startDate, endDate) {
     });
     
     return { totalRevenue, paymentCount };
+};
+
+window.cancelMembership = function(membershipId, reason = '', comments = '') {
+    const membershipIndex = window.sharedMemberships.findIndex(m => m.id === parseInt(membershipId));
+    if (membershipIndex !== -1) {
+        const membership = window.sharedMemberships[membershipIndex];
+        
+        // Update membership status
+        membership.status = 'cancelled';
+        membership.cancelDate = new Date().toISOString().slice(0, 10);
+        membership.cancelReason = reason;
+        membership.cancelComments = comments;
+        membership.autoRenew = false;
+        
+        // Calculate remaining sessions until end date
+        if (!membership.remainingSessions) {
+            membership.remainingSessions = membership.sessionsIncluded - (membership.sessionsUsed || 0);
+        }
+        
+        // Update the user's membership status as well
+        const userId = membership.userId;
+        if (window.updateUser) {
+            window.updateUser(userId, {
+                membershipStatus: 'cancelled',
+                membershipPlan: null
+            });
+        }
+        
+        // Save to localStorage
+        try {
+            localStorage.setItem('massageMemberships', JSON.stringify(window.sharedMemberships));
+            console.log('✅ Membership cancellation saved to localStorage');
+        } catch (e) {
+            console.warn('Could not save membership cancellation to localStorage:', e);
+        }
+        
+        window.dispatchEvent(new CustomEvent('membershipCancelled', { 
+            detail: membership 
+        }));
+        
+        console.log('✅ Membership cancelled:', membership);
+        return membership;
+    }
+    return null;
+};
+
+window.reactivateMembership = function(membershipId) {
+    const membershipIndex = window.sharedMemberships.findIndex(m => m.id === parseInt(membershipId));
+    if (membershipIndex !== -1) {
+        const membership = window.sharedMemberships[membershipIndex];
+        
+        // Reactivate membership
+        membership.status = 'active';
+        membership.autoRenew = true;
+        delete membership.cancelDate;
+        delete membership.cancelReason;
+        delete membership.cancelComments;
+        
+        // Extend end date by one month from today
+        const newEndDate = new Date();
+        newEndDate.setMonth(newEndDate.getMonth() + 1);
+        membership.endDate = newEndDate.toISOString().slice(0, 10);
+        
+        // Update the user's membership status
+        const userId = membership.userId;
+        if (window.updateUser) {
+            window.updateUser(userId, {
+                membershipStatus: 'active',
+                membershipPlan: membership.type
+            });
+        }
+        
+        // Save to localStorage
+        try {
+            localStorage.setItem('massageMemberships', JSON.stringify(window.sharedMemberships));
+            console.log('✅ Membership reactivation saved to localStorage');
+        } catch (e) {
+            console.warn('Could not save membership reactivation to localStorage:', e);
+        }
+        
+        window.dispatchEvent(new CustomEvent('membershipReactivated', { 
+            detail: membership 
+        }));
+        
+        console.log('✅ Membership reactivated:', membership);
+        return membership;
+    }
+    return null;
 };
 
 // Function to calculate federal holidays for a given year

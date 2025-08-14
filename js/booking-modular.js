@@ -51,7 +51,7 @@ class ModularBookingSystem {
 
     async waitForDependencies() {
         const dependencies = [
-            'window.dataPersistence',
+            'window.dataPersistenceFixed',
             'window.apiClient',
             'window.bookingFormHandler',
             'window.bookingUIManager'

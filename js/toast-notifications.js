@@ -10,9 +10,18 @@ class ToastNotification {
     }
 
     init() {
+        // Wait for DOM to be ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.createContainer());
+        } else {
+            this.createContainer();
+        }
+    }
+
+    createContainer() {
         // Create toast container if it doesn't exist
         this.container = document.querySelector('.toast-container');
-        if (!this.container) {
+        if (!this.container && document.body) {
             this.container = document.createElement('div');
             this.container.className = 'toast-container';
             document.body.appendChild(this.container);
@@ -20,6 +29,18 @@ class ToastNotification {
     }
 
     show(message, type = 'info', duration = 5000, title = '') {
+        // Ensure container exists
+        if (!this.container) {
+            this.createContainer();
+        }
+        
+        // If still no container, skip toast
+        if (!this.container) {
+            console.warn('Toast container not available, falling back to console:', message);
+            console.log(`${type.toUpperCase()}: ${title} ${message}`);
+            return;
+        }
+        
         const toast = this.createToast(message, type, title);
         this.container.appendChild(toast);
 

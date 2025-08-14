@@ -1,12 +1,13 @@
-/* Admin Panel Base Styles */
+/* Admin Panel Base Styles - Matching Main Website */
 
 /* Core admin panel layout */
 .admin-panel {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 2rem;
-    background: #f8f9fa;
+    padding: 6rem 2rem 2rem 2rem; /* Top padding for fixed header */
+    background: #f9f9f9; /* Match main site background */
     min-height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 }
 
 /* Login screen styles */

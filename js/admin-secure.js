@@ -78,6 +78,19 @@ function showLoginScreen() {
 function showAdminPanel() {
     if (loginScreen) loginScreen.style.display = 'none';
     if (adminPanel) adminPanel.style.display = 'block';
+    
+    // Show admin navbar
+    const adminNavbar = document.getElementById('adminNavbar');
+    if (adminNavbar) {
+        adminNavbar.style.display = 'block';
+    }
+    
+    // Setup admin logout button
+    const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+    if (adminLogoutBtn) {
+        adminLogoutBtn.addEventListener('click', handleLogout);
+    }
+    
     initializeAdminPanel();
 }
 
@@ -175,11 +188,12 @@ async function handleSecureAdminLogin(event) {
         return null;
     }
     
-    // Development fallback only works with environment variable or special flag
+    // Development fallback only works with environment variable or special flag  
     const isDevelopmentMode = window.location.hostname === 'localhost' ||
                               window.location.hostname === '127.0.0.1' ||
                               window.location.search.includes('dev=true') ||
-                              localStorage.getItem('dev-mode') === 'true';
+                              localStorage.getItem('dev-mode') === 'true' ||
+                              window.location.protocol === 'file:'; // Allow file:// protocol for local development
     
     if (!isDevelopmentMode) {
         if (typeof logger !== 'undefined') {
@@ -193,6 +207,25 @@ async function handleSecureAdminLogin(event) {
     
     if (!devModeConfirmed) {
         return null;
+    }
+    
+    // Check with existing user authentication system
+    if (window.authenticateUser) {
+        const user = window.authenticateUser(email, password);
+        if (user && user.role === 'admin') {
+            console.log('🔒 Admin authentication successful via user system');
+            currentUser = user;
+            
+            // Use cookie session manager
+            if (window.CookieSessionManager) {
+                window.CookieSessionManager.login(currentUser);
+            }
+            
+            showAdminPanel();
+            document.getElementById('adminLoginForm').reset();
+            errorDiv.textContent = '';
+            return;
+        }
     }
     
     // Minimal development fallback - admin email only, no hardcoded passwords

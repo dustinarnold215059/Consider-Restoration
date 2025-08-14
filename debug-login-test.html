@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Login Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Admin Login Debug Test</h1>
+    
+    <div class="test-section">
+        <h3>Current Admin Credentials:</h3>
+        <p><strong>Email:</strong> admin@considerrestoration.com</p>
+        <p><strong>Password:</strong> admin123 (or any 6+ characters)</p>
+    </div>
+    
+    <div class="test-section">
+        <h3>Quick Login Test:</h3>
+        <button onclick="testAdminLogin()">Test Admin Login</button>
+        <button onclick="clearSession()">Clear Session</button>
+        <button onclick="goToAdmin()">Go to Admin Page</button>
+        <div id="testResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Environment Check:</h3>
+        <div id="envInfo"></div>
+        <button onclick="checkEnvironment()">Check Environment</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>Debug Admin User:</h3>
+        <div id="adminInfo"></div>
+        <button onclick="checkAdminUser()">Check Admin User</button>
+        <button onclick="testPasswordHashes()">Test Password Hashes</button>
+    </div>
+
+    <script src="js/shared-data.js"></script>
+    <script src="js/auth-security.js"></script>
+    <script src="js/session-simple.js"></script>
+    
+    <script>
+        // Initialize session manager
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof SimpleSessionManager !== 'undefined') {
+                window.SimpleSessionManager = new SimpleSessionManager();
+                window.SimpleSessionManager.initialize();
+                console.log('✅ Session Manager initialized');
+            } else {
+                console.warn('❌ SimpleSessionManager class not found');
+            }
+        });
+    </script>
+    
+    <script>
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+        
+        function testAdminLogin() {
+            console.log('🧪 Testing admin login...');
+            showResult('Testing admin login...', 'info');
+            
+            const email = 'admin@considerrestoration.com';
+            const password = 'admin123';
+            
+            // Check authentication function
+            if (window.authenticateUser) {
+                const user = window.authenticateUser(email, password);
+                if (user && user.role === 'admin') {
+                    // Set session
+                    const sessionUser = {
+                        ...user,
+                        loginTime: new Date().toISOString()
+                    };
+                    
+                    localStorage.setItem('currentUser', JSON.stringify(sessionUser));
+                    localStorage.setItem('isLoggedIn', 'true');
+                    
+                    if (window.SimpleSessionManager) {
+                        window.SimpleSessionManager.login(sessionUser);
+                    }
+                    
+                    showResult(`✅ Login successful! User: ${user.name} (${user.role})`, 'success');
+                    
+                    setTimeout(() => {
+                        showResult('✅ Login successful! Redirecting to admin page...', 'success');
+                        setTimeout(() => window.location.href = 'admin.html', 1000);
+                    }, 500);
+                } else {
+                    showResult('❌ Authentication failed - user not found or not admin', 'error');
+                }
+            } else {
+                showResult('❌ Authentication system not available', 'error');
+            }
+        }
+        
+        function clearSession() {
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('isLoggedIn');
+            
+            if (window.SimpleSessionManager) {
+                window.SimpleSessionManager.clearSession();
+            }
+            
+            showResult('✅ Session cleared', 'success');
+        }
+        
+        function goToAdmin() {
+            window.location.href = 'admin.html';
+        }
+        
+        function checkEnvironment() {
+            const envDiv = document.getElementById('envInfo');
+            
+            const info = {
+                hostname: window.location.hostname,
+                protocol: window.location.protocol,
+                isDevelopmentMode: window.location.hostname === 'localhost' ||
+                                  window.location.hostname === '127.0.0.1' ||
+                                  window.location.search.includes('dev=true') ||
+                                  localStorage.getItem('dev-mode') === 'true' ||
+                                  window.location.protocol === 'file:',
+                authenticateUserAvailable: typeof window.authenticateUser === 'function',
+                sessionManagerAvailable: typeof window.SimpleSessionManager === 'object',
+                getUsersAvailable: typeof window.getUsers === 'function',
+                currentUser: localStorage.getItem('currentUser'),
+                isLoggedIn: localStorage.getItem('isLoggedIn')
+            };
+            
+            envDiv.innerHTML = `
+                <div class="result">
+                    <strong>Environment Info:</strong><br>
+                    Protocol: ${info.protocol}<br>
+                    Hostname: ${info.hostname}<br>
+                    Development Mode: ${info.isDevelopmentMode ? '✅ Yes' : '❌ No'}<br>
+                    Auth System: ${info.authenticateUserAvailable ? '✅ Available' : '❌ Missing'}<br>
+                    Session Manager: ${info.sessionManagerAvailable ? '✅ Available' : '❌ Missing'}<br>
+                    Get Users: ${info.getUsersAvailable ? '✅ Available' : '❌ Missing'}<br>
+                    Current User: ${info.currentUser ? '✅ Set' : '❌ None'}<br>
+                    Logged In: ${info.isLoggedIn || '❌ No'}
+                </div>
+            `;
+        }
+        
+        function checkAdminUser() {
+            const adminDiv = document.getElementById('adminInfo');
+            
+            // Check shared users
+            const sharedUsers = window.sharedUsers || [];
+            const adminUser = sharedUsers.find(u => u.email === 'admin@considerrestoration.com');
+            
+            // Check getUsers function
+            const getUsersFunc = window.getUsers;
+            let usersFromFunction = [];
+            if (getUsersFunc) {
+                try {
+                    usersFromFunction = getUsersFunc();
+                } catch (e) {
+                    console.error('Error calling getUsers:', e);
+                }
+            }
+            
+            const adminFromFunction = usersFromFunction.find(u => u.email === 'admin@considerrestoration.com');
+            
+            adminDiv.innerHTML = `
+                <div class="result">
+                    <strong>Admin User Debug:</strong><br>
+                    Shared Users Length: ${sharedUsers.length}<br>
+                    Admin in sharedUsers: ${adminUser ? '✅ Found' : '❌ Missing'}<br>
+                    ${adminUser ? `Admin ID: ${adminUser.id}<br>Admin Email: ${adminUser.email}<br>Admin Role: ${adminUser.role}<br>Password Hash: ${adminUser.passwordHash ? 'Present' : 'Missing'}<br>` : ''}
+                    getUsers Function Users: ${usersFromFunction.length}<br>
+                    Admin in getUsers: ${adminFromFunction ? '✅ Found' : '❌ Missing'}<br>
+                    ${adminFromFunction ? `Function Admin ID: ${adminFromFunction.id}<br>Function Admin Email: ${adminFromFunction.email}<br>Function Admin Role: ${adminFromFunction.role}<br>` : ''}
+                </div>
+            `;
+        }
+        
+        function testPasswordHashes() {
+            const passwords = ['admin123', 'admin', 'password', 'test123', 'christopher', 'considerrestoration'];
+            const adminUser = window.sharedUsers?.find(u => u.email === 'admin@considerrestoration.com');
+            
+            if (!adminUser) {
+                showResult('❌ Admin user not found', 'error');
+                return;
+            }
+            
+            showResult('Testing password combinations...', 'info');
+            let foundPassword = false;
+            
+            passwords.forEach(password => {
+                if (window.verifyPassword) {
+                    const isValid = window.verifyPassword(password, adminUser.passwordHash);
+                    console.log(`Password "${password}": ${isValid ? '✅ VALID' : '❌ Invalid'}`);
+                    if (isValid) {
+                        showResult(`✅ Found valid password: "${password}"`, 'success');
+                        foundPassword = true;
+                    }
+                } else {
+                    console.warn('verifyPassword function not available');
+                }
+            });
+            
+            if (!foundPassword) {
+                showResult('❌ No valid password found in test list', 'error');
+            }
+        }
+        
+        // Auto-check environment on load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(checkEnvironment, 500);
+        });
+    </script>
+</body>
+</html>

@@ -36,24 +36,9 @@ class BcryptBrowser {
         }
     }
 
-    // Legacy verification (INSECURE - for migration only)
+    // Legacy verification removed for security
     verifyLegacyPassword(password, hash) {
-        console.warn('🔒 Using legacy password verification - INSECURE');
-        
-        // Handle our old fake hashes
-        if (hash === 'hashed_admin123_secure') {
-            return password === 'admin123';
-        }
-        
-        if (hash === 'hashed_user123_secure') {
-            return password === 'user123';
-        }
-        
-        // Direct plaintext comparison (very insecure)
-        if (hash === 'admin123' || hash === 'user123') {
-            return password === hash;
-        }
-        
+        console.warn('🔒 Legacy authentication disabled for security');
         return false;
     }
 

@@ -100,6 +100,16 @@ class EnhancedErrorHandler {
 
     // Error Handling Methods
     handleJavaScriptError(event) {
+        // Filter out generic cross-origin "Script error." messages that provide no useful information
+        if (event.message === 'Script error.' && 
+            event.filename === '' && 
+            event.lineno === 0 && 
+            event.colno === 0) {
+            // These are usually cross-origin errors or browser extensions
+            // Skip logging them as they're not actionable
+            return;
+        }
+        
         const error = {
             type: 'javascript',
             message: event.message,
