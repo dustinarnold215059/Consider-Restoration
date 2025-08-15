@@ -117,6 +117,11 @@ class PerformanceOptimizer {
         console.log('⚡ Image optimization initialized');
     }
 
+    setupResponsiveImages() {
+        // Skip responsive image setup for now
+        console.log('⚡ Responsive images setup skipped');
+    }
+
     setupScriptOptimization() {
         if (!this.config.enableScriptOptimization) return;
 
@@ -501,6 +506,76 @@ class PerformanceOptimizer {
         });
         
         await Promise.allSettled(promises);
+    }
+
+    setupServiceWorkerCaching() {
+        // Skip if running locally to avoid errors
+        if (window.location.protocol === 'file:') {
+            console.log('⚡ Skipping service worker caching for local development');
+            return;
+        }
+        
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(registration => {
+                console.log('⚡ Service worker caching enabled');
+            }).catch(error => {
+                console.log('⚡ Service worker not available for caching');
+            });
+        }
+    }
+
+    setupScriptErrorBoundaries() {
+        // Add global error handling for scripts
+        window.addEventListener('error', (event) => {
+            if (event.filename && event.filename.includes('.js')) {
+                console.warn('⚡ Script error caught:', event.error?.message || event.message);
+                // Optionally report to monitoring service
+                if (this.config.enableMonitoring) {
+                    this.reportScriptError(event);
+                }
+            }
+        });
+
+        // Handle promise rejections
+        window.addEventListener('unhandledrejection', (event) => {
+            console.warn('⚡ Unhandled promise rejection:', event.reason);
+            if (this.config.enableMonitoring) {
+                this.reportPromiseRejection(event);
+            }
+        });
+
+        console.log('⚡ Script error boundaries established');
+    }
+
+    reportScriptError(event) {
+        // Basic error reporting - can be enhanced with external service
+        const errorData = {
+            type: 'script_error',
+            message: event.error?.message || event.message,
+            filename: event.filename,
+            lineno: event.lineno,
+            colno: event.colno,
+            timestamp: new Date().toISOString()
+        };
+        
+        // Store locally for now
+        const errors = JSON.parse(localStorage.getItem('script_errors') || '[]');
+        errors.push(errorData);
+        // Keep only last 10 errors
+        localStorage.setItem('script_errors', JSON.stringify(errors.slice(-10)));
+    }
+
+    reportPromiseRejection(event) {
+        // Basic promise rejection reporting
+        const errorData = {
+            type: 'promise_rejection',
+            reason: event.reason?.toString() || 'Unknown rejection',
+            timestamp: new Date().toISOString()
+        };
+        
+        const errors = JSON.parse(localStorage.getItem('promise_errors') || '[]');
+        errors.push(errorData);
+        localStorage.setItem('promise_errors', JSON.stringify(errors.slice(-10)));
     }
 
     // Utility Methods

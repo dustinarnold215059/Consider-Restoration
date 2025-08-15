@@ -12,7 +12,12 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="manifest" href="./manifest.json">
     <script src="js/logger.js"></script>
-    <script src="js/secure-session.js"></script>
+    <script src="js/portal-session-manager.js"></script>
+    <!-- DISABLED old session restoration on booking page -->
+    <!-- <script src="js/secure-session.js"></script> -->
+    <script src="js/advanced-cache.js"></script>
+    <script src="js/code-quality-monitor.js"></script>
+    <script src="js/accessibility-enhancer.js"></script>
     <style>
         /* Time blocking styles */
         option.blocked-time {
@@ -531,15 +536,15 @@
     
     <!-- Utility scripts -->
     <script src="js/site-config.js"></script>
-    <script src="js/logging-utility.js"></script>
     <script src="js/environment-config.js"></script>
     <script src="js/toast-notifications.js"></script>
     
     <script src="js/enhanced-error-handler.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
-    <script src="js/secure-tokens.js" defer></script>
-    <script src="js/auth-security.js?v=20250813b" defer></script>
-    <script src="js/secure-init.js" defer></script>
+    <!-- DISABLED session/auth scripts on booking page -->
+    <!-- <script src="js/secure-tokens.js" defer></script> -->
+    <!-- <script src="js/auth-security.js?v=20250813b" defer></script> -->
+    <!-- <script src="js/secure-init.js" defer></script> -->
     <script src="js/api-client.js" defer></script>
     <script src="js/data-persistence-fixed.js" defer></script>
     <script src="js/shared-data.js" defer></script>
@@ -559,7 +564,7 @@
                     <li><a href="reviews.html">Reviews</a></li>
                     <li><a href="contact.html">Contact</a></li>
                     <li><a href="user-portal.html" id="accountNavLink">Login</a></li>
-                    <li id="adminNavLink" style="display: none;"><a href="admin.html">Admin</a></li>
+                    <li id="adminNavLink" style="display: none !important;"><a href="admin.html">Admin</a></li>
                 </ul>
             </div>
         </nav>
@@ -3204,10 +3209,11 @@
                 
                 // Use secure session manager instead of localStorage
                 if (window.secureSession) {
-                    const loginResult = await window.secureSession.login(userSession.email, 'secure_session');
-                    if (!loginResult.success) {
-                        logger.error('Secure session creation failed');
-                    }
+                    window.secureSession.login(userSession.email, 'secure_session').then(loginResult => {
+                        if (!loginResult.success) {
+                            logger.error('Secure session creation failed');
+                        }
+                    });
                 } else {
                     logger.warn('Secure session manager not available, using fallback');
                     localStorage.setItem('sessionToken', 'fallback_' + Date.now());
@@ -3791,21 +3797,47 @@
         function navigateToPortalSafely() {
             console.log('🔐 Navigating to portal safely...');
             
-            // Ensure session data is properly saved
+            // Ensure session data is properly saved using the correct session manager
             let currentUser = null;
-            if (window.CookieSessionManager) {
+            
+            // Try universal session manager first (main system)
+            if (window.universalSession) {
+                currentUser = window.universalSession.getCurrentUser();
+                console.log('🔐 Using universalSession for navigation');
+            }
+            // Fallback to CookieSessionManager if available
+            else if (window.CookieSessionManager) {
                 currentUser = window.CookieSessionManager.getCurrentUser();
+                console.log('🔐 Using CookieSessionManager for navigation');
+            }
+            // Final fallback to direct localStorage check
+            else {
+                const userSession = localStorage.getItem('user_session_data');
+                if (userSession) {
+                    try {
+                        currentUser = JSON.parse(userSession);
+                        console.log('🔐 Using localStorage fallback for navigation');
+                    } catch (e) {
+                        console.warn('🔐 Invalid session data in localStorage');
+                    }
+                }
             }
             
             console.log('🔐 Pre-navigation session check:');
             console.log('  - currentUser exists:', !!currentUser);
+            console.log('  - Available session managers:');
+            console.log('    - universalSession:', !!window.universalSession);
+            console.log('    - CookieSessionManager:', !!window.CookieSessionManager);
             
             if (currentUser) {
                 console.log('  - User data valid:', currentUser.name, currentUser.email);
                 
                 try {
-                    // Refresh session before navigation
-                    if (window.CookieSessionManager) {
+                    // Refresh session before navigation using available manager
+                    if (window.universalSession) {
+                        console.log('🔐 Refreshing universalSession before navigation...');
+                        window.universalSession.saveSession(currentUser); // Ensure session is saved
+                    } else if (window.CookieSessionManager) {
                         console.log('🔐 Refreshing CookieSessionManager before navigation...');
                         window.CookieSessionManager.refreshSession();
                     }
@@ -3833,8 +3865,9 @@
     </script>
 
     <!-- Session Management Only (auth-security.js already loaded in head) -->
-    <script src="js/cookie-session-manager.js"></script>
-    <script src="js/navigation-handler.js"></script>
+    <!-- DISABLED session managers on booking page -->
+    <!-- <script src="js/cookie-session-manager.js"></script> -->
+    <!-- <script src="js/navigation-handler.js"></script> -->
     
     <!-- Modular Booking System -->
     <script src="js/modules/booking/booking-form-handler.js" defer></script>

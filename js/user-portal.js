@@ -898,24 +898,56 @@ function cancelMembership() {
     }
     
     const membershipName = getMembershipDisplayName(currentUser.membershipPlan);
-    const confirmMessage = `Are you sure you want to cancel your ${membershipName} membership?\n\nThis action cannot be undone. Your membership benefits will end immediately.`;
+    const confirmMessage = `Are you sure you want to cancel your ${membershipName} membership?\n\nThis will stop automatic renewals. Your current membership will remain active until the end of your billing period.`;
     
     if (confirm(confirmMessage)) {
-        // Cancel the membership
-        const previousPlan = currentUser.membershipPlan;
-        currentUser.membershipPlan = null;
-        currentUser.membershipEndDate = new Date().toISOString();
+        // Find and cancel the user's membership auto-renewal
+        const memberships = window.getMemberships ? window.getMemberships() : [];
+        const userMembership = memberships.find(m => m.userId === currentUser.id && m.status === 'active');
         
-        // Update in shared data if available
-        if (window.updateUser) {
-            window.updateUser(currentUser.id, currentUser);
+        if (userMembership && window.cancelMembershipRenewal) {
+            // Cancel auto-renewal but keep membership active until end date
+            const success = window.cancelMembershipRenewal(userMembership.id);
+            
+            if (success) {
+                console.log('🔒 Auto-renewal cancelled for user membership');
+                
+                // Update user's auto-renewal status
+                currentUser.autoRenew = false;
+                currentUser.membershipCancellationDate = new Date().toISOString();
+                
+                // Update in shared data if available
+                if (window.updateUser) {
+                    window.updateUser(currentUser.id, currentUser);
+                } else {
+                    // Update in local storage
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                }
+                
+                // Refresh the display
+                updateAccountSummary();
+                
+                // Show confirmation message
+                showTemporaryMessage(`Auto-renewal cancelled for your ${membershipName} membership. Your membership will remain active until ${new Date(userMembership.endDate).toLocaleDateString()}.`, 'success');
+            } else {
+                showTemporaryMessage('Failed to cancel membership. Please try again or contact support.', 'error');
+            }
         } else {
-            // Update in local storage
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        }
-        
-        // Refresh the display
-        updateAccountSummary();
+            // Fallback for legacy memberships without auto-renewal
+            const previousPlan = currentUser.membershipPlan;
+            currentUser.membershipPlan = null;
+            currentUser.membershipEndDate = new Date().toISOString();
+            
+            // Update in shared data if available
+            if (window.updateUser) {
+                window.updateUser(currentUser.id, currentUser);
+            } else {
+                // Update in local storage
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
+            
+            // Refresh the display
+            updateAccountSummary();
         
         // Show confirmation message
         showTemporaryMessage(`Your ${membershipName} membership has been cancelled. Thank you for being a member!`, 'info');

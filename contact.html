@@ -5,9 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact - Consider Restoration</title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/logger.js"></script>
+    <script src="js/portal-session-manager.js"></script>
     <script src="js/shared-data.js"></script>
-    <script src="js/cookie-session-manager.js"></script>
-    <script src="js/navigation-handler.js"></script>
+    <!-- DISABLED old session managers -->
+    <!-- <script src="js/cookie-session-manager.js"></script> -->
+    <!-- <script src="js/navigation-handler.js"></script> -->
     <!-- No external dependencies needed for backend submission -->
 </head>
 <body>
@@ -48,7 +51,7 @@
                         
                         <div class="contact-item">
                             <h3>✉️ Email</h3>
-                            <p><strong>Email:</strong> <a href="mailto:admin@test.com">admin@test.com</a></p>
+                            <p><strong>Email:</strong> <a href="mailto:considerrestoration@gmail.com">considerrestoration@gmail.com</a></p>
                         </div>
                         
                         <div class="hours-section">
@@ -132,6 +135,119 @@
 
     <script src="js/script.js"></script>
     <script>
+        // Check for logged-in user and auto-populate contact form
+        function checkUserSessionForContact() {
+            console.log('📧 Checking user session for contact form auto-population...');
+            
+            let currentUser = null;
+            
+            // Try universal session manager first (main system)
+            if (window.universalSession) {
+                currentUser = window.universalSession.getCurrentUser();
+                console.log('📧 Using universalSession:', currentUser ? `${currentUser.name} (${currentUser.email})` : 'No user');
+            }
+            // Fallback to direct localStorage check
+            else {
+                const userSession = localStorage.getItem('user_session_data');
+                if (userSession) {
+                    try {
+                        currentUser = JSON.parse(userSession);
+                        console.log('📧 Using localStorage fallback:', currentUser ? `${currentUser.name} (${currentUser.email})` : 'No user');
+                    } catch (e) {
+                        console.warn('📧 Invalid session data in localStorage');
+                    }
+                }
+            }
+            
+            const nameField = document.getElementById('contactName');
+            const emailField = document.getElementById('contactEmail');
+            const phoneField = document.getElementById('contactPhone');
+            
+            if (currentUser) {
+                console.log('✅ User session found, auto-populating contact fields for:', currentUser.name);
+                
+                // Auto-fill user info if user is logged in
+                if (nameField && !nameField.value) {
+                    nameField.value = currentUser.name || '';
+                    nameField.style.backgroundColor = '#f0f8ff'; // Light blue to show pre-filled
+                    nameField.style.border = '2px solid #27ae60'; // Green border for auto-filled
+                    console.log('📧 Populated name field:', currentUser.name);
+                }
+                if (emailField && !emailField.value) {
+                    emailField.value = currentUser.email || '';
+                    emailField.style.backgroundColor = '#f0f8ff';
+                    emailField.style.border = '2px solid #27ae60';
+                    console.log('📧 Populated email field:', currentUser.email);
+                }
+                if (phoneField && !phoneField.value && currentUser.phone) {
+                    phoneField.value = currentUser.phone;
+                    phoneField.style.backgroundColor = '#f0f8ff';
+                    phoneField.style.border = '2px solid #27ae60';
+                    console.log('📧 Populated phone field:', currentUser.phone);
+                }
+                
+                // Add a helpful message for the user
+                const formSection = document.querySelector('.contact-form-section h2');
+                if (formSection && !document.getElementById('autoPopulateNotice')) {
+                    const notice = document.createElement('p');
+                    notice.id = 'autoPopulateNotice';
+                    notice.style.cssText = 'color: #27ae60; font-size: 0.9rem; margin: 0.5rem 0; font-style: italic;';
+                    notice.textContent = `✅ Form auto-populated with your account information (${currentUser.name})`;
+                    formSection.insertAdjacentElement('afterend', notice);
+                }
+                
+                return currentUser;
+            } else {
+                console.log('❌ No user session found for contact form');
+                
+                // Clear auto-populated styling if user logs out
+                if (nameField && nameField.style.backgroundColor === 'rgb(240, 248, 255)') {
+                    nameField.value = '';
+                    nameField.style.backgroundColor = '';
+                    nameField.style.border = '';
+                }
+                if (emailField && emailField.style.backgroundColor === 'rgb(240, 248, 255)') {
+                    emailField.value = '';
+                    emailField.style.backgroundColor = '';
+                    emailField.style.border = '';
+                }
+                if (phoneField && phoneField.style.backgroundColor === 'rgb(240, 248, 255)') {
+                    phoneField.value = '';
+                    phoneField.style.backgroundColor = '';
+                    phoneField.style.border = '';
+                }
+                
+                // Remove auto-populate notice
+                const notice = document.getElementById('autoPopulateNotice');
+                if (notice) {
+                    notice.remove();
+                }
+                
+                return null;
+            }
+        }
+        
+        // Initialize auto-populate when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📧 Contact page loaded, checking for user session...');
+            
+            // Wait a bit for session managers to load
+            setTimeout(() => {
+                checkUserSessionForContact();
+            }, 300);
+            
+            // Listen for authentication events
+            window.addEventListener('userAuthChanged', (event) => {
+                console.log('📧 User authentication changed, refreshing contact form');
+                setTimeout(checkUserSessionForContact, 100);
+            });
+            
+            window.addEventListener('userLoggedOut', () => {
+                console.log('📧 User logged out, clearing contact form');
+                setTimeout(checkUserSessionForContact, 100);
+            });
+        });
+        
         // Simple Contact form handling - localStorage only
         document.getElementById('contactForm')?.addEventListener('submit', function(e) {
             e.preventDefault();

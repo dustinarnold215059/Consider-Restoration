@@ -6,9 +6,12 @@
     <title>Membership Programs - Consider Restoration</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://js.stripe.com/v3/"></script>
+    <script src="js/logger.js"></script>
+    <script src="js/portal-session-manager.js"></script>
     <script src="js/shared-data.js"></script>
-    <script src="js/cookie-session-manager.js"></script>
-    <script src="js/navigation-handler.js"></script>
+    <!-- DISABLED old session managers -->
+    <!-- <script src="js/cookie-session-manager.js"></script> -->
+    <!-- <script src="js/navigation-handler.js"></script> -->
     <style>
         /* Membership Modal Specific Styles */
         .modal {
@@ -513,10 +516,10 @@
             console.log('🚀 showMembershipModal() called for plan:', planType);
             selectedMembershipPlan = planType;
             
-            // Check if user is already logged in using CookieSessionManager
+            // Check if user is already logged in using Universal Session Manager
             let user = null;
-            if (window.CookieSessionManager) {
-                user = window.CookieSessionManager.getCurrentUser();
+            if (window.universalSession) {
+                user = window.universalSession.getCurrentUser();
             }
             console.log('🔍 Checking for logged-in user:', user ? 'Found' : 'Not found');
             
@@ -555,10 +558,10 @@
             selectedMembershipPlan = planType;
             currentUser = user; // Set the global currentUser variable
             
-            // Store current user in CookieSessionManager (preserve login state)
-            if (window.CookieSessionManager && !window.CookieSessionManager.getCurrentUser()) {
-                window.CookieSessionManager.login(user);
-                console.log('🍪 Stored user in CookieSessionManager for membership flow');
+            // Store current user in Universal Session Manager (preserve login state)
+            if (window.universalSession && !window.universalSession.getCurrentUser()) {
+                window.universalSession.saveSession(user);
+                console.log('🔐 Stored user in Universal Session Manager for membership flow');
             }
             
             // Call the same completion function that login/register would call
@@ -631,10 +634,10 @@
             
             if (user) {
                 currentUser = user;
-                // Log the user into CookieSessionManager
-                if (window.CookieSessionManager) {
-                    window.CookieSessionManager.login(user);
-                    console.log('🍪 User logged in via CookieSessionManager in membership flow');
+                // Log the user into Universal Session Manager
+                if (window.universalSession) {
+                    window.universalSession.saveSession(user);
+                    console.log('🔐 User logged in via Universal Session Manager in membership flow');
                 }
                 return { success: true, user: user };
             }
@@ -674,10 +677,10 @@
             
             currentUser = newUser;
             
-            // Log the new user into CookieSessionManager
-            if (window.CookieSessionManager) {
-                window.CookieSessionManager.login(newUser);
-                console.log('🍪 New user registered and logged in via CookieSessionManager');
+            // Log the new user into Universal Session Manager
+            if (window.universalSession) {
+                window.universalSession.saveSession(newUser);
+                console.log('🔐 New user registered and logged in via Universal Session Manager');
             }
             
             return { success: true, user: newUser };
@@ -880,12 +883,12 @@
             currentUser.membershipStatus = 'active';
             currentUser.paymentStatus = 'paid';
             
-            // Store user data in CookieSessionManager
-            if (window.CookieSessionManager) {
-                window.CookieSessionManager.login(currentUser);
-                console.log('🍪 Updated user session with membership info');
+            // Store user data in Universal Session Manager
+            if (window.universalSession) {
+                window.universalSession.saveSession(currentUser);
+                console.log('🔐 Updated user session with membership info');
             } else {
-                // Fallback to localStorage if CookieSessionManager not available
+                // Fallback to localStorage if Universal Session Manager not available
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 console.log('⚠️ Using localStorage fallback for user data');
             }
@@ -895,36 +898,84 @@
                 window.updateUser(currentUser.id, currentUser);
             }
             
-            // Create actual membership record in the shared membership system
-            if (window.addMembership) {
-                const startDate = new Date();
-                const endDate = new Date();
-                endDate.setMonth(endDate.getMonth() + 1); // Add one month
+            // Check if user has existing cancelled membership to reactivate or create new one
+            if (window.getUserMemberships && window.addMembership) {
+                const existingMemberships = window.getUserMemberships(currentUser.id);
+                const cancelledMembership = existingMemberships.find(m => m.status === 'cancelled');
                 
-                const membershipRecord = {
-                    userId: currentUser.id,
-                    type: selectedMembershipPlan,
-                    typeName: currentPlan.name,
-                    price: priceNum,
-                    sessionsIncluded: getMembershipSessions(selectedMembershipPlan),
-                    sessionsUsed: 0,
-                    status: 'active',
-                    startDate: startDate.toISOString().slice(0, 10),
-                    endDate: endDate.toISOString().slice(0, 10),
-                    paymentDate: startDate.toISOString().slice(0, 10),
-                    autoRenew: true,
-                    stripeSubscriptionId: 'sub_live_' + Date.now(),
-                    paymentHistory: [{
-                        id: Date.now(),
-                        amount: priceNum,
-                        date: startDate.toISOString().slice(0, 10),
-                        status: 'paid',
-                        stripePaymentId: 'pi_live_' + Date.now()
-                    }]
-                };
-                
-                window.addMembership(membershipRecord);
-                console.log('✅ Membership record created:', membershipRecord);
+                if (cancelledMembership) {
+                    // Reactivate existing membership with new plan
+                    console.log('🔄 Found cancelled membership, reactivating with new plan...');
+                    
+                    const startDate = new Date();
+                    const endDate = new Date();
+                    endDate.setMonth(endDate.getMonth() + 1);
+                    
+                    // Update the cancelled membership to active with new plan details
+                    if (window.updateMembership) {
+                        const updatedMembership = window.updateMembership(cancelledMembership.id, {
+                            type: selectedMembershipPlan,
+                            typeName: currentPlan.name,
+                            price: priceNum,
+                            sessionsIncluded: getMembershipSessions(selectedMembershipPlan),
+                            status: 'active',
+                            startDate: startDate.toISOString().slice(0, 10),
+                            endDate: endDate.toISOString().slice(0, 10),
+                            paymentDate: startDate.toISOString().slice(0, 10),
+                            autoRenew: true,
+                            stripeSubscriptionId: 'sub_live_' + Date.now(),
+                            // Add new payment to history
+                            paymentHistory: [
+                                ...(cancelledMembership.paymentHistory || []),
+                                {
+                                    id: Date.now(),
+                                    amount: priceNum,
+                                    date: startDate.toISOString().slice(0, 10),
+                                    status: 'paid',
+                                    stripePaymentId: 'pi_live_' + Date.now()
+                                }
+                            ],
+                            // Clear cancellation data
+                            cancelDate: undefined,
+                            cancelReason: undefined,
+                            cancelComments: undefined
+                        });
+                        
+                        console.log('✅ Membership reactivated with new plan:', updatedMembership);
+                    }
+                } else {
+                    // Create new membership record
+                    console.log('🆕 Creating new membership record...');
+                    
+                    const startDate = new Date();
+                    const endDate = new Date();
+                    endDate.setMonth(endDate.getMonth() + 1); // Add one month
+                    
+                    const membershipRecord = {
+                        userId: currentUser.id,
+                        type: selectedMembershipPlan,
+                        typeName: currentPlan.name,
+                        price: priceNum,
+                        sessionsIncluded: getMembershipSessions(selectedMembershipPlan),
+                        sessionsUsed: 0,
+                        status: 'active',
+                        startDate: startDate.toISOString().slice(0, 10),
+                        endDate: endDate.toISOString().slice(0, 10),
+                        paymentDate: startDate.toISOString().slice(0, 10),
+                        autoRenew: true,
+                        stripeSubscriptionId: 'sub_live_' + Date.now(),
+                        paymentHistory: [{
+                            id: Date.now(),
+                            amount: priceNum,
+                            date: startDate.toISOString().slice(0, 10),
+                            status: 'paid',
+                            stripePaymentId: 'pi_live_' + Date.now()
+                        }]
+                    };
+                    
+                    window.addMembership(membershipRecord);
+                    console.log('✅ New membership record created:', membershipRecord);
+                }
             }
             
             // Close payment modal
@@ -1008,10 +1059,10 @@
         
         // Update page for logged-in users
         function updatePageForLoggedInUser() {
-            // Use CookieSessionManager instead of localStorage
+            // Use Universal Session Manager instead of localStorage
             let user = null;
-            if (window.CookieSessionManager) {
-                user = window.CookieSessionManager.getCurrentUser();
+            if (window.universalSession) {
+                user = window.universalSession.getCurrentUser();
             }
             
             console.log('🔍 updatePageForLoggedInUser - currentUser:', user ? 'Found' : 'Not found');
@@ -1077,7 +1128,7 @@
         
         // Event listeners
         document.addEventListener('DOMContentLoaded', function() {
-            // Delay to ensure CookieSessionManager is ready
+            // Delay to ensure Universal Session Manager is ready
             setTimeout(updatePageForLoggedInUser, 300);
             
             // Listen for authentication events

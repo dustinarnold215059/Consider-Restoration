@@ -48,72 +48,15 @@ forceSecurityCleanup();
 window.sharedUsers = [
     {
         id: 1,
-        username: 'admin@considerrestoration.com',
-        passwordHash: '$2a$12$6eXN8j6ylNu6iF3usMK2vuMlTNsIarmuFPyNaMjwdYssGxizTYprG',
-        name: 'Christopher Admin',
-        email: 'admin@considerrestoration.com',
-        phone: '(555) 123-4567',
-        role: 'admin',
+        username: 'gecko215059@gmail.com',
+        passwordHash: '$2a$12$2ed57c08dd45bfd9fc3c9d5cae22a0950090af3529a67030709b72c9169e05d2',
+        name: 'User Account',
+        email: 'gecko215059@gmail.com',
+        phone: '',
+        role: 'user',
         totalAppointments: 0,
-        lastVisit: null
-    },
-    {
-        id: 2,
-        username: 'test@example.com',
-        passwordHash: 'simple_password123', // Simple password for easy testing
-        name: 'Test User',
-        email: 'test@example.com',
-        phone: '(555) 123-4567',
-        role: 'user',
-        totalAppointments: 5,
-        lastVisit: '2024-01-15'
-    },
-    {
-        id: 3,
-        username: 'john.doe@email.com',
-        passwordHash: '$2a$12$acf09WFgZBMo8AJYQNE3n.aNnJp.RxCAdcdSr0FeQALXmaR4c5/VO',
-        name: 'John Doe',
-        email: 'john.doe@email.com',
-        phone: '(555) 234-5678',
-        role: 'user',
-        totalAppointments: 12,
-        lastVisit: '2024-01-10',
-        preferences: 'Prefers applied neurology techniques, focus on pain management'
-    },
-    {
-        id: 3,
-        username: 'jane.smith@email.com',
-        passwordHash: '$2a$12$acf09WFgZBMo8AJYQNE3n.aNnJp.RxCAdcdSr0FeQALXmaR4c5/VO',
-        name: 'Jane Smith',
-        email: 'jane.smith@email.com',
-        phone: '(555) 345-6789',
-        role: 'user',
-        totalAppointments: 8,
-        lastVisit: '2024-01-08',
-        preferences: 'Prefers prenatal massage, needs gentle approach'
-    },
-    {
-        id: 4,
-        username: 'dustin@email.com',
-        passwordHash: '$2a$12$acf09WFgZBMo8AJYQNE3n.aNnJp.RxCAdcdSr0FeQALXmaR4c5/VO',
-        name: 'Dustin',
-        email: 'dustin@email.com',
-        phone: '(555) 456-7890',
-        role: 'user',
-        totalAppointments: 5,
-        lastVisit: '2024-01-12',
-        preferences: 'Prefers deep tissue massage, athletic recovery focus'
-    },
-    // Simple test user with plaintext password for debugging
-    {
-        id: 999,
-        username: 'test@test.com',
-        password: 'test123', // Plaintext for fallback
-        passwordHash: 'test123', // Will be handled by fallback logic
-        name: 'Test User',
-        email: 'test@test.com',
-        phone: '(555) 999-0000',
-        role: 'user'
+        lastVisit: null,
+        createdAt: new Date().toISOString()
     }
 ];
 
@@ -146,12 +89,17 @@ window.addMembership = function(membership) {
     membership.id = newId;
     membership.paymentHistory = membership.paymentHistory || [];
     
+    // Add auto-renewal properties
+    membership.autoRenew = membership.autoRenew !== false; // Default to true
+    membership.lastRenewalDate = null;
+    membership.nextBillingDate = membership.endDate;
+    
     window.sharedMemberships.push(membership);
     
     // Save to localStorage
     try {
         localStorage.setItem('massageMemberships', JSON.stringify(window.sharedMemberships));
-        console.log('✅ Membership saved to localStorage');
+        console.log('✅ Membership saved to localStorage with auto-renewal enabled');
     } catch (e) {
         console.warn('Could not save membership to localStorage:', e);
     }
@@ -159,6 +107,142 @@ window.addMembership = function(membership) {
     window.dispatchEvent(new CustomEvent('membershipAdded', { detail: membership }));
     return membership;
 };
+
+// Cancel membership auto-renewal
+window.cancelMembershipRenewal = function(membershipId) {
+    const membership = window.sharedMemberships.find(m => m.id === membershipId);
+    if (membership) {
+        membership.autoRenew = false;
+        membership.cancellationDate = new Date().toISOString();
+        console.log('🔒 Auto-renewal cancelled for membership:', membershipId);
+        
+        // Save to localStorage
+        try {
+            localStorage.setItem('massageMemberships', JSON.stringify(window.sharedMemberships));
+            console.log('✅ Membership cancellation saved');
+        } catch (e) {
+            console.warn('Could not save membership cancellation:', e);
+        }
+        
+        window.dispatchEvent(new CustomEvent('membershipCancelled', { detail: membership }));
+        return true;
+    }
+    return false;
+};
+
+// Auto-renewal system - checks and processes renewals
+window.checkMembershipRenewals = function() {
+    const today = new Date();
+    const memberships = window.sharedMemberships;
+    let renewalsProcessed = 0;
+    
+    console.log('🔄 Checking for membership renewals...');
+    
+    memberships.forEach(membership => {
+        if (!membership.autoRenew || membership.status !== 'active') {
+            return; // Skip if auto-renewal is disabled or membership is inactive
+        }
+        
+        const endDate = new Date(membership.endDate);
+        const nextBillingDate = new Date(membership.nextBillingDate);
+        
+        // Check if it's time to renew (on or after the end date)
+        if (today >= endDate || today >= nextBillingDate) {
+            console.log('💳 Processing auto-renewal for membership:', membership.id);
+            
+            // Calculate new dates
+            const newStartDate = new Date(membership.endDate);
+            const newEndDate = new Date(newStartDate);
+            newEndDate.setMonth(newEndDate.getMonth() + 1); // Add 1 month
+            
+            // Process payment (simulated)
+            const paymentSuccess = processAutoRenewalPayment(membership);
+            
+            if (paymentSuccess) {
+                // Update membership
+                membership.startDate = newStartDate.toISOString();
+                membership.endDate = newEndDate.toISOString();
+                membership.nextBillingDate = newEndDate.toISOString();
+                membership.lastRenewalDate = today.toISOString();
+                
+                // Add payment to history
+                membership.paymentHistory.push({
+                    id: Date.now(),
+                    amount: membership.price,
+                    date: today.toISOString(),
+                    type: 'auto-renewal',
+                    status: 'completed',
+                    description: 'Monthly membership auto-renewal'
+                });
+                
+                renewalsProcessed++;
+                console.log('✅ Auto-renewal successful for membership:', membership.id);
+                
+                // Dispatch renewal event
+                window.dispatchEvent(new CustomEvent('membershipRenewed', { 
+                    detail: { 
+                        membership: membership,
+                        newEndDate: newEndDate.toISOString()
+                    }
+                }));
+            } else {
+                console.log('❌ Auto-renewal payment failed for membership:', membership.id);
+                membership.status = 'payment_failed';
+                membership.autoRenew = false; // Stop trying to renew
+            }
+        }
+    });
+    
+    if (renewalsProcessed > 0) {
+        // Save updated memberships
+        try {
+            localStorage.setItem('massageMemberships', JSON.stringify(window.sharedMemberships));
+            console.log(`✅ ${renewalsProcessed} membership renewal(s) processed and saved`);
+        } catch (e) {
+            console.warn('Could not save membership renewals:', e);
+        }
+    }
+    
+    return renewalsProcessed;
+};
+
+// Simulated payment processing for auto-renewal
+function processAutoRenewalPayment(membership) {
+    // In a real system, this would integrate with Stripe, PayPal, etc.
+    // For demo purposes, we'll simulate a 95% success rate
+    const success = Math.random() > 0.05; // 95% success rate
+    
+    if (success) {
+        console.log('💳 Payment processed successfully for $' + membership.price);
+    } else {
+        console.log('❌ Payment failed for membership renewal');
+    }
+    
+    return success;
+}
+
+// Initialize auto-renewal checking - runs every hour
+window.startAutoRenewalSystem = function() {
+    console.log('🔄 Starting auto-renewal system...');
+    
+    // Check immediately
+    window.checkMembershipRenewals();
+    
+    // Then check every hour (3600000 ms)
+    setInterval(() => {
+        window.checkMembershipRenewals();
+    }, 3600000);
+    
+    console.log('✅ Auto-renewal system started - checking every hour');
+};
+
+// Start the auto-renewal system when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait a bit for other systems to initialize
+    setTimeout(() => {
+        window.startAutoRenewalSystem();
+    }, 2000);
+});
 
 window.updateMembership = function(membershipId, updates) {
     const membershipIndex = window.sharedMemberships.findIndex(m => m.id === parseInt(membershipId));

@@ -8,65 +8,23 @@
     <link rel="stylesheet" href="css/admin.css">
     <script src="js/error-handler.js"></script>
     <script src="js/shared-data.js"></script>
-    <script src="js/portal-session-manager.js"></script>
-    <script src="js/secure-session.js"></script>
     <script>
-        // Admin page protection with secure session management
+        // Admin page protection - redirect non-admin users
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🔒 Admin page loading with security checks');
-            
-            // Wait for session manager to load
-            setTimeout(function() {
-                // Check for existing session with proper role isolation
-                if (window.universalSession) {
-                    const currentUser = window.universalSession.getCurrentUser();
-                    
-                    if (currentUser) {
-                        if (currentUser.role === 'admin') {
-                            console.log('🔒 Valid admin session found, allowing access');
-                            return; // Allow admin access
-                        } else {
-                            console.log('🔒 Non-admin user attempting admin access');
-                            alert('Access denied. This page is for administrators only.');
-                            window.location.href = 'user-portal.html';
-                            return;
-                        }
-                    }
-                } else {
-                    // Fallback check with secure localStorage
-                    const adminSession = localStorage.getItem('admin_session_data');
-                    if (adminSession) {
-                        try {
-                            const user = JSON.parse(adminSession);
-                            if (user.role === 'admin') {
-                                console.log('🔒 Valid admin session found (fallback)');
-                                return; // Allow admin access
-                            }
-                        } catch (e) {
-                            localStorage.removeItem('admin_session_data');
-                        }
-                    }
-                    
-                    // Check for user session and block non-admin access
-                    const userSession = localStorage.getItem('user_session_data');
-                    if (userSession) {
-                        try {
-                            const user = JSON.parse(userSession);
-                            if (user.role !== 'admin') {
-                                console.log('🔒 User session found, redirecting to user portal');
-                                alert('Access denied. This page is for administrators only.');
-                                window.location.href = 'user-portal.html';
-                                return;
-                            }
-                        } catch (e) {
-                            localStorage.removeItem('user_session_data');
-                        }
-                    }
+            // Check if user is accessing admin page directly
+            const currentUser = localStorage.getItem('currentUser');
+            if (currentUser) {
+                const user = JSON.parse(currentUser);
+                if (user.role !== 'admin') {
+                    // Non-admin user trying to access admin page
+                    alert('Access denied. This page is for administrators only.');
+                    window.location.href = 'index.html';
+                    return;
                 }
-                
-                console.log('🔒 No conflicting sessions, showing admin login');
-                // No session or invalid session - show login screen
-            }, 100);
+            }
+            
+            // If no user is logged in, show login screen normally
+            // The admin login will handle authentication
         });
     </script>
 </head>
@@ -78,16 +36,13 @@
                 <h2>Admin Login</h2>
             </div>
             <form id="adminLoginForm">
-                <input type="hidden" id="csrfToken" name="csrfToken" value="">
                 <div class="form-group">
                     <label for="username">Username:</label>
-                    <input type="email" id="username" name="username" required autocomplete="username" 
-                           placeholder="Enter your email address">
+                    <input type="text" id="username" name="username" required>
                 </div>
                 <div class="form-group">
                     <label for="password">Password:</label>
-                    <input type="password" id="password" name="password" required autocomplete="current-password"
-                           placeholder="Enter your password">
+                    <input type="password" id="password" name="password" required>
                 </div>
                 <button type="submit">Login</button>
                 <div id="loginError" class="error-message"></div>
@@ -113,7 +68,6 @@
                 <button class="nav-btn" data-section="sales">Sales</button>
                 <button class="nav-btn" data-section="reports">Reports</button>
                 <button class="nav-btn" data-section="setup">Setup</button>
-                <button class="nav-btn" data-section="membership-management">Memberships</button>
                 <button class="nav-btn" data-section="settings">Settings</button>
                 <button id="logoutBtn" class="logout-btn">Logout</button>
             </div>
@@ -610,43 +564,6 @@
                             </div>
                             <button type="submit" class="btn-primary">Update Hours</button>
                         </form>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Membership Management Section -->
-            <section id="membership-management" class="admin-section">
-                <div class="section-header">
-                    <h2>Membership Management</h2>
-                </div>
-                
-                <div class="membership-overview">
-                    <div class="membership-stat-card">
-                        <h3>Active Memberships</h3>
-                        <div class="membership-count" id="activeMemberships">0</div>
-                        <div class="membership-label">Currently Active</div>
-                    </div>
-                    <div class="membership-stat-card">
-                        <h3>Auto-Renewals</h3>
-                        <div class="membership-count" id="autoRenewCount">0</div>
-                        <div class="membership-label">Auto-Renewal Enabled</div>
-                    </div>
-                    <div class="membership-stat-card">
-                        <h3>This Month Renewals</h3>
-                        <div class="membership-count" id="monthlyRenewals">0</div>
-                        <div class="membership-label">Processed This Month</div>
-                    </div>
-                </div>
-                
-                <div class="membership-controls">
-                    <button id="checkRenewalsBtn" class="btn-primary">Check Renewals Now</button>
-                    <button id="viewRenewalHistoryBtn" class="btn-secondary">View Renewal History</button>
-                </div>
-                
-                <div class="membership-list">
-                    <h3>Active Memberships</h3>
-                    <div id="membershipsList" class="memberships-table">
-                        <!-- Memberships will be populated here -->
                     </div>
                 </div>
             </section>

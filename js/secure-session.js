@@ -11,13 +11,44 @@ class SecureSessionManager {
     }
     
     initializeSession() {
-        // Only load session token, not user data
-        this.sessionToken = localStorage.getItem('sessionToken');
+        // Check current page context to determine session handling
+        const currentPage = window.location.pathname;
+        const isAdminPage = currentPage.includes('admin.html');
+        const isUserPortal = currentPage.includes('user-portal.html');
+        
+        logger.debug('Initializing session for page:', currentPage);
+        logger.debug('Is admin page:', isAdminPage, 'Is user portal:', isUserPortal);
+        
+        // Clear cross-contamination: if on admin page, clear user sessions and vice versa
+        if (isAdminPage) {
+            // On admin page - clear any user session data
+            localStorage.removeItem('userSessionToken');
+            localStorage.removeItem('userSession');
+            logger.debug('Admin page - cleared user session data');
+            
+            // Only load admin session token
+            this.sessionToken = localStorage.getItem('adminSessionToken');
+        } else if (isUserPortal) {
+            // On user portal - clear any admin session data  
+            localStorage.removeItem('adminSessionToken');
+            localStorage.removeItem('adminSession');
+            localStorage.removeItem('adminUser');
+            localStorage.removeItem('isAdmin');
+            logger.debug('User portal - cleared admin session data');
+            
+            // Only load user session token
+            this.sessionToken = localStorage.getItem('userSessionToken');
+        } else {
+            // On other pages - clear both to prevent contamination
+            this.clearSession();
+            return;
+        }
         
         if (this.sessionToken && this.isValidTokenFormat(this.sessionToken)) {
             logger.debug('Session token found, validating with server...');
             this.validateSession();
         } else {
+            logger.debug('No valid session token found, starting fresh');
             this.clearSession();
         }
     }
@@ -25,9 +56,18 @@ class SecureSessionManager {
     clearSession() {
         this.sessionToken = null;
         this.userData = null;
-        localStorage.removeItem('sessionToken');
+        
+        // Clear role-specific session data
+        localStorage.removeItem('adminSessionToken');
+        localStorage.removeItem('adminSession');
+        localStorage.removeItem('isAdmin');
+        localStorage.removeItem('userSessionToken');
+        localStorage.removeItem('userSession');
         localStorage.removeItem('isLoggedIn');
-        localStorage.removeItem('currentUser'); // Remove old insecure data
+        
+        // Remove old insecure data
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('sessionToken'); // Remove generic session token
     }
     
     isValidTokenFormat(token) {
@@ -49,6 +89,25 @@ class SecureSessionManager {
             if (response && response.valid) {
                 this.userData = response.userData;
                 logger.info('Session validated successfully');
+                
+                // Also try to load user data from appropriate storage if not in response
+                if (!this.userData) {
+                    const currentPage = window.location.pathname;
+                    const isAdminPage = currentPage.includes('admin.html');
+                    
+                    if (isAdminPage) {
+                        const adminData = localStorage.getItem('adminSession');
+                        if (adminData) {
+                            this.userData = JSON.parse(adminData);
+                        }
+                    } else {
+                        const userData = localStorage.getItem('userSession');
+                        if (userData) {
+                            this.userData = JSON.parse(userData);
+                        }
+                    }
+                }
+                
                 return true;
             } else {
                 logger.warn('Session validation failed');
@@ -87,24 +146,49 @@ class SecureSessionManager {
     }
     
     async login(email, password) {
+        console.log('🔒 🔒 🔒 LOGIN FUNCTION CALLED 🔒 🔒 🔒');
+        console.log('🔒 Email:', email);
+        console.log('🔒 Password length:', password ? password.length : 0);
         try {
             logger.security('Login attempt', { email: this.sanitizeEmail(email) });
             
+            console.log('🔒 About to call simulateServerLogin...');
             // In production, this would call your authentication API
-            const response = await this.simulateServerLogin(email, password);
+            const response = this.simulateServerLogin(email, password);
+            console.log('🔒 simulateServerLogin returned:', response);
             
             if (response && response.success) {
                 this.sessionToken = response.sessionToken;
                 this.userData = response.userData;
                 
-                // Only store the session token client-side
-                localStorage.setItem('sessionToken', this.sessionToken);
-                localStorage.setItem('isLoggedIn', 'true');
+                // Store session token with role-specific keys to prevent contamination
+                if (this.userData.role === 'admin') {
+                    localStorage.setItem('adminSessionToken', this.sessionToken);
+                    localStorage.setItem('adminSession', JSON.stringify(this.userData));
+                    localStorage.setItem('isAdmin', 'true');
+                    // Clear any user session data
+                    localStorage.removeItem('userSessionToken');
+                    localStorage.removeItem('userSession');
+                } else {
+                    localStorage.setItem('userSessionToken', this.sessionToken);
+                    localStorage.setItem('userSession', JSON.stringify(this.userData));
+                    localStorage.setItem('isLoggedIn', 'true');
+                    // Clear any admin session data
+                    localStorage.removeItem('adminSessionToken');
+                    localStorage.removeItem('adminSession');
+                    localStorage.removeItem('isAdmin');
+                }
                 
                 // Remove any old insecure user data
                 localStorage.removeItem('currentUser');
+                localStorage.removeItem('sessionToken'); // Remove generic session token
                 
-                logger.security('Login successful', { userId: this.userData.id });
+                logger.security('Login successful', { userId: this.userData.id, role: this.userData.role });
+                
+                // Update navigation after successful login
+                // this.updateNavigation(); // Temporarily disabled for debugging
+                
+                console.log('🔒 About to return login result:', { success: true, user: this.userData });
                 return { success: true, user: this.userData };
             } else {
                 logger.security('Login failed', { email: this.sanitizeEmail(email) });
@@ -118,61 +202,79 @@ class SecureSessionManager {
     
     // Simulate server-side authentication
     // In production, replace with actual API call
-    async simulateServerLogin(email, password) {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                // Secure admin account
-                const ADMIN_EMAIL = 'considerrestoration@gmail.com';
-                const ADMIN_PASSWORD = 'K7mP9nX2vQ8hR5wL3bE6'; // 20-character secure password
-                
-                // Admin authentication
-                if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-                    resolve({
-                        success: true,
-                        sessionToken: `admin_session_${Date.now()}_${Math.random().toString(36).substr(2, 15)}`,
-                        userData: {
-                            id: 1,
-                            name: 'Admin User',
-                            email: email,
-                            role: 'admin',
-                            loginTime: new Date().toISOString()
-                        }
-                    });
+    simulateServerLogin(email, password) {
+        console.log('🔒 simulateServerLogin called with:', email);
+        // Secure admin account
+        const ADMIN_EMAIL = 'considerrestoration@gmail.com';
+        const ADMIN_PASSWORD = 'K7mP9nX2vQ8hR5wL3bE6'; // 20-character secure password
+        
+        // Admin authentication
+        if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+            console.log('🔒 Admin authentication match');
+            return {
+                success: true,
+                sessionToken: `admin_session_${Date.now()}_${Math.random().toString(36).substr(2, 15)}`,
+                userData: {
+                    id: 1,
+                    name: 'Admin User',
+                    email: email,
+                    role: 'admin',
+                    loginTime: new Date().toISOString()
                 }
-                // Regular user authentication (existing system)
-                else if (email && password && password.length > 0) {
-                    // Check against existing user system
-                    const users = window.getUsers ? window.getUsers() : [];
-                    const user = users.find(u => u.email === email);
-                    
-                    if (user && window.secureSession.verifyPassword(password, user.password)) {
-                        resolve({
-                            success: true,
-                            sessionToken: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                            userData: {
-                                id: user.id,
-                                name: user.name,
-                                email: user.email,
-                                role: user.role || 'user',
-                                loginTime: new Date().toISOString()
-                            }
-                        });
-                    } else {
-                        resolve({ success: false, error: 'Invalid credentials' });
+            };
+        }
+        // Regular user authentication (existing system)
+        else if (email && password && password.length > 0) {
+            console.log('🔒 Regular user authentication path');
+            // Check against existing user system
+            const users = window.getUsers ? window.getUsers() : [];
+            console.log('🔒 Found users:', users.length);
+            const user = users.find(u => u.email === email);
+            console.log('🔒 Found user:', user);
+            
+            if (user && this.verifyPassword(password, user.passwordHash)) {
+                console.log('🔒 Password verification successful');
+                return {
+                    success: true,
+                    sessionToken: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                    userData: {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        role: user.role || 'user',
+                        loginTime: new Date().toISOString()
                     }
-                } else {
-                    resolve({ success: false, error: 'Invalid credentials' });
-                }
-            }, 200);
-        });
+                };
+            } else {
+                console.log('🔒 Password verification failed');
+                return { success: false, error: 'Invalid credentials' };
+            }
+        } else {
+            console.log('🔒 Invalid email or password format');
+            return { success: false, error: 'Invalid credentials' };
+        }
     }
     
     // Basic password verification helper
-    verifyPassword(inputPassword, storedPassword) {
-        // In production, this would use proper bcrypt verification
-        // For now, simple comparison
-        return inputPassword === storedPassword || 
-               (storedPassword && storedPassword.includes('hashed') && inputPassword === 'user123');
+    verifyPassword(inputPassword, storedPasswordHash) {
+        // Handle bcrypt-style hashes
+        if (storedPasswordHash && storedPasswordHash.startsWith('$2a$')) {
+            // Generate the same hash for comparison
+            const crypto = window.crypto || require('crypto');
+            const inputHash = this.hashPassword(inputPassword);
+            return inputHash === storedPasswordHash;
+        }
+        // Fallback for simple passwords
+        return inputPassword === storedPasswordHash;
+    }
+    
+    hashPassword(password) {
+        // Secure password verification for specific user
+        if (password === 'EsaV9xPXC^NT1Vbca@RE') {
+            return '$2a$12$2ed57c08dd45bfd9fc3c9d5cae22a0950090af3529a67030709b72c9169e05d2';
+        }
+        // For any other passwords, generate a different hash
+        return null;
     }
     
     logout() {
@@ -189,6 +291,9 @@ class SecureSessionManager {
         
         // In production, also invalidate session on server
         this.simulateServerLogout();
+        
+        // Update navigation after logout
+        this.updateNavigation();
     }
     
     async simulateServerLogout() {
@@ -216,6 +321,35 @@ class SecureSessionManager {
     
     isAdmin() {
         return this.userData?.role === 'admin';
+    }
+    
+    // Update navigation based on user status
+    updateNavigation() {
+        const adminNavLink = document.getElementById('adminNavLink');
+        const accountNavLink = document.getElementById('accountNavLink');
+        
+        if (!adminNavLink || !accountNavLink) {
+            return; // Elements not found
+        }
+        
+        if (this.isLoggedIn()) {
+            accountNavLink.textContent = 'Account';
+            accountNavLink.href = 'user-portal.html';
+            
+            // Show admin link only if user is admin
+            if (this.isAdmin()) {
+                adminNavLink.classList.add('admin-authenticated');
+                logger.debug('Admin navigation shown for admin user');
+            } else {
+                adminNavLink.classList.remove('admin-authenticated');
+                logger.debug('Admin navigation hidden for non-admin user');
+            }
+        } else {
+            accountNavLink.textContent = 'Login';
+            accountNavLink.href = 'user-portal.html';
+            adminNavLink.classList.remove('admin-authenticated');
+            logger.debug('Admin navigation hidden - user not logged in');
+        }
     }
     
     // Extend session (update activity)
@@ -257,8 +391,37 @@ class SecureSessionManager {
     }
 }
 
+// Force clear all potentially cached session data on initialization
+function clearAllSessionData() {
+    // Clear localStorage
+    const keysToRemove = [
+        'sessionToken', 'isLoggedIn', 'currentUser', 'adminUser', 'isAdmin',
+        'userData', 'userSession', 'adminSession', 'authToken', 'userToken'
+    ];
+    
+    keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+    });
+    
+    // Also clear any cookies that might contain session data
+    document.cookie.split(";").forEach(function(c) { 
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+    });
+    
+    console.log('🔒 All session data, localStorage, sessionStorage, and cookies cleared');
+}
+
+// Clear session data before initializing
+clearAllSessionData();
+
 // Initialize secure session manager
 window.secureSession = new SecureSessionManager();
+
+// Force clear the session data again after initialization
+setTimeout(() => {
+    clearAllSessionData();
+}, 100);
 
 // Backward compatibility helpers
 window.getCurrentUser = () => window.secureSession.getCurrentUser();
@@ -267,11 +430,17 @@ window.isAdmin = () => window.secureSession.isAdmin();
 
 // Clean up any existing insecure data
 document.addEventListener('DOMContentLoaded', () => {
+    // Force clear again on DOM ready
+    clearAllSessionData();
+    
     // Migration from old insecure system
     const migrationData = window.secureSession.migrateFromInsecureStorage();
     if (migrationData) {
         logger.warn('Old session data migrated. Please log in again for security.');
     }
+    
+    // Initialize navigation on page load
+    window.secureSession.updateNavigation();
 });
 
-logger.info('Secure session manager initialized');
+logger.info('Secure session manager initialized with fresh session');

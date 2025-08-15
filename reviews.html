@@ -5,9 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Client Reviews - Consider Restoration</title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/logger.js"></script>
+    <script src="js/portal-session-manager.js"></script>
     <script src="js/shared-data.js"></script>
-    <script src="js/cookie-session-manager.js"></script>
-    <script src="js/navigation-handler.js"></script>
+    <!-- DISABLED old session managers -->
+    <!-- <script src="js/cookie-session-manager.js"></script> -->
+    <!-- <script src="js/navigation-handler.js"></script> -->
     <style>
         /* Reviews Page Specific Styles */
         .reviews-hero {
@@ -1090,20 +1093,34 @@
         
         // Check if user is logged in
         function checkLoginStatus() {
-            // Use CookieSessionManager instead of localStorage
-            if (window.CookieSessionManager) {
-                currentUser = window.CookieSessionManager.getCurrentUser();
-                if (currentUser && currentUser.role === 'user') {
+            console.log('🔐 Checking login status for reviews...');
+            
+            // Use Universal Session Manager
+            if (window.universalSession) {
+                currentUser = window.universalSession.getCurrentUser();
+                const isLoggedIn = window.universalSession.isLoggedIn();
+                
+                console.log('🔐 Universal session check:', { currentUser, isLoggedIn });
+                
+                if (isLoggedIn && currentUser) {
+                    // Allow both regular users and admins to submit reviews
+                    console.log('🔐 User logged in - showing review form');
                     document.getElementById('addReviewSection').style.display = 'block';
                     document.getElementById('loginPromptSection').style.display = 'none';
                     
                     // User name is automatically used in review submission
-                    // No need to pre-populate name field as reviews use currentUser.name directly
+                    console.log('🔐 Review form enabled for:', currentUser.name);
                     
                     return true;
                 }
+            } else {
+                console.log('🔐 Universal session manager not available yet');
+                // Retry after session manager loads
+                setTimeout(checkLoginStatus, 200);
+                return false;
             }
             
+            console.log('🔐 No user logged in - showing login prompt');
             document.getElementById('addReviewSection').style.display = 'none';
             document.getElementById('loginPromptSection').style.display = 'block';
             currentUser = null;
@@ -1315,7 +1332,7 @@
 
         // Initialize everything when page loads
         document.addEventListener('DOMContentLoaded', () => {
-            // Delay to ensure CookieSessionManager is ready
+            // Delay to ensure Universal Session Manager is ready
             setTimeout(checkLoginStatus, 300);
             setupStarRating();
             setupReviewForm();

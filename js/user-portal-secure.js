@@ -19,60 +19,104 @@ const logoutBtn = document.getElementById('logoutBtn');
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🔒 User Portal DOM loaded, initializing...');
+    
+    // Clear any old session data that might be interfering
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('adminUser');
+    localStorage.removeItem('isAdmin');
+    
+    // Don't clear sessionToken and isLoggedIn here as they may be needed for session restoration
+    // localStorage.removeItem('sessionToken');
+    // localStorage.removeItem('isLoggedIn');
+    
+    // Clear any cached user data variables
+    currentUser = null;
+    
+    // Clear secure session manager state only if we're starting fresh
+    if (window.secureSession && !localStorage.getItem('sessionToken')) {
+        window.secureSession.logout();
+    }
+    
     setupUserPortalFunctionality();
+    // Delay profile form setup to ensure DOM is fully loaded
+    setTimeout(setupProfileForm, 100);
     checkExistingSession();
 });
 
 async function checkExistingSession() {
-    // Wait for CookieSessionManager to be available
+    // Wait for UniversalSession to be available
     let attempts = 0;
-    while (!window.CookieSessionManager && attempts < 50) {
+    while (!window.universalSession && attempts < 50) {
         await new Promise(resolve => setTimeout(resolve, 100));
         attempts++;
     }
     
-    if (!window.CookieSessionManager) {
-        console.error('❌ CookieSessionManager not available after waiting');
-    } else {
-        console.log('✅ CookieSessionManager is available');
+    if (!window.universalSession) {
+        console.log('🔒 Universal session manager not available - showing auth screen');
+        showAuthScreen();
+        return;
     }
     
     try {
-        // First try server-side session verification
-        const apiUrl = typeof EnvConfig !== 'undefined' ? 
-            EnvConfig.getAuthUrl('verify') : 
-            'http://localhost:3060/api/auth/verify';
+        // Check for existing session using universal session manager
+        console.log('🔒 Checking for existing user session via universal manager');
         
-        const response = await fetch(apiUrl, {
-            method: 'GET',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' }
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            currentUser = data.user;
-            console.log('🔒 Existing server session found:', currentUser);
-            showUserPortal();
-            return;
+        const sessionUser = window.universalSession.getCurrentUser();
+        const isLoggedIn = window.universalSession.isLoggedIn();
+        
+        console.log('🔒 Universal session check - isLoggedIn:', isLoggedIn);
+        console.log('🔒 Universal session check - sessionUser:', sessionUser);
+        
+        if (isLoggedIn && sessionUser) {
+            // Check if this is an admin user - redirect to admin panel
+            if (sessionUser.role === 'admin') {
+                console.log('🔒 Admin user detected in universal session, redirecting to admin panel');
+                window.location.href = 'admin.html';
+                return;
+            } else {
+                // Regular user - show user portal
+                console.log('🔒 Regular user session found in universal, showing user portal');
+                currentUser = sessionUser;
+                showUserPortal(sessionUser);
+                return;
+            }
         }
+        
+        // No valid session - show auth screen
+        console.log('🔒 No valid session found in universal - showing auth screen');
+        showAuthScreen();
+        
+        /* COMMENTED OUT - Automatic session restoration disabled
+        // Check if user is already logged in via secure session
+        const sessionUser = window.secureSession.getCurrentUser();
+        const isLoggedIn = window.secureSession.isLoggedIn();
+        
+        console.log('🔒 Session check - isLoggedIn:', isLoggedIn);
+        console.log('🔒 Session check - sessionUser:', sessionUser);
+        
+        if (isLoggedIn && sessionUser) {
+            // Check if this is an admin user - redirect to admin panel
+            if (sessionUser.role === 'admin') {
+                console.log('🔒 Admin user detected in session, redirecting to admin panel');
+                window.location.href = 'admin.html';
+                return;
+            } else {
+                // Regular user - show user portal
+                console.log('🔒 Regular user session found, showing user portal');
+                currentUser = sessionUser;
+                showUserPortal(sessionUser);
+                return;
+            }
+        }
+        
+        // No valid session - show auth screen
+        console.log('🔒 No valid session found - showing auth screen');
+        showAuthScreen();
+        */
     } catch (error) {
-        console.log('🔒 Server not available for session check, checking local storage...');
+        console.error('🔒 Session check error:', error);
+        showAuthScreen();
     }
-    
-    // Fallback to cookie session check
-    if (window.CookieSessionManager) {
-        const sessionUser = window.CookieSessionManager.getCurrentUser();
-        if (sessionUser && sessionUser.role !== 'admin') {
-            currentUser = sessionUser;
-            console.log('🔒 Existing cookie user session found:', currentUser);
-            showUserPortal();
-            return;
-        }
-    }
-    
-    console.log('🔒 No existing user session');
-    showAuthScreen();
 }
 
 function setupUserPortalFunctionality() {
@@ -80,7 +124,22 @@ function setupUserPortalFunctionality() {
     
     // Setup auth forms
     if (loginForm) {
+        console.log('🔒 Attaching login form event listener');
         loginForm.addEventListener('submit', handleSecureLogin);
+        
+        // Add button click listener as backup
+        const loginButton = loginForm.querySelector('button[type="submit"]');
+        if (loginButton) {
+            console.log('🔒 Adding backup button click listener');
+            loginButton.addEventListener('click', (e) => {
+                console.log('🔒 Login button clicked!');
+                if (!e.defaultPrevented) {
+                    handleSecureLogin(e);
+                }
+            });
+        }
+    } else {
+        console.error('🔒 Login form not found!');
     }
     
     if (registerForm) {
@@ -133,123 +192,121 @@ async function handleSecureLogin(event) {
     const password = document.getElementById('loginPassword').value;
     
     console.log('🔒 Attempting user login with:', email);
+    console.log('🔒 Password length:', password ? password.length : 0);
+    console.log('🔒 Form event triggered correctly');
     
     // Clear any previous errors
     if (loginError) loginError.textContent = '';
     
     // Show loading state
-    const submitBtn = event.target.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    submitBtn.textContent = 'Signing in...';
-    submitBtn.disabled = true;
+    let submitBtn = event.target.querySelector('button[type="submit"]');
+    if (!submitBtn) {
+        // Try to find submit button in the form
+        submitBtn = document.querySelector('#loginForm button[type="submit"]');
+    }
+    if (!submitBtn) {
+        // Try to find any button in the login form
+        submitBtn = document.querySelector('#loginForm button');
+    }
+    
+    let originalText = 'Login';
+    
+    if (submitBtn) {
+        originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Signing in...';
+        submitBtn.disabled = true;
+        console.log('🔒 Submit button found and updated');
+    } else {
+        console.warn('🔒 Submit button not found anywhere');
+    }
     
     // Add timeout for the entire login process
     const loginTimeout = setTimeout(() => {
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
+        if (submitBtn) {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        }
         if (loginError) loginError.textContent = 'Login timeout - please try again';
         console.error('🔒 Login process timed out');
     }, 10000); // 10 second timeout
     
     try {
-        // First try server-side authentication
-        console.log('🔒 Trying server-side user authentication...');
+        // Use secure session manager for authentication
+        console.log('🔒 Trying secure session authentication...');
         
-        const apiUrl = typeof EnvConfig !== 'undefined' ? 
-            EnvConfig.getAuthUrl('login') : 
-            'http://localhost:3060/api/auth/login';
+        // Check if secure session manager is available
+        if (!window.secureSession) {
+            throw new Error('Secure session manager not available');
+        }
         
-        const response = await fetch(apiUrl, {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ email, password })
-        });
-
-        if (response.ok) {
-            const data = await response.json();
+        // Clear any existing session first
+        console.log('🔒 Clearing any existing session...');
+        window.secureSession.logout();
+        
+        console.log('🔒 About to call secureSession.login...');
+        const loginResult = await window.secureSession.login(email, password);
+        console.log('🔒 Login call completed, result:', loginResult);
+        
+        console.log('🔒 Login result received:', loginResult);
+        console.log('🔒 Login result success property:', loginResult.success);
+        console.log('🔒 Login result user property:', loginResult.user);
+        
+        if (loginResult && loginResult.success) {
+            console.log('🔒 Login successful:', loginResult.user);
+            if (loginResult.user) {
+                console.log('🔒 User role from login:', loginResult.user.role);
+                console.log('🔒 User name from login:', loginResult.user.name);
+            } else {
+                console.error('🔒 No user data in login result');
+            }
             
-            if (data.user.role === 'admin') {
+            // Clear timeout and restore button
+            clearTimeout(loginTimeout);
+            if (submitBtn) {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+            
+            // Save session using universal manager
+            if (window.universalSession) {
+                const sessionSaved = window.universalSession.saveSession(loginResult.user);
+                console.log('🔒 Universal session saved:', sessionSaved);
+            }
+            
+            if (loginResult.user.role === 'admin') {
                 // Redirect admin to admin panel
                 console.log('🔒 Admin user detected, redirecting to admin panel');
                 window.location.href = 'admin.html';
                 return;
-            }
-            
-            // Successful user login
-            console.log('🔒 Server-side user login successful');
-            currentUser = data.user;
-            
-            // Use cookie session manager instead of localStorage
-            if (window.CookieSessionManager) {
-                window.CookieSessionManager.login(data.user);
-            }
-            
-            // Check for pending booking
-            if (sessionStorage.getItem('pendingBooking')) {
-                window.location.href = 'booking.html';
             } else {
-                showUserPortal();
-            }
-            
-            clearTimeout(loginTimeout);
-            loginForm.reset();
-            if (loginError) loginError.textContent = '';
-            return;
-        } else {
-            console.log('🔒 Server login failed, trying fallback...');
-        }
-    } catch (error) {
-        console.log('🔒 Server not available, using fallback authentication:', error.message);
-    }
-    
-    // Fallback to client-side authentication (for development)
-    console.log('🔒 Using fallback client-side user authentication...');
-    
-    try {
-        // Use the existing authentication functions
-        let user = null;
-        
-        if (window.authenticateUser) {
-            user = window.authenticateUser(email, password);
-        }
-        
-        if (user) {
-            console.log('🔒 Fallback user login successful');
-            currentUser = user;
-            
-            if (user.role === 'admin') {
-                window.location.href = 'admin.html';
+                // Regular user - show user portal
+                console.log('🔒 Regular user login - showing user portal');
+                console.log('🔒 About to call showUserPortal with:', loginResult.user);
+                
+                // Ensure currentUser is set correctly
+                currentUser = loginResult.user;
+                console.log('🔒 Set currentUser to:', currentUser);
+                
+                showUserPortal(loginResult.user);
                 return;
             }
-            
-            // Use cookie session manager instead of localStorage
-            if (window.CookieSessionManager) {
-                window.CookieSessionManager.login(user);
-            }
-            
-            if (sessionStorage.getItem('pendingBooking')) {
-                window.location.href = 'booking.html';
-            } else {
-                showUserPortal();
-            }
-            
-            clearTimeout(loginTimeout);
-            loginForm.reset();
-            if (loginError) loginError.textContent = '';
         } else {
-            if (loginError) loginError.textContent = 'Invalid email or password';
+            // Login failed
+            console.log('🔒 Login failed:', loginResult.error);
+            if (loginError) loginError.textContent = loginResult.error || 'Invalid email or password';
         }
     } catch (error) {
-        console.error('🔒 Fallback login error:', error);
-        if (loginError) loginError.textContent = 'Login failed. Please try again.';
+        console.error('🔒 Login error caught:', error);
+        console.error('🔒 Error message:', error.message);
+        console.error('🔒 Error stack:', error.stack);
+        if (loginError) loginError.textContent = 'Login system error - please try again';
     } finally {
         // Clear timeout and restore button state
         clearTimeout(loginTimeout);
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
+        if (submitBtn) {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        }
     }
 }
 
@@ -301,9 +358,7 @@ async function handleSecureRegister(event) {
             currentUser = data.user;
             
             // Use cookie session manager instead of localStorage
-            if (window.CookieSessionManager) {
-                window.CookieSessionManager.login(data.user);
-            }
+            // Session managed by secure session manager
             
             showUserPortal();
             
@@ -333,9 +388,7 @@ async function handleSecureRegister(event) {
                 currentUser = newUser;
                 
                 // Use cookie session manager instead of localStorage
-                if (window.CookieSessionManager) {
-                    window.CookieSessionManager.login(newUser);
-                }
+                // Session managed by secure session manager
                 
                 showUserPortal();
                 
@@ -375,27 +428,70 @@ async function handleLogout() {
         console.log('🔒 Server logout failed, proceeding with local logout');
     }
     
+    // Clear universal session
+    if (window.universalSession) {
+        window.universalSession.logout();
+        console.log('🔒 Universal session cleared');
+    }
+    
     // Always clear local session
     currentUser = null;
     sessionStorage.removeItem('pendingBooking');
     
-    // Clear cookie session manager if available
-    if (window.CookieSessionManager) {
-        window.CookieSessionManager.logout();
+    // Clear secure session manager if available
+    if (window.secureSession) {
+        window.secureSession.logout();
     }
     
     showAuthScreen();
     console.log('🔒 User logout completed');
 }
 
-function showUserPortal() {
+function showUserPortal(user = null) {
+    console.log('🔒 showUserPortal called with user:', user);
+    
+    if (user) {
+        currentUser = user;
+        console.log('🔒 currentUser set to:', currentUser);
+    }
+    
+    // If no user provided, try to get current user from secure session
+    if (!currentUser && window.secureSession) {
+        const sessionUser = window.secureSession.getCurrentUser();
+        if (sessionUser) {
+            currentUser = sessionUser;
+            console.log('🔒 Retrieved user from secure session:', currentUser);
+        }
+    }
+    
+    console.log('🔒 Current user before display:', currentUser);
+    
     if (authScreen) authScreen.style.display = 'none';
     if (userPortal) userPortal.style.display = 'block';
     
-    // Update user name display
+    // Update user name display with proper validation
     const userNameDisplay = document.getElementById('userNameDisplay');
     if (userNameDisplay && currentUser) {
-        userNameDisplay.textContent = currentUser.name || currentUser.email;
+        console.log('🔒 Setting user name display:', currentUser);
+        console.log('🔒 User role:', currentUser.role);
+        console.log('🔒 User name:', currentUser.name);
+        console.log('🔒 User email:', currentUser.email);
+        
+        // Ensure we're using the actual user's name, not any cached admin data
+        let displayName = '';
+        if (currentUser.name && currentUser.name.trim() !== '' && currentUser.name !== 'Admin User') {
+            displayName = currentUser.name.trim();
+        } else if (currentUser.email && currentUser.email.trim() !== '') {
+            displayName = currentUser.email.split('@')[0]; // Use email username part
+        } else {
+            displayName = 'User';
+        }
+        
+        console.log('🔒 Final display name:', displayName);
+        userNameDisplay.textContent = displayName;
+    } else if (userNameDisplay) {
+        console.warn('🔒 No current user found for name display');
+        userNameDisplay.textContent = 'User';
     }
     
     // Load user data
@@ -620,14 +716,162 @@ window.rebookService = function(service) {
 };
 
 window.showProfile = function() {
-    console.log('🔒 Show profile modal');
-    // Implement profile modal logic
+    console.log('🔒 Show profile modal - function called!');
+    
+    if (!currentUser) {
+        console.error('❌ No current user available');
+        alert('Please log in to view your profile.');
+        return;
+    }
+    
+    console.log('✅ Current user found:', currentUser);
+    
+    // Get the profile modal
+    const profileModal = document.getElementById('profileModal');
+    if (!profileModal) {
+        console.error('❌ Profile modal not found');
+        alert('Profile modal not available.');
+        return;
+    }
+    
+    console.log('✅ Profile modal found, populating data...');
+    
+    // Populate form with current user data
+    const nameField = document.getElementById('profileName');
+    const emailField = document.getElementById('profileEmail');
+    const phoneField = document.getElementById('profilePhone');
+    const preferencesField = document.getElementById('profilePreferences');
+    
+    if (nameField) nameField.value = (currentUser.firstName + ' ' + currentUser.lastName).trim() || currentUser.name || '';
+    if (emailField) emailField.value = currentUser.email || '';
+    if (phoneField) phoneField.value = currentUser.phone || '';
+    if (preferencesField) preferencesField.value = currentUser.preferences || '';
+    
+    console.log('✅ Form fields populated');
+    
+    // Show the modal
+    profileModal.style.display = 'block';
+    console.log('✅ Modal displayed');
+    
+    // Setup close functionality (only once per modal show)
+    setupModalCloseHandlers(profileModal);
 };
+
+function setupModalCloseHandlers(modal) {
+    // Remove any existing close handlers to prevent duplicates
+    const closeButtons = modal.querySelectorAll('.close');
+    closeButtons.forEach(btn => {
+        // Remove existing event listeners by cloning the node
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        // Add new event listener
+        newBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+    });
+    
+    // Handle clicking outside modal (use event delegation to avoid conflicts)
+    const handleOutsideClick = function(event) {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+            document.removeEventListener('click', handleOutsideClick);
+        }
+    };
+    
+    // Add the event listener for this specific modal instance
+    setTimeout(() => {
+        document.addEventListener('click', handleOutsideClick);
+    }, 100); // Small delay to prevent immediate closure
+}
 
 window.showHistory = function() {
     console.log('🔒 Show full history modal');
     // Implement history modal logic
 };
+
+function setupProfileForm() {
+    console.log('🔧 Setting up profile form...');
+    const profileForm = document.getElementById('profileForm');
+    if (!profileForm) {
+        console.error('❌ Profile form not found');
+        // Try again after a delay
+        setTimeout(setupProfileForm, 500);
+        return;
+    }
+    
+    console.log('✅ Profile form found, adding event listener');
+    
+    // Remove any existing event listeners
+    const newForm = profileForm.cloneNode(true);
+    profileForm.parentNode.replaceChild(newForm, profileForm);
+    
+    // Add event listener to the new form
+    newForm.addEventListener('submit', function(e) {
+        console.log('🔥 Profile form submitted!');
+        e.preventDefault();
+        
+        if (!currentUser) {
+            console.error('❌ No current user for profile update');
+            alert('No user session found. Please log in again.');
+            return;
+        }
+        
+        console.log('✅ Processing profile update for user:', currentUser.id);
+        
+        // Get form data
+        const formData = new FormData(newForm);
+        const updatedData = {
+            name: formData.get('name'),
+            email: formData.get('email'),
+            phone: formData.get('phone'),
+            preferences: formData.get('preferences')
+        };
+        
+        // Split name into first and last name
+        const nameParts = updatedData.name.trim().split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+        
+        // Update current user object
+        currentUser.firstName = firstName;
+        currentUser.lastName = lastName;
+        currentUser.name = updatedData.name;
+        currentUser.email = updatedData.email;
+        currentUser.phone = updatedData.phone;
+        currentUser.preferences = updatedData.preferences;
+        
+        // Update in shared data if available
+        if (window.updateUser) {
+            try {
+                window.updateUser(currentUser.id, currentUser);
+                console.log('✅ Profile updated in shared data');
+            } catch (error) {
+                console.error('Error updating user in shared data:', error);
+            }
+        }
+        
+        // Update session
+        if (window.universalSession) {
+            window.universalSession.saveSession(currentUser);
+            console.log('✅ Profile updated in session');
+        }
+        
+        // Update display
+        updateUserDisplay();
+        
+        // Close modal
+        const profileModal = document.getElementById('profileModal');
+        if (profileModal) {
+            profileModal.style.display = 'none';
+        }
+        
+        // Show success message
+        alert('Profile updated successfully!');
+        
+        console.log('✅ Profile update completed successfully');
+    });
+}
 
 // Update membership status display
 function updateMembershipStatus() {

@@ -13,20 +13,40 @@ class CookieSessionManager {
     initialize() {
         if (this.initialized) return;
 
-        console.log('🍪 Initializing Cookie Session Manager...');
-        console.log('🍪 Current domain:', window.location.hostname);
-        console.log('🍪 Current protocol:', window.location.protocol);
-        console.log('🍪 All cookies:', document.cookie || 'No cookies found');
+        console.log('🍪 Cookie Session Manager initializing...');
+        console.log('🍪 SESSION PERSISTENCE DISABLED - clearing all sessions');
         
         try {
-            // Load session from cookies
-            this.currentUser = this.validateCurrentSession();
+            // RE-ENABLE SESSION RESTORATION with proper role isolation
+            console.log('🍪 Checking for existing session with role isolation...');
+            
+            // Check current page to determine which session to load
+            const currentPage = window.location.pathname;
+            const isAdminPage = currentPage.includes('admin.html');
+            const isUserPortal = currentPage.includes('user-portal.html');
+            
+            if (isAdminPage) {
+                // On admin page - only load admin sessions
+                this.clearUserSessionData();
+                this.currentUser = this.validateAdminSession();
+                console.log('🍪 Admin page - loaded admin session only');
+            } else if (isUserPortal) {
+                // On user portal - only load user sessions
+                this.clearAdminSessionData();
+                this.currentUser = this.validateUserSession();
+                console.log('🍪 User portal - loaded user session only');
+            } else {
+                // On other pages - validate any existing session but don't auto-restore
+                this.currentUser = this.validateCurrentSession();
+                console.log('🍪 Other page - validated existing session');
+            }
+            
             this.initialized = true;
             
-            console.log('✅ Cookie Session Manager initialized');
-            console.log('🔐 Current user:', this.currentUser ? this.currentUser.name : 'Not logged in');
+            console.log('✅ Cookie Session Manager initialized with role isolation');
+            console.log('🔐 Current user:', this.currentUser ? `${this.currentUser.name} (${this.currentUser.role})` : 'Not logged in');
             
-            // Update navigation
+            // Update navigation to logged out state
             this.updateNavigation();
             
         } catch (error) {
@@ -306,6 +326,103 @@ class CookieSessionManager {
         console.log('🍪 Session cleared from cookies');
     }
 
+    clearAllSessionData() {
+        // Clear all possible session-related storage
+        const keysToRemove = [
+            'sessionToken', 'isLoggedIn', 'currentUser', 'adminUser', 'isAdmin',
+            'userData', 'userSession', 'adminSession', 'authToken', 'userToken',
+            'adminSessionToken', 'userSessionToken',
+            'cr_session', 'cr_user', 'cr_cookie_cr_session', 'cr_cookie_cr_user'
+        ];
+        
+        keysToRemove.forEach(key => {
+            localStorage.removeItem(key);
+            sessionStorage.removeItem(key);
+            this.deleteCookie(key);
+        });
+        
+        // Clear all cookies
+        document.cookie.split(";").forEach(function(c) { 
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+        });
+        
+        console.log('🍪 All session data completely cleared');
+    }
+
+    clearUserSessionData() {
+        // Clear only user session data
+        const userKeys = ['userSessionToken', 'userSession', 'isLoggedIn'];
+        userKeys.forEach(key => {
+            localStorage.removeItem(key);
+            sessionStorage.removeItem(key);
+            this.deleteCookie(key);
+        });
+        console.log('🍪 User session data cleared');
+    }
+
+    clearAdminSessionData() {
+        // Clear only admin session data
+        const adminKeys = ['adminSessionToken', 'adminSession', 'isAdmin', 'adminUser'];
+        adminKeys.forEach(key => {
+            localStorage.removeItem(key);
+            sessionStorage.removeItem(key);
+            this.deleteCookie(key);
+        });
+        console.log('🍪 Admin session data cleared');
+    }
+
+    validateAdminSession() {
+        try {
+            const adminData = localStorage.getItem('adminSession');
+            const adminToken = localStorage.getItem('adminSessionToken');
+            
+            if (!adminData || !adminToken) {
+                return null;
+            }
+            
+            const user = JSON.parse(adminData);
+            
+            if (!user.id || !user.email || !user.name || user.role !== 'admin') {
+                console.warn('🔐 Invalid admin session data');
+                this.clearAdminSessionData();
+                return null;
+            }
+            
+            console.log('🍪 Valid admin session found');
+            return user;
+        } catch (error) {
+            console.error('🔐 Admin session validation error:', error);
+            this.clearAdminSessionData();
+            return null;
+        }
+    }
+
+    validateUserSession() {
+        try {
+            const userData = localStorage.getItem('userSession');
+            const userToken = localStorage.getItem('userSessionToken');
+            
+            if (!userData || !userToken) {
+                return null;
+            }
+            
+            const user = JSON.parse(userData);
+            
+            if (!user.id || !user.email || !user.name || user.role === 'admin') {
+                console.warn('🔐 Invalid user session data');
+                this.clearUserSessionData();
+                return null;
+            }
+            
+            console.log('🍪 Valid user session found');
+            return user;
+        } catch (error) {
+            console.error('🔐 User session validation error:', error);
+            this.clearUserSessionData();
+            return null;
+        }
+    }
+
     getCurrentUser() {
         return this.currentUser;
     }
@@ -355,12 +472,15 @@ window.loginUser = (userData) => window.CookieSessionManager.login(userData);
 window.logoutUser = () => window.CookieSessionManager.logout();
 window.refreshUserSession = () => window.CookieSessionManager.refreshSession();
 
-// Periodic session refresh (every 5 minutes)
+// RE-ENABLED - Periodic session refresh with role isolation
 setInterval(() => {
     if (window.CookieSessionManager.initialized) {
+        console.log('🍪 Periodic session refresh with role isolation');
         window.CookieSessionManager.refreshSession();
     }
 }, 5 * 60 * 1000);
+
+console.log('🍪 Periodic session refresh ENABLED with role isolation');
 
 // Export removed for browser compatibility
 // Use window.CookieSessionManager to access the instance

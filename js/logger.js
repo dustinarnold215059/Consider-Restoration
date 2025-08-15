@@ -40,25 +40,33 @@ class Logger {
     }
     
     error(...args) {
-        if (this.shouldLog('ERROR')) {
+        if (this && this.shouldLog && this.shouldLog('ERROR')) {
+            console.error('❌', ...args);
+        } else if (console.error) {
             console.error('❌', ...args);
         }
     }
     
     warn(...args) {
-        if (this.shouldLog('WARN')) {
+        if (this && this.shouldLog && this.shouldLog('WARN')) {
+            console.warn('⚠️', ...args);
+        } else if (console.warn) {
             console.warn('⚠️', ...args);
         }
     }
     
     info(...args) {
-        if (this.shouldLog('INFO')) {
+        if (this && this.shouldLog && this.shouldLog('INFO')) {
+            console.info('ℹ️', ...args);
+        } else if (console.info) {
             console.info('ℹ️', ...args);
         }
     }
     
     debug(...args) {
-        if (this.shouldLog('DEBUG')) {
+        if (this && this.shouldLog && this.shouldLog('DEBUG')) {
+            console.log('🔧', ...args);
+        } else if (console.log) {
             console.log('🔧', ...args);
         }
     }
@@ -66,7 +74,7 @@ class Logger {
     // Special methods for security-sensitive logging
     security(message, details = null) {
         // Security events always logged but sanitized in production
-        if (this.isProduction) {
+        if (this && this.isProduction) {
             console.warn('🔒 Security Event:', message);
         } else {
             console.warn('🔒 Security Event:', message, details);
@@ -75,7 +83,7 @@ class Logger {
     
     // Sanitized user data logging - removes sensitive info
     user(message, userData = null) {
-        if (this.shouldLog('INFO')) {
+        if (this && this.shouldLog && this.shouldLog('INFO')) {
             if (this.isProduction && userData) {
                 // Remove sensitive data in production
                 const sanitized = this.sanitizeUserData(userData);

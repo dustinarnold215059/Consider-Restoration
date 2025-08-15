@@ -3,17 +3,10 @@
 console.log('🚀 Navigation handler loaded');
 
 function updateNavigationForUser() {
-    console.log('🔄 Updating navigation for user session');
+    console.log('🔄 Navigation update - SESSION PERSISTENCE DISABLED');
     
     const adminNavLink = document.getElementById('adminNavLink');
     const accountNavLink = document.getElementById('accountNavLink');
-    
-    // Check if CookieSessionManager is available
-    if (typeof window.CookieSessionManager === 'undefined') {
-        console.log('⏳ CookieSessionManager not ready, retrying in 100ms');
-        setTimeout(updateNavigationForUser, 100);
-        return;
-    }
     
     // Check if navigation elements exist
     if (!adminNavLink || !accountNavLink) {
@@ -23,26 +16,68 @@ function updateNavigationForUser() {
     }
     
     try {
-        const currentUser = window.CookieSessionManager.getCurrentUser();
-        console.log('🔐 Current user check:', currentUser ? currentUser.name : 'Not logged in');
+        // Check for valid session with proper role isolation
+        if (typeof window.secureSession === 'undefined') {
+            console.log('⏳ SecureSession not ready, retrying in 100ms');
+            setTimeout(updateNavigationForUser, 100);
+            return;
+        }
         
-        if (currentUser) {
+        const currentUser = window.secureSession.getCurrentUser();
+        const isLoggedIn = window.secureSession.isLoggedIn();
+        const isAdmin = window.secureSession.isAdmin();
+        
+        console.log('🔐 Current user check:', currentUser ? `${currentUser.name} (${currentUser.role})` : 'Not logged in');
+        console.log('🔐 Is admin:', isAdmin);
+        
+        if (isLoggedIn && currentUser) {
             // User is logged in
-            if (currentUser.role === 'admin') {
-                adminNavLink.style.display = 'block';
-                accountNavLink.textContent = 'My Account';
-                console.log('👑 Admin navigation updated');
+            accountNavLink.textContent = 'My Account';
+            accountNavLink.href = 'user-portal.html';
+            
+            if (isAdmin) {
+                adminNavLink.classList.add('admin-authenticated');
+                console.log('👑 Admin navigation shown for admin user');
             } else {
-                adminNavLink.style.display = 'none';
-                accountNavLink.textContent = 'My Account';
-                console.log('👤 User navigation updated');
+                adminNavLink.classList.remove('admin-authenticated');
+                console.log('👤 Admin navigation hidden for regular user');
             }
         } else {
             // User is not logged in
-            adminNavLink.style.display = 'none';
+            adminNavLink.classList.remove('admin-authenticated');
             accountNavLink.textContent = 'Login';
-            console.log('🚪 Guest navigation updated');
+            accountNavLink.href = 'user-portal.html';
+            console.log('🚪 Guest navigation - admin hidden, login shown');
         }
+        
+        /* DISABLED - Automatic session checking
+        const currentUser = window.secureSession.getCurrentUser();
+        const isLoggedIn = window.secureSession.isLoggedIn();
+        const isAdmin = window.secureSession.isAdmin();
+        
+        console.log('🔐 Current user check:', currentUser ? currentUser.name : 'Not logged in');
+        console.log('🔐 Is admin:', isAdmin);
+        
+        if (isLoggedIn && currentUser) {
+            // User is logged in
+            accountNavLink.textContent = 'My Account';
+            accountNavLink.href = 'user-portal.html';
+            
+            if (isAdmin) {
+                adminNavLink.classList.add('admin-authenticated');
+                console.log('👑 Admin navigation shown for admin user');
+            } else {
+                adminNavLink.classList.remove('admin-authenticated');
+                console.log('👤 Admin navigation hidden for regular user');
+            }
+        } else {
+            // User is not logged in
+            adminNavLink.classList.remove('admin-authenticated');
+            accountNavLink.textContent = 'Login';
+            accountNavLink.href = 'user-portal.html';
+            console.log('🚪 Guest navigation - admin hidden, login shown');
+        }
+        */
     } catch (error) {
         console.error('❌ Error updating navigation:', error);
     }

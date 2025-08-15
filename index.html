@@ -16,6 +16,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/image-placeholders.css">
+    <style>
+        /* Ensure admin nav is hidden by default until proper authentication */
+        #adminNavLink {
+            display: none !important;
+        }
+        /* Only show when explicitly enabled by admin authentication */
+        #adminNavLink.admin-authenticated {
+            display: block !important;
+        }
+    </style>
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#3A7D99">
     
@@ -49,19 +59,24 @@
     <!-- Browser compatibility polyfills (load first) -->
     <script src="js/browser-compatibility.js"></script>
     <script src="js/logger.js"></script>
-    <script src="js/secure-session.js"></script>
+    <script src="js/portal-session-manager.js"></script>
+    <!-- DISABLED old session restoration on index page -->
+    <!-- <script src="js/secure-session.js"></script> -->
+    <script src="js/advanced-cache.js"></script>
+    <script src="js/code-quality-monitor.js"></script>
+    <script src="js/accessibility-enhancer.js"></script>
     <script src="js/production-logger.js"></script>
     
     <!-- Utility scripts -->
     <script src="js/site-config.js"></script>
-    <script src="js/logging-utility.js"></script>
     <script src="js/environment-config.js"></script>
     <script src="js/toast-notifications.js"></script>
     
     <!-- Ultra-minimal scripts for home page performance -->
     <script src="js/lazy-loading.js" defer></script>
-    <script src="js/cookie-session-manager.js"></script>
-    <script src="js/navigation-handler.js"></script>
+    <!-- DISABLED session managers on index page -->
+    <!-- <script src="js/cookie-session-manager.js"></script> -->
+    <!-- <script src="js/navigation-handler.js"></script> -->
     
     <!-- Local Business Schema Markup -->
     <script type="application/ld+json">
@@ -375,7 +390,7 @@
                     <li><a href="reviews.html">Reviews</a></li>
                     <li><a href="contact.html">Contact</a></li>
                     <li><a href="user-portal.html" id="accountNavLink">Login</a></li>
-                    <li id="adminNavLink" style="display: none;"><a href="admin.html">Admin</a></li>
+                    <li id="adminNavLink" style="display: none !important;"><a href="admin.html">Admin</a></li>
                 </ul>
             </div>
         </nav>
