@@ -548,8 +548,9 @@ class PerformanceOptimizer {
         if ('serviceWorker' in navigator) {
             // Add resource hints for HTTP/2 push (only for existing resources)
             const criticalResources = [
-                { href: '/css/style.css', as: 'style' }
-                // Note: removed main.js as it doesn't exist, removed logo.png as it doesn't exist yet
+                { href: '/css/styles.css', as: 'style' },
+                { href: '/js/main.js', as: 'script' }
+                // Note: removed logo.png as it doesn't exist yet
             ];
             
             criticalResources.forEach(resource => {
@@ -565,29 +566,18 @@ class PerformanceOptimizer {
                     };
                     testImg.src = resource.href;
                 } else {
-                    // For non-image resources, test existence first
-                    fetch(resource.href, { method: 'HEAD' })
-                        .then(response => {
-                            if (response.ok) {
-                                const link = document.createElement('link');
-                                link.rel = 'preload';
-                                link.href = resource.href;
-                                link.as = resource.as;
-                                if (resource.as === 'style') {
-                                    link.onload = function() {
-                                        this.onload = null;
-                                        this.rel = 'stylesheet';
-                                    };
-                                }
-                                document.head.appendChild(link);
-                                console.log('⚡ Preloaded resource:', resource.href);
-                            } else {
-                                console.log('⚡ Skipping missing resource:', resource.href);
-                            }
-                        })
-                        .catch(() => {
-                            console.log('⚡ Skipping inaccessible resource:', resource.href);
-                        });
+                    // For non-image resources, add directly
+                    const link = document.createElement('link');
+                    link.rel = 'preload';
+                    link.href = resource.href;
+                    link.as = resource.as;
+                    if (resource.as === 'style') {
+                        link.onload = function() {
+                            this.onload = null;
+                            this.rel = 'stylesheet';
+                        };
+                    }
+                    document.head.appendChild(link);
                 }
             });
         }
