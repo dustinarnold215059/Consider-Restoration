@@ -1982,9 +1982,19 @@
         function autoPopulateServiceFromURL() {
             console.log('🔍 Auto-populate function called');
             
-            // Get URL parameters
+            // Get URL parameters (check both search params and hash)
+            let serviceParam = null;
+            
+            // First try URL search parameters (?service=...)
             const urlParams = new URLSearchParams(window.location.search);
-            const serviceParam = urlParams.get('service');
+            serviceParam = urlParams.get('service');
+            
+            // If not found, try hash parameters (#service=...)
+            if (!serviceParam && window.location.hash) {
+                const hash = window.location.hash.substring(1);
+                const hashParams = new URLSearchParams(hash);
+                serviceParam = hashParams.get('service');
+            }
             
             console.log('URL:', window.location.href);
             console.log('Service parameter:', serviceParam);
@@ -2291,6 +2301,12 @@
                     autoPopulateServiceFromURL();
                 }
             }, 500);
+            
+            // Listen for hash changes to handle navigation with hash parameters
+            window.addEventListener('hashchange', () => {
+                console.log('🔍 Hash changed, re-running auto-populate');
+                autoPopulateServiceFromURL();
+            });
             
             // Check for existing user session on page load (with delay to ensure CookieSessionManager is ready)
             setTimeout(checkUserSession, 300);
