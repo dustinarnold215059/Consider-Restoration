@@ -131,15 +131,26 @@ class EnhancedErrorHandler {
     }
 
     handleResourceError(event) {
-        const error = {
-            type: 'resource',
-            resource: event.target.tagName,
-            source: event.target.src || event.target.href,
-            timestamp: Date.now(),
-            url: window.location.href
-        };
-
-        this.logError(error);
+        const source = event.target.src || event.target.href;
+        
+        // Skip logging for known missing resources with fallbacks
+        const skipLogging = [
+            '/css/styles.css',
+            '/js/main.js',
+            '/images/logo.png',
+            '/images/hero-bg.jpg'
+        ].some(path => source && source.includes(path));
+        
+        if (!skipLogging) {
+            const error = {
+                type: 'resource',
+                resource: event.target.tagName,
+                source: source,
+                timestamp: Date.now(),
+                url: window.location.href
+            };
+            this.logError(error);
+        }
         
         // Handle specific resource types
         if (event.target.tagName === 'SCRIPT') {
@@ -236,8 +247,20 @@ class EnhancedErrorHandler {
 
     handlePreloadError(linkElement) {
         const resourceType = linkElement.as || 'resource';
-        console.warn(`🛡️ Preload ${resourceType} failed to load:`, linkElement.href);
-        // Preload errors are non-critical, just log them
+        const href = linkElement.href;
+        
+        // Skip logging for common missing resources that have fallbacks
+        const skipLogging = [
+            '/css/styles.css',  // Falls back to style.css
+            '/js/main.js',      // Not critical for functionality
+            '/images/logo.png', // Has fallbacks
+            '/images/hero-bg.jpg' // Has fallbacks
+        ].some(path => href.includes(path));
+        
+        if (!skipLogging) {
+            console.warn(`🛡️ Preload ${resourceType} failed to load:`, href);
+        }
+        
         // Remove the failed preload link to prevent retry
         if (linkElement.parentNode) {
             linkElement.parentNode.removeChild(linkElement);
