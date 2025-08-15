@@ -135,8 +135,6 @@ class EnhancedErrorHandler {
         
         // Skip logging for known missing resources with fallbacks
         const skipLogging = [
-            '/css/styles.css',
-            '/js/main.js',
             '/images/logo.png',
             '/images/hero-bg.jpg'
         ].some(path => source && source.includes(path));
@@ -251,8 +249,6 @@ class EnhancedErrorHandler {
         
         // Skip logging for common missing resources that have fallbacks
         const skipLogging = [
-            '/css/styles.css',  // Falls back to style.css
-            '/js/main.js',      // Not critical for functionality
             '/images/logo.png', // Has fallbacks
             '/images/hero-bg.jpg' // Has fallbacks
         ].some(path => href.includes(path));

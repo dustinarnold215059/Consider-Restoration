@@ -548,9 +548,8 @@ class PerformanceOptimizer {
         if ('serviceWorker' in navigator) {
             // Add resource hints for HTTP/2 push (only for existing resources)
             const criticalResources = [
-                { href: '/css/styles.css', as: 'style' },
-                { href: '/js/main.js', as: 'script' }
-                // Note: removed logo.png as it doesn't exist yet
+                { href: '/css/style.css', as: 'style' }
+                // Note: removed main.js and logo.png as they don't exist
             ];
             
             criticalResources.forEach(resource => {

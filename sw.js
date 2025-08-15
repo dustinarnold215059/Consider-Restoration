@@ -13,7 +13,6 @@ const STATIC_ASSETS = [
     '/admin.html',
     '/user-portal.html',
     '/css/style.css',
-    '/js/main.js',
     '/js/booking.js',
     '/js/admin.js',
     '/js/user-portal.js',
