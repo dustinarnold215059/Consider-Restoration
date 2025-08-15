@@ -600,7 +600,19 @@ class EnhancedErrorHandler {
 
         // Use original console.error to avoid infinite recursion
         if (this.originalConsoleError) {
-            this.originalConsoleError('🛡️ Error logged:', error);
+            // Better error object logging
+            if (typeof error === 'object' && error !== null) {
+                this.originalConsoleError('🛡️ Error logged:', {
+                    type: error.type,
+                    message: error.message,
+                    url: error.url,
+                    source: error.source,
+                    resource: error.resource,
+                    timestamp: new Date(error.timestamp).toLocaleTimeString()
+                });
+            } else {
+                this.originalConsoleError('🛡️ Error logged:', error);
+            }
         }
     }
 
