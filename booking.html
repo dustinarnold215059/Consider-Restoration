@@ -11,7 +11,7 @@
     <meta name="keywords" content="book massage appointment, online booking, massage therapy Livonia, Swedish massage, deep tissue massage, prenatal massage">
     <link rel="stylesheet" href="css/style.css">
     <link rel="manifest" href="./manifest.json">
-    <script src="js/logger.js"></script>
+    <!-- <script src="js/logger.js"></script> -->
     <script src="js/portal-session-manager.js"></script>
     <!-- DISABLED old session restoration on booking page -->
     <!-- <script src="js/secure-session.js"></script> -->
@@ -532,7 +532,7 @@
     
     <!-- Browser compatibility polyfills (load first) -->
     <script src="js/browser-compatibility.js"></script>
-    <script src="js/production-logger.js"></script>
+    <!-- <script src="js/production-logger.js"></script> -->
     
     <!-- Utility scripts -->
     <script src="js/site-config.js"></script>
@@ -1614,7 +1614,7 @@
             // Get appointments from shared data
             const appointments = window.sharedAppointments || [];
             console.log('📅 Total appointments in system:', appointments.length);
-            logger.debug('Sample appointments loaded:', appointments.length);
+            console.log('📅 Sample appointments loaded:', appointments.length);
             
             // Normalize the input date to YYYY-MM-DD format
             const normalizedDate = normalizeDate(date);
@@ -1628,7 +1628,7 @@
                     const statusMatches = (appointment.status === 'confirmed' || appointment.status === 'pending');
                     const matches = dateMatches && statusMatches;
                     
-                    logger.debug('Appointment check:', {
+                    console.log('📅 Appointment check:', {
                         date: appointment.date,
                         matches: matches,
                         status: appointment.status
@@ -1641,7 +1641,7 @@
                 })
                 .map(appointment => appointment.time);
             
-            logger.debug('Booked times calculated:', { date, count: bookedTimes.length });
+            console.log('📅 Booked times calculated:', { date, count: bookedTimes.length });
             return bookedTimes;
         }
         
@@ -2126,12 +2126,12 @@
                 // Check availability for current month dates
                 let availabilityInfo = '';
                 if (isCurrentMonth && !isPast && !isBlocked) {
-                    logger.debug('Calendar slot calculation for:', dateStr);
+                    console.log('📅 Calendar slot calculation for:', dateStr);
                     
                     const availableTimes = getAvailableTimesForDate(dateStr);
                     const isAvailable = availableTimes.length > 0;
                     
-                    logger.debug('Calendar availability calculated:', { date: dateStr, slots: availableTimes.length });
+                    console.log('📅 Calendar availability calculated:', { date: dateStr, slots: availableTimes.length });
                     
                     if (isAvailable) {
                         dayClass += ' available';
@@ -3016,7 +3016,7 @@
             const email = document.getElementById('emergencyEmail').value;
             const password = document.getElementById('emergencyPassword').value;
             
-            logger.security('Emergency login attempt', { email: email.substring(0, 5) + '***' });
+            console.log('🔐 Emergency login attempt', { email: email.substring(0, 5) + '***' });
             
             // Use secure authentication system
             
@@ -3227,11 +3227,11 @@
                 if (window.secureSession) {
                     window.secureSession.login(userSession.email, 'secure_session').then(loginResult => {
                         if (!loginResult.success) {
-                            logger.error('Secure session creation failed');
+                            console.error('🔐 Secure session creation failed');
                         }
                     });
                 } else {
-                    logger.warn('Secure session manager not available, using fallback');
+                    console.warn('🔐 Secure session manager not available, using fallback');
                     localStorage.setItem('sessionToken', 'fallback_' + Date.now());
                     localStorage.setItem('isLoggedIn', 'true');
                 }
