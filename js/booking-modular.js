@@ -53,8 +53,7 @@ class ModularBookingSystem {
         const dependencies = [
             'window.dataPersistenceFixed',
             'window.apiClient',
-            'window.bookingFormHandler',
-            'window.bookingUIManager'
+            'window.bookingFormHandler'
         ];
 
         for (const dep of dependencies) {
@@ -89,11 +88,7 @@ class ModularBookingSystem {
             console.log('📅 Form handler module registered');
         }
 
-        // Register UI manager module
-        if (window.bookingUIManager) {
-            this.modules.set('uiManager', window.bookingUIManager);
-            console.log('📅 UI manager module registered');
-        }
+        // UI manager module disabled due to conflicts with inline time blocking logic
 
         // Initialize payment module if available
         if (window.stripe && this.config.enablePaymentProcessing) {
