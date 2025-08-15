@@ -145,7 +145,14 @@ class EnhancedErrorHandler {
         if (event.target.tagName === 'SCRIPT') {
             this.handleScriptLoadError(event.target);
         } else if (event.target.tagName === 'LINK') {
-            this.handleStylesheetError(event.target);
+            // Check if it's a stylesheet or preload link
+            if (event.target.rel === 'stylesheet') {
+                this.handleStylesheetError(event.target);
+            } else if (event.target.rel === 'preload') {
+                this.handlePreloadError(event.target);
+            } else {
+                this.handleLinkError(event.target);
+            }
         } else if (event.target.tagName === 'IMG') {
             this.handleImageError(event.target);
         }
@@ -225,6 +232,21 @@ class EnhancedErrorHandler {
     handleStylesheetError(linkElement) {
         console.warn('🛡️ Stylesheet failed to load:', linkElement.href);
         // CSS errors are usually non-critical, just log them
+    }
+
+    handlePreloadError(linkElement) {
+        const resourceType = linkElement.as || 'resource';
+        console.warn(`🛡️ Preload ${resourceType} failed to load:`, linkElement.href);
+        // Preload errors are non-critical, just log them
+        // Remove the failed preload link to prevent retry
+        if (linkElement.parentNode) {
+            linkElement.parentNode.removeChild(linkElement);
+        }
+    }
+
+    handleLinkError(linkElement) {
+        console.warn('🛡️ Link resource failed to load:', linkElement.href, 'rel:', linkElement.rel);
+        // Generic link errors are usually non-critical
     }
 
     handleImageError(imgElement) {

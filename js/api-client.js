@@ -26,10 +26,10 @@ class APIClient {
         
         if (window.location.hostname.includes('staging.') || 
             window.location.hostname.includes('dev.')) {
-            return 'https://api-staging.considerrestoration.com/api';
+            return 'https://consider-restoration.vercel.app/api';
         }
         
-        return 'https://api.considerrestoration.com/api';
+        return 'https://consider-restoration.vercel.app/api';
     }
 
     // Set authentication token

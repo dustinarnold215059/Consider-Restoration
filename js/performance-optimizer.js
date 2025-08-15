@@ -420,15 +420,22 @@ class PerformanceOptimizer {
             '/images/logo.png'
         ];
         
+        // Test if images exist before preloading
         criticalImages.forEach(src => {
-            const link = document.createElement('link');
-            link.rel = 'preload';
-            link.as = 'image';
-            link.href = src;
-            document.head.appendChild(link);
+            const testImg = new Image();
+            testImg.onload = () => {
+                const link = document.createElement('link');
+                link.rel = 'preload';
+                link.as = 'image';
+                link.href = src;
+                document.head.appendChild(link);
+                console.log('⚡ Preloaded critical image:', src);
+            };
+            testImg.onerror = () => {
+                console.log('⚡ Skipping missing image:', src);
+            };
+            testImg.src = src;
         });
-        
-        console.log('⚡ Preloaded', criticalImages.length, 'critical images');
     }
 
     // Script Optimization Methods
@@ -506,6 +513,76 @@ class PerformanceOptimizer {
         });
         
         await Promise.allSettled(promises);
+    }
+
+    setupConnectionPreloading() {
+        // Setup DNS prefetch and preconnect for external domains
+        const externalDomains = [
+            'https://fonts.googleapis.com',
+            'https://js.stripe.com',
+            'https://cdn.jsdelivr.net'
+        ];
+        
+        externalDomains.forEach(domain => {
+            // DNS prefetch
+            const dnsLink = document.createElement('link');
+            dnsLink.rel = 'dns-prefetch';
+            dnsLink.href = domain;
+            document.head.appendChild(dnsLink);
+            
+            // Preconnect for critical domains
+            if (domain.includes('stripe') || domain.includes('fonts')) {
+                const preconnectLink = document.createElement('link');
+                preconnectLink.rel = 'preconnect';
+                preconnectLink.href = domain;
+                preconnectLink.crossOrigin = 'anonymous';
+                document.head.appendChild(preconnectLink);
+            }
+        });
+        
+        console.log('⚡ Connection preloading setup for', externalDomains.length, 'domains');
+    }
+
+    setupHTTP2Optimization() {
+        // Enable HTTP/2 server push hints
+        if ('serviceWorker' in navigator) {
+            // Add resource hints for HTTP/2 push (only for existing resources)
+            const criticalResources = [
+                { href: '/css/styles.css', as: 'style' },
+                { href: '/js/main.js', as: 'script' }
+                // Note: removed logo.png as it doesn't exist yet
+            ];
+            
+            criticalResources.forEach(resource => {
+                // Test if resource exists before preloading
+                if (resource.as === 'image') {
+                    const testImg = new Image();
+                    testImg.onload = () => {
+                        const link = document.createElement('link');
+                        link.rel = 'preload';
+                        link.href = resource.href;
+                        link.as = resource.as;
+                        document.head.appendChild(link);
+                    };
+                    testImg.src = resource.href;
+                } else {
+                    // For non-image resources, add directly
+                    const link = document.createElement('link');
+                    link.rel = 'preload';
+                    link.href = resource.href;
+                    link.as = resource.as;
+                    if (resource.as === 'style') {
+                        link.onload = function() {
+                            this.onload = null;
+                            this.rel = 'stylesheet';
+                        };
+                    }
+                    document.head.appendChild(link);
+                }
+            });
+        }
+        
+        console.log('⚡ HTTP/2 optimization hints configured');
     }
 
     setupServiceWorkerCaching() {

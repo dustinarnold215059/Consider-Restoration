@@ -9,71 +9,10 @@
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "en-US",
-  "icons": [
-    {
-      "src": "/images/christopher-logo.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "/images/christopher-logo-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable any"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Book Appointment",
-      "short_name": "Book",
-      "description": "Book a new massage appointment",
-      "url": "/booking.html",
-      "icons": [
-        {
-          "src": "/images/booking-icon.png",
-          "sizes": "96x96"
-        }
-      ]
-    },
-    {
-      "name": "My Portal",
-      "short_name": "Portal",
-      "description": "Access your client portal",
-      "url": "/user-portal.html",
-      "icons": [
-        {
-          "src": "/images/portal-icon.png",
-          "sizes": "96x96"
-        }
-      ]
-    },
-    {
-      "name": "Admin Panel",
-      "short_name": "Admin",
-      "description": "Administrator dashboard",
-      "url": "/admin.html",
-      "icons": [
-        {
-          "src": "/images/admin-icon.png",
-          "sizes": "96x96"
-        }
-      ]
-    }
-  ],
+  "icons": [],
+  "shortcuts": [],
   "categories": ["health", "wellness", "business"],
-  "screenshots": [
-    {
-      "src": "/images/screenshot-mobile.png",
-      "sizes": "540x720",
-      "type": "image/png"
-    },
-    {
-      "src": "/images/screenshot-desktop.png",
-      "sizes": "1280x720",
-      "type": "image/png"
-    }
-  ],
+  "screenshots": [],
   "related_applications": [],
   "prefer_related_applications": false
 }

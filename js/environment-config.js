@@ -55,8 +55,8 @@ class EnvironmentConfig {
                 corsEnabled: true
             },
             production: {
-                apiBaseUrl: 'https://api.considerrestoration.com/api',
-                websiteUrl: 'https://considerrestoration.com',
+                apiBaseUrl: 'https://consider-restoration.vercel.app/api',
+                websiteUrl: 'https://consider-restoration.vercel.app',
                 stripePublishableKey: 'pk_live_production_key_here', // Production Stripe key
                 enableLogging: false,
                 enableDetailedErrors: false,
