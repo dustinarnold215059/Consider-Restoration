@@ -5,7 +5,7 @@ const CACHE_NAME = 'massage-therapy-v1.0.0';
 const STATIC_CACHE = 'static-v1.0.0';
 const DYNAMIC_CACHE = 'dynamic-v1.0.0';
 
-// Assets to cache immediately
+// Assets to cache immediately (only files that actually exist on deployment)
 const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -13,16 +13,10 @@ const STATIC_ASSETS = [
     '/admin.html',
     '/user-portal.html',
     '/css/style.css',
-    '/js/booking.js',
-    '/js/admin.js',
-    '/js/user-portal.js',
     '/js/auth-security.js',
     '/js/api-client.js',
-    '/js/modules/admin/dashboard.js',
-    '/js/modules/booking/booking-system.js',
-    '/images/favicon.ico',
-    '/images/christopher-logo.png',
     '/manifest.json'
+    // Removed non-existent files: booking.js, admin.js, user-portal.js, modules, images
 ];
 
 // API endpoints to cache
@@ -246,8 +240,8 @@ self.addEventListener('push', event => {
     
     const options = {
         body: event.data ? event.data.text() : 'New appointment reminder',
-        icon: '/images/christopher-logo.png',
-        badge: '/images/favicon.ico',
+        // icon: '/images/christopher-logo.png', // Removed - image doesn't exist
+        // badge: '/images/favicon.ico', // Removed - image doesn't exist
         vibrate: [200, 100, 200],
         data: {
             dateOfArrival: Date.now(),
@@ -256,13 +250,13 @@ self.addEventListener('push', event => {
         actions: [
             {
                 action: 'view',
-                title: 'View Details',
-                icon: '/images/view-icon.png'
+                title: 'View Details'
+                // icon: '/images/view-icon.png' // Removed - image doesn't exist
             },
             {
                 action: 'close',
-                title: 'Close',
-                icon: '/images/close-icon.png'
+                title: 'Close'
+                // icon: '/images/close-icon.png' // Removed - image doesn't exist
             }
         ]
     };
