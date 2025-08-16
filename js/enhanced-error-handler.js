@@ -7,6 +7,7 @@ class EnhancedErrorHandler {
         this.errorLog = [];
         this.userNotifications = [];
         this.retryQueue = new Map();
+        this.notificationQueue = [];
         this.maxRetries = 3;
         this.retryDelay = 1000; // Start with 1 second
         
@@ -89,10 +90,20 @@ class EnhancedErrorHandler {
             document.addEventListener('DOMContentLoaded', () => {
                 this.createNotificationContainer();
                 this.setupFeedbackCollection();
+                this.processQueuedNotifications();
             });
         } else {
             this.createNotificationContainer();
             this.setupFeedbackCollection();
+            this.processQueuedNotifications();
+        }
+    }
+
+    processQueuedNotifications() {
+        // Process any notifications that were queued before DOM was ready
+        while (this.notificationQueue.length > 0) {
+            const { message, type, options } = this.notificationQueue.shift();
+            this.showNotification(message, type, options);
         }
     }
 
@@ -393,8 +404,9 @@ class EnhancedErrorHandler {
         if (container) {
             container.appendChild(notification);
         } else {
-            // Container not ready yet, just log the message
-            console.warn('🛡️ Notification container not ready:', message);
+            // Container not ready yet, queue the notification
+            this.notificationQueue.push({ message, type, options });
+            console.warn('🛡️ Notification queued (container not ready):', message);
             return;
         }
 
