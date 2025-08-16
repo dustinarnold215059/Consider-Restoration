@@ -44,6 +44,13 @@ class DataPersistenceManagerFixed {
         }
         
         try {
+            // Skip server checks when running on Vercel without backend
+            if (window.location.hostname.includes('vercel.app')) {
+                console.log('📊 Server health check skipped - running in client-side mode');
+                this.serverAvailable = false;
+                return;
+            }
+            
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
             

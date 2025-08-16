@@ -189,6 +189,11 @@ class EnhancedErrorHandler {
     }
 
     handleNetworkError(url, errorOrResponse) {
+        // Skip logging for expected API health check failures
+        if (url && (url.includes('/health') || url.includes('/api/health'))) {
+            return; // Don't log health check failures - they're expected in client-side mode
+        }
+        
         const error = {
             type: 'network',
             url: url,

@@ -262,9 +262,10 @@ class APIClient {
 
     // Health check
     async healthCheck() {
-        // Skip health checks for file:// protocol (client-side only mode)
-        if (window.location.protocol === 'file:') {
-            console.log('🔗 Health check skipped for file:// protocol');
+        // Skip health checks for file:// protocol or when running on Vercel without backend
+        if (window.location.protocol === 'file:' || 
+            window.location.hostname.includes('vercel.app')) {
+            console.log('🔗 Health check skipped - running in client-side mode');
             return { status: 'offline', message: 'Client-side mode' };
         }
         
