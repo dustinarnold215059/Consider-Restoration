@@ -936,7 +936,8 @@ function displayMemberships() {
                             }
                         </td>
                     </tr>
-                `).join('')}
+                `;
+                }).join('')}
             </tbody>
         </table>
     `;
