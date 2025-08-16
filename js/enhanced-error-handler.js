@@ -84,11 +84,16 @@ class EnhancedErrorHandler {
     }
 
     setupUserFeedbackSystem() {
-        // Create notification container
-        this.createNotificationContainer();
-        
-        // Setup feedback collection
-        this.setupFeedbackCollection();
+        // Wait for DOM to be ready before creating notification container
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.createNotificationContainer();
+                this.setupFeedbackCollection();
+            });
+        } else {
+            this.createNotificationContainer();
+            this.setupFeedbackCollection();
+        }
     }
 
     setupRetryMechanism() {
@@ -383,9 +388,15 @@ class EnhancedErrorHandler {
 
         notification.appendChild(content);
 
-        // Add to container
+        // Add to container (only if container exists)
         const container = document.getElementById('error-notifications');
-        container.appendChild(notification);
+        if (container) {
+            container.appendChild(notification);
+        } else {
+            // Container not ready yet, just log the message
+            console.warn('🛡️ Notification container not ready:', message);
+            return;
+        }
 
         // Animate in
         setTimeout(() => {
