@@ -3,22 +3,21 @@
  * Only stores session tokens client-side, keeps sensitive data server-side
  */
 
+// Create fallback logger immediately if main logger doesn't exist
+if (typeof logger === 'undefined') {
+    window.logger = {
+        debug: (...args) => console.log('[DEBUG]', ...args),
+        info: (...args) => console.log('[INFO]', ...args),
+        warn: (...args) => console.warn('[WARN]', ...args),
+        error: (...args) => console.error('[ERROR]', ...args),
+        security: (...args) => console.log('[SECURITY]', ...args)
+    };
+}
+
 class SecureSessionManager {
     constructor() {
         this.sessionToken = null;
         this.userData = null;
-        
-        // Create fallback logger if main logger doesn't exist
-        if (typeof logger === 'undefined') {
-            window.logger = {
-                debug: (...args) => console.log('[DEBUG]', ...args),
-                info: (...args) => console.log('[INFO]', ...args),
-                warn: (...args) => console.warn('[WARN]', ...args),
-                error: (...args) => console.error('[ERROR]', ...args),
-                security: (...args) => console.log('[SECURITY]', ...args)
-            };
-        }
-        
         this.initializeSession();
     }
     

@@ -128,9 +128,11 @@ async function handleStaticRequest(request) {
         // Fallback to network
         const networkResponse = await fetch(request);
         
-        // Cache the response
-        const cache = await caches.open(DYNAMIC_CACHE);
-        cache.put(request, networkResponse.clone());
+        // Cache the response (but not chrome-extension URLs)
+        if (!request.url.startsWith('chrome-extension://')) {
+            const cache = await caches.open(DYNAMIC_CACHE);
+            cache.put(request, networkResponse.clone());
+        }
         
         return networkResponse;
     } catch (error) {

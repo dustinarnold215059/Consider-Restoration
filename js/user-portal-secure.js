@@ -234,9 +234,16 @@ async function handleSecureLogin(event) {
         // Use secure session manager for authentication
         console.log('🔒 Trying secure session authentication...');
         
-        // Check if secure session manager is available
+        // Wait for secure session manager to be available
+        let retries = 0;
+        while (!window.secureSession && retries < 10) {
+            console.log('🔒 Waiting for secure session manager...', retries + 1);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            retries++;
+        }
+        
         if (!window.secureSession) {
-            throw new Error('Secure session manager not available');
+            throw new Error('Secure session manager not available after waiting');
         }
         
         // Clear any existing session first
