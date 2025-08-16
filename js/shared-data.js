@@ -57,6 +57,52 @@ window.sharedUsers = [
         totalAppointments: 0,
         lastVisit: null,
         createdAt: new Date().toISOString()
+    },
+    // Test users with memberships to demonstrate admin panel fixes
+    {
+        id: 101,
+        username: 'wellness.test@example.com',
+        passwordHash: '$2a$12$sample.hash.for.testing.purposes.only',
+        name: 'Sarah Johnson',
+        email: 'wellness.test@example.com',
+        phone: '(555) 123-4567',
+        role: 'user',
+        membershipType: 'wellness',
+        membershipStatus: 'active',
+        membershipStartDate: '2024-01-15T00:00:00Z',
+        totalAppointments: 3,
+        lastVisit: '2024-08-10T00:00:00Z',
+        createdAt: '2024-01-15T00:00:00Z'
+    },
+    {
+        id: 102,
+        username: 'restoration.test@example.com',
+        passwordHash: '$2a$12$sample.hash.for.testing.purposes.only',
+        name: 'Mike Rodriguez',
+        email: 'restoration.test@example.com',
+        phone: '(555) 234-5678',
+        role: 'user',
+        membershipType: 'restoration-plus',
+        membershipStatus: 'active',
+        membershipStartDate: '2024-02-01T00:00:00Z',
+        totalAppointments: 5,
+        lastVisit: '2024-08-12T00:00:00Z',
+        createdAt: '2024-02-01T00:00:00Z'
+    },
+    {
+        id: 103,
+        username: 'elite.test@example.com',
+        passwordHash: '$2a$12$sample.hash.for.testing.purposes.only',
+        name: 'Jennifer Chen',
+        email: 'elite.test@example.com',
+        phone: '(555) 345-6789',
+        role: 'user',
+        membershipType: 'therapeutic-elite',
+        membershipStatus: 'active',
+        membershipStartDate: '2024-03-01T00:00:00Z',
+        totalAppointments: 8,
+        lastVisit: '2024-08-14T00:00:00Z',
+        createdAt: '2024-03-01T00:00:00Z'
     }
 ];
 
