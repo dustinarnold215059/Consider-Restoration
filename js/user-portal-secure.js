@@ -500,31 +500,7 @@ function showUserPortal(user = null) {
         console.warn('🔒 No current user found for name display');
         userNameDisplay.textContent = 'User';
     }
-}
-
-// Function to update user display after profile changes
-function updateUserDisplayAfterProfileUpdate() {
-    const userNameDisplay = document.getElementById('userNameDisplay');
-    if (userNameDisplay && currentUser) {
-        let displayName = '';
-        if (currentUser.name && currentUser.name.trim() !== '' && currentUser.name !== 'Admin User') {
-            displayName = currentUser.name.trim();
-        } else if (currentUser.email && currentUser.email.trim() !== '') {
-            displayName = currentUser.email.split('@')[0]; // Use email username part
-        } else {
-            displayName = 'User';
-        }
-        
-        console.log('🔒 Updating user display after profile update:', displayName);
-        userNameDisplay.textContent = displayName;
-        
-        // Also update account summary and appointments to reflect changes
-        updateAccountSummary();
-        loadUserAppointments();
-    }
-}
-
-function showUserPortal() {
+    
     // Load user data
     updateAccountSummary();
     loadUserAppointments();
@@ -889,7 +865,7 @@ function setupProfileForm() {
         }
         
         // Update display
-        updateUserDisplayAfterProfileUpdate();
+        updateUserDisplay();
         
         // Close modal
         const profileModal = document.getElementById('profileModal');
