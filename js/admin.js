@@ -197,6 +197,16 @@ function updateDashboardStats() {
         .reduce((total, apt) => total + (parseFloat(apt.price) || 0), 0);
     document.getElementById('monthlyRevenue').textContent = `$${monthlyRevenue.toFixed(2)}`;
     
+    // Total membership revenue (monthly recurring)
+    const memberships = window.getMemberships ? window.getMemberships() : [];
+    const activeMemberships = memberships.filter(m => m.status === 'active');
+    const totalMembershipRevenue = activeMemberships.reduce((total, membership) => {
+        const planType = membership.plan || membership.typeName;
+        const price = getMembershipPrice(planType);
+        return total + price;
+    }, 0);
+    document.getElementById('membershipRevenue').textContent = `$${totalMembershipRevenue.toFixed(2)}`;
+    
     // Active clients (users with role 'user')
     const activeClients = users.filter(user => user.role === 'user').length;
     document.getElementById('activeClients').textContent = activeClients;
@@ -810,6 +820,7 @@ function displayMemberships() {
                 <tr>
                     <th>Member ID</th>
                     <th>Plan</th>
+                    <th>Cost</th>
                     <th>Status</th>
                     <th>Start Date</th>
                     <th>End Date</th>
@@ -822,7 +833,8 @@ function displayMemberships() {
                 ${activeMemberships.map(membership => `
                     <tr>
                         <td>${membership.userId}</td>
-                        <td>${membership.plan}</td>
+                        <td>${getMembershipDisplayName(membership.plan || membership.typeName)}</td>
+                        <td>$${getMembershipPrice(membership.plan || membership.typeName)}/month</td>
                         <td><span class="status ${membership.status}">${membership.status}</span></td>
                         <td>${formatDate(membership.startDate)}</td>
                         <td>${formatDate(membership.endDate)}</td>
@@ -1213,6 +1225,16 @@ function getMembershipDisplayName(membershipPlan) {
     };
     
     return membershipPlan ? membershipNames[membershipPlan] || membershipPlan : 'None';
+}
+
+function getMembershipPrice(membershipPlan) {
+    const membershipPrices = {
+        'wellness': 75,
+        'restoration-plus': 140,
+        'therapeutic-elite': 200
+    };
+    
+    return membershipPlan ? membershipPrices[membershipPlan] || 0 : 0;
 }
 
 function getWeekStart(date) {
