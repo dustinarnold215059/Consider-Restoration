@@ -864,8 +864,12 @@ function setupProfileForm() {
             console.log('✅ Profile updated in session');
         }
         
-        // Update display
-        updateUserDisplay();
+        // Update display - simple refresh of user name
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        if (userNameDisplay && currentUser) {
+            let displayName = currentUser.name || currentUser.email?.split('@')[0] || 'User';
+            userNameDisplay.textContent = displayName;
+        }
         
         // Close modal
         const profileModal = document.getElementById('profileModal');
