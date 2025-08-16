@@ -44,38 +44,38 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 async function checkExistingSession() {
-    // Wait for SecureSession to be available
+    // Wait for UniversalSession to be available
     let attempts = 0;
-    while (!window.secureSession && attempts < 50) {
+    while (!window.universalSession && attempts < 50) {
         await new Promise(resolve => setTimeout(resolve, 100));
         attempts++;
     }
     
-    if (!window.secureSession) {
-        console.log('🔒 Secure session manager not available - showing auth screen');
+    if (!window.universalSession) {
+        console.log('🔒 Universal session manager not available - showing auth screen');
         showAuthScreen();
         return;
     }
     
     try {
-        // Check for existing session using secure session manager
-        console.log('🔒 Checking for existing user session via secure session manager');
+        // Check for existing session using universal session manager
+        console.log('🔒 Checking for existing user session via universal manager');
         
-        const sessionUser = window.secureSession.userData;
-        const isLoggedIn = window.secureSession.sessionToken !== null;
+        const sessionUser = window.universalSession.getCurrentUser();
+        const isLoggedIn = window.universalSession.isLoggedIn();
         
-        console.log('🔒 Secure session check - isLoggedIn:', isLoggedIn);
-        console.log('🔒 Secure session check - sessionUser:', sessionUser);
+        console.log('🔒 Universal session check - isLoggedIn:', isLoggedIn);
+        console.log('🔒 Universal session check - sessionUser:', sessionUser);
         
         if (isLoggedIn && sessionUser) {
             // Check if this is an admin user - redirect to admin panel
             if (sessionUser.role === 'admin') {
-                console.log('🔒 Admin user detected in secure session, redirecting to admin panel');
+                console.log('🔒 Admin user detected in universal session, redirecting to admin panel');
                 window.location.href = 'admin.html';
                 return;
             } else {
                 // Regular user - show user portal
-                console.log('🔒 Regular user session found in secure session, showing user portal');
+                console.log('🔒 Regular user session found in universal, showing user portal');
                 currentUser = sessionUser;
                 showUserPortal(sessionUser);
                 return;
@@ -83,7 +83,7 @@ async function checkExistingSession() {
         }
         
         // No valid session - show auth screen
-        console.log('🔒 No valid session found in secure session - showing auth screen');
+        console.log('🔒 No valid session found in universal - showing auth screen');
         showAuthScreen();
         
         /* COMMENTED OUT - Automatic session restoration disabled
@@ -274,10 +274,10 @@ async function handleSecureLogin(event) {
                 submitBtn.disabled = false;
             }
             
-            // Save session using secure manager
-            if (window.secureSession) {
-                // Session is already saved by the secure session manager during login
-                console.log('🔒 Session saved by secure session manager');
+            // Save session using universal manager
+            if (window.universalSession) {
+                const sessionSaved = window.universalSession.saveSession(loginResult.user);
+                console.log('🔒 Universal session saved:', sessionSaved);
             }
             
             if (loginResult.user.role === 'admin') {
@@ -435,10 +435,10 @@ async function handleLogout() {
         console.log('🔒 Server logout failed, proceeding with local logout');
     }
     
-    // Clear secure session
-    if (window.secureSession) {
-        window.secureSession.clearSession();
-        console.log('🔒 Secure session cleared');
+    // Clear universal session
+    if (window.universalSession) {
+        window.universalSession.logout();
+        console.log('🔒 Universal session cleared');
     }
     
     // Always clear local session
@@ -859,8 +859,8 @@ function setupProfileForm() {
         }
         
         // Update session
-        if (window.secureSession) {
-            window.secureSession.userData = currentUser;
+        if (window.universalSession) {
+            window.universalSession.saveSession(currentUser);
             console.log('✅ Profile updated in session');
         }
         
