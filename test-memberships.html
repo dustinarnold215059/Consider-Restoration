@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Memberships</title>
+</head>
+<body>
+    <h1>Add Test Memberships</h1>
+    <button onclick="addTestMemberships()">Add Sample Memberships</button>
+    <button onclick="showCurrentMemberships()">Show Current Memberships</button>
+    <div id="output"></div>
+
+    <script src="js/shared-data.js"></script>
+    <script>
+        function addTestMemberships() {
+            // Clear existing memberships
+            window.sharedMemberships = [];
+            
+            // Add sample memberships
+            const sampleMemberships = [
+                {
+                    userId: 1,
+                    typeName: 'wellness',
+                    price: 75,
+                    status: 'active',
+                    startDate: '2025-01-01',
+                    endDate: '2025-12-31',
+                    autoRenew: true,
+                    nextBillingDate: '2025-02-01',
+                    sessionsIncluded: 1,
+                    sessionsUsed: 0,
+                    paymentHistory: []
+                },
+                {
+                    userId: 2,
+                    typeName: 'restoration-plus',
+                    price: 140,
+                    status: 'active',
+                    startDate: '2025-01-15',
+                    endDate: '2026-01-15',
+                    autoRenew: true,
+                    nextBillingDate: '2025-02-15',
+                    sessionsIncluded: 2,
+                    sessionsUsed: 1,
+                    paymentHistory: []
+                },
+                {
+                    userId: 3,
+                    typeName: 'therapeutic-elite',
+                    price: 200,
+                    status: 'active',
+                    startDate: '2025-01-10',
+                    endDate: '2026-01-10',
+                    autoRenew: false,
+                    nextBillingDate: '2025-02-10',
+                    sessionsIncluded: 3,
+                    sessionsUsed: 0,
+                    paymentHistory: []
+                }
+            ];
+
+            sampleMemberships.forEach((membership, index) => {
+                membership.id = index + 1;
+                window.sharedMemberships.push(membership);
+            });
+
+            // Save to localStorage
+            localStorage.setItem('massageMemberships', JSON.stringify(window.sharedMemberships));
+            
+            document.getElementById('output').innerHTML = '<p style="color: green;">✅ Added 3 sample memberships! Now go check the admin panel.</p>';
+        }
+
+        function showCurrentMemberships() {
+            const memberships = window.getMemberships();
+            document.getElementById('output').innerHTML = `
+                <h3>Current Memberships (${memberships.length})</h3>
+                <pre>${JSON.stringify(memberships, null, 2)}</pre>
+            `;
+        }
+    </script>
+</body>
+</html>

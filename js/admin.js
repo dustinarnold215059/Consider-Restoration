@@ -202,7 +202,7 @@ function updateDashboardStats() {
     const activeMemberships = memberships.filter(m => m.status === 'active');
     const totalMembershipRevenue = activeMemberships.reduce((total, membership) => {
         const planType = membership.plan || membership.typeName;
-        const price = getMembershipPrice(planType);
+        const price = getMembershipPrice(planType, membership);
         return total + price;
     }, 0);
     document.getElementById('membershipRevenue').textContent = `$${totalMembershipRevenue.toFixed(2)}`;
@@ -834,7 +834,7 @@ function displayMemberships() {
                     <tr>
                         <td>${membership.userId}</td>
                         <td>${getMembershipDisplayName(membership.plan || membership.typeName)}</td>
-                        <td>$${getMembershipPrice(membership.plan || membership.typeName)}/month</td>
+                        <td>$${getMembershipPrice(membership.plan || membership.typeName, membership)}/month</td>
                         <td><span class="status ${membership.status}">${membership.status}</span></td>
                         <td>${formatDate(membership.startDate)}</td>
                         <td>${formatDate(membership.endDate)}</td>
@@ -1227,7 +1227,13 @@ function getMembershipDisplayName(membershipPlan) {
     return membershipPlan ? membershipNames[membershipPlan] || membershipPlan : 'None';
 }
 
-function getMembershipPrice(membershipPlan) {
+function getMembershipPrice(membershipPlan, membership = null) {
+    // First, try to use the direct price from the membership object
+    if (membership && membership.price) {
+        return membership.price;
+    }
+    
+    // Fallback to lookup by plan type
     const membershipPrices = {
         'wellness': 75,
         'restoration-plus': 140,
