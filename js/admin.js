@@ -786,15 +786,34 @@ function switchSection(sectionName) {
 function displayMemberships() {
     console.log('📊 Loading membership data for admin display');
     
+    // First check for separate membership records
     const memberships = window.getMemberships ? window.getMemberships() : [];
-    console.log('🔍 Found memberships:', memberships.length, memberships);
     
-    // Update statistics
-    const activeMemberships = memberships.filter(m => m.status === 'active');
-    console.log('🔍 Active memberships:', activeMemberships.length, activeMemberships);
+    // Also check for users with membership types (this might be the actual data)
+    const users = window.getUsers ? window.getUsers() : [];
+    const usersWithMemberships = users.filter(user => user.membershipType && user.membershipType !== 'none');
+    
+    // If no separate membership records exist, use users with memberships
+    let activeMemberships = memberships.filter(m => m.status === 'active');
+    
+    // If no membership records, convert users with memberships to membership format
+    if (activeMemberships.length === 0 && usersWithMemberships.length > 0) {
+        activeMemberships = usersWithMemberships.map(user => ({
+            id: user.id,
+            userId: user.id,
+            membershipType: user.membershipType,
+            status: user.membershipStatus || 'active',
+            startDate: user.membershipStartDate || user.createdAt,
+            endDate: null, // Calculate if needed
+            autoRenew: true, // Default assumption
+            nextBillingDate: null,
+            paymentHistory: [] // Would need to be calculated from payment records
+        }));
+    }
+    
     const autoRenewMemberships = activeMemberships.filter(m => m.autoRenew);
     
-    // Calculate this month's renewals
+    // Calculate this month's renewals (simplified for user-based memberships)
     const thisMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
     const monthlyRenewals = memberships.filter(m => 
         m.paymentHistory && m.paymentHistory.some(p => 
@@ -804,6 +823,8 @@ function displayMemberships() {
     
     // Calculate total revenue from all membership payments
     let totalRevenue = 0;
+    
+    // First try to calculate from membership payment history
     memberships.forEach(membership => {
         if (membership.paymentHistory) {
             membership.paymentHistory.forEach(payment => {
@@ -822,6 +843,16 @@ function displayMemberships() {
             }
         }
     });
+    
+    // If no revenue from membership records, estimate from active user memberships
+    if (totalRevenue === 0 && activeMemberships.length > 0) {
+        activeMemberships.forEach(membership => {
+            const membershipType = membership.membershipType || membership.plan || membership.typeName || membership.type;
+            const monthlyPrice = getMembershipPrice(membershipType);
+            // Estimate: assume each membership has been active for at least 1 month
+            totalRevenue += monthlyPrice;
+        });
+    }
     
     // Update stat displays
     document.getElementById('activeMemberships').textContent = activeMemberships.length;
@@ -859,11 +890,16 @@ function displayMemberships() {
                 </tr>
             </thead>
             <tbody>
-                ${activeMemberships.map(membership => `
+                ${activeMemberships.map(membership => {
+                    const membershipType = membership.plan || membership.typeName || membership.membershipType || membership.type;
+                    const displayName = getMembershipDisplayName(membershipType);
+                    const price = getMembershipPrice(membershipType);
+                    
+                    return `
                     <tr>
                         <td>${membership.userId}</td>
-                        <td>${getMembershipDisplayName(membership.plan || membership.typeName || membership.membershipType || membership.type)}</td>
-                        <td>$${getMembershipPrice(membership.plan || membership.typeName || membership.membershipType || membership.type)}/month</td>
+                        <td>${displayName}</td>
+                        <td>$${price}/month</td>
                         <td><span class="status ${membership.status}">${membership.status}</span></td>
                         <td>${formatDate(membership.startDate)}</td>
                         <td>${formatDate(membership.endDate)}</td>
