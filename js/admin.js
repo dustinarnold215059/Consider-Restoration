@@ -201,9 +201,7 @@ function updateDashboardStats() {
     const memberships = window.getMemberships ? window.getMemberships() : [];
     const activeMemberships = memberships.filter(m => m.status === 'active');
     const totalMembershipRevenue = activeMemberships.reduce((total, membership) => {
-        const planType = membership.plan || membership.typeName;
-        const price = getMembershipPrice(planType, membership);
-        return total + price;
+        return total + (membership.price || 0);
     }, 0);
     document.getElementById('membershipRevenue').textContent = `$${totalMembershipRevenue.toFixed(2)}`;
     
@@ -833,8 +831,8 @@ function displayMemberships() {
                 ${activeMemberships.map(membership => `
                     <tr>
                         <td>${membership.userId}</td>
-                        <td>${getMembershipDisplayName(membership.plan || membership.typeName)}</td>
-                        <td>$${getMembershipPrice(membership.plan || membership.typeName, membership)}/month</td>
+                        <td>${membership.typeName || membership.plan || 'Unknown'}</td>
+                        <td>$${membership.price || 0}/month</td>
                         <td><span class="status ${membership.status}">${membership.status}</span></td>
                         <td>${formatDate(membership.startDate)}</td>
                         <td>${formatDate(membership.endDate)}</td>
