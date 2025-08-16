@@ -789,9 +789,26 @@ function displayMemberships() {
     // First check for separate membership records
     const memberships = window.getMemberships ? window.getMemberships() : [];
     
-    // Also check for users with membership types (this might be the actual data)
-    const users = window.getUsers ? window.getUsers() : [];
+    // Try to get users from multiple sources
+    let users = [];
+    if (window.getUsers) {
+        users = window.getUsers();
+        console.log('🔍 Got users from window.getUsers:', users.length);
+    } else {
+        // Fallback: read directly from localStorage
+        try {
+            const storedUsers = localStorage.getItem('massageUsers');
+            if (storedUsers) {
+                users = JSON.parse(storedUsers);
+                console.log('🔍 Got users from localStorage fallback:', users.length);
+            }
+        } catch (e) {
+            console.error('❌ Failed to read users from localStorage:', e);
+        }
+    }
+    
     const usersWithMemberships = users.filter(user => user.membershipType && user.membershipType !== 'none');
+    console.log('🔍 Users with memberships:', usersWithMemberships.length, usersWithMemberships);
     
     // If no separate membership records exist, use users with memberships
     let activeMemberships = memberships.filter(m => m.status === 'active');
@@ -859,6 +876,13 @@ function displayMemberships() {
     document.getElementById('autoRenewCount').textContent = autoRenewMemberships.length;
     document.getElementById('monthlyRenewals').textContent = monthlyRenewals.length;
     
+    console.log('📊 Updated membership stats:', {
+        active: activeMemberships.length,
+        autoRenew: autoRenewMemberships.length,
+        monthlyRenewals: monthlyRenewals.length,
+        totalRevenue: totalRevenue
+    });
+    
     // Update total revenue if element exists
     const totalRevenueElement = document.getElementById('totalMembershipRevenue');
     if (totalRevenueElement) {
@@ -918,7 +942,36 @@ function displayMemberships() {
     `;
     
     membershipsList.innerHTML = tableHTML;
+    console.log('✅ Membership table updated with', activeMemberships.length, 'memberships');
 }
+
+// Debug function to manually refresh membership display
+window.debugRefreshMemberships = function() {
+    console.log('🔧 Debug: Manually refreshing membership display...');
+    
+    // Force reload data from localStorage
+    try {
+        const storedUsers = localStorage.getItem('massageUsers');
+        if (storedUsers) {
+            const users = JSON.parse(storedUsers);
+            console.log('🔧 Debug: Found', users.length, 'users in localStorage');
+            
+            const usersWithMemberships = users.filter(u => u.membershipType && u.membershipType !== 'none');
+            console.log('🔧 Debug: Found', usersWithMemberships.length, 'users with memberships:', usersWithMemberships);
+        } else {
+            console.log('🔧 Debug: No users found in localStorage');
+        }
+    } catch (e) {
+        console.error('🔧 Debug: Error reading localStorage:', e);
+    }
+    
+    // Force call displayMemberships
+    if (typeof displayMemberships === 'function') {
+        displayMemberships();
+    } else {
+        console.error('🔧 Debug: displayMemberships function not found');
+    }
+};
 
 // Toggle auto-renewal for a membership
 function toggleAutoRenewal(membershipId, enable) {
