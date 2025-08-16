@@ -787,9 +787,11 @@ function displayMemberships() {
     console.log('📊 Loading membership data for admin display');
     
     const memberships = window.getMemberships ? window.getMemberships() : [];
+    console.log('🔍 Found memberships:', memberships.length, memberships);
     
     // Update statistics
     const activeMemberships = memberships.filter(m => m.status === 'active');
+    console.log('🔍 Active memberships:', activeMemberships.length, activeMemberships);
     const autoRenewMemberships = activeMemberships.filter(m => m.autoRenew);
     
     // Calculate this month's renewals
