@@ -201,7 +201,9 @@ function updateDashboardStats() {
     const memberships = window.getMemberships ? window.getMemberships() : [];
     const activeMemberships = memberships.filter(m => m.status === 'active');
     const totalMembershipRevenue = activeMemberships.reduce((total, membership) => {
-        return total + (membership.price || 0);
+        const planType = membership.plan || membership.typeName;
+        const price = getMembershipPrice(planType);
+        return total + price;
     }, 0);
     document.getElementById('membershipRevenue').textContent = `$${totalMembershipRevenue.toFixed(2)}`;
     
@@ -831,8 +833,8 @@ function displayMemberships() {
                 ${activeMemberships.map(membership => `
                     <tr>
                         <td>${membership.userId}</td>
-                        <td>${membership.typeName || membership.plan || 'Unknown'}</td>
-                        <td>$${membership.price || 0}/month</td>
+                        <td>${getMembershipDisplayName(membership.plan || membership.typeName)}</td>
+                        <td>$${getMembershipPrice(membership.plan || membership.typeName)}/month</td>
                         <td><span class="status ${membership.status}">${membership.status}</span></td>
                         <td>${formatDate(membership.startDate)}</td>
                         <td>${formatDate(membership.endDate)}</td>
@@ -1225,13 +1227,7 @@ function getMembershipDisplayName(membershipPlan) {
     return membershipPlan ? membershipNames[membershipPlan] || membershipPlan : 'None';
 }
 
-function getMembershipPrice(membershipPlan, membership = null) {
-    // First, try to use the direct price from the membership object
-    if (membership && membership.price) {
-        return membership.price;
-    }
-    
-    // Fallback to lookup by plan type
+function getMembershipPrice(membershipPlan) {
     const membershipPrices = {
         'wellness': 75,
         'restoration-plus': 140,
