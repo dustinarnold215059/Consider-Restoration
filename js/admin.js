@@ -201,7 +201,7 @@ function updateDashboardStats() {
     const memberships = window.getMemberships ? window.getMemberships() : [];
     const activeMemberships = memberships.filter(m => m.status === 'active');
     const totalMembershipRevenue = activeMemberships.reduce((total, membership) => {
-        const planType = membership.plan || membership.typeName;
+        const planType = membership.plan || membership.typeName || membership.membershipType || membership.type;
         const price = getMembershipPrice(planType);
         return total + price;
     }, 0);
@@ -802,10 +802,37 @@ function displayMemberships() {
         )
     );
     
+    // Calculate total revenue from all membership payments
+    let totalRevenue = 0;
+    memberships.forEach(membership => {
+        if (membership.paymentHistory) {
+            membership.paymentHistory.forEach(payment => {
+                if (payment.status === 'completed' || payment.status === 'paid') {
+                    totalRevenue += payment.amount || 0;
+                }
+            });
+        }
+        // Also add initial payment if it exists
+        if (membership.price && membership.status === 'active') {
+            // Don't double count if already in payment history
+            const hasInitialPayment = membership.paymentHistory && 
+                membership.paymentHistory.some(p => p.type === 'initial' || p.type === 'subscription');
+            if (!hasInitialPayment) {
+                totalRevenue += membership.price;
+            }
+        }
+    });
+    
     // Update stat displays
     document.getElementById('activeMemberships').textContent = activeMemberships.length;
     document.getElementById('autoRenewCount').textContent = autoRenewMemberships.length;
     document.getElementById('monthlyRenewals').textContent = monthlyRenewals.length;
+    
+    // Update total revenue if element exists
+    const totalRevenueElement = document.getElementById('totalMembershipRevenue');
+    if (totalRevenueElement) {
+        totalRevenueElement.textContent = `$${totalRevenue.toFixed(2)}`;
+    }
     
     // Display membership list
     const membershipsList = document.getElementById('membershipsList');
@@ -835,8 +862,8 @@ function displayMemberships() {
                 ${activeMemberships.map(membership => `
                     <tr>
                         <td>${membership.userId}</td>
-                        <td>${getMembershipDisplayName(membership.plan || membership.typeName)}</td>
-                        <td>$${getMembershipPrice(membership.plan || membership.typeName)}/month</td>
+                        <td>${getMembershipDisplayName(membership.plan || membership.typeName || membership.membershipType || membership.type)}</td>
+                        <td>$${getMembershipPrice(membership.plan || membership.typeName || membership.membershipType || membership.type)}/month</td>
                         <td><span class="status ${membership.status}">${membership.status}</span></td>
                         <td>${formatDate(membership.startDate)}</td>
                         <td>${formatDate(membership.endDate)}</td>
