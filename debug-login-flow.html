@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Login Flow - Step by Step</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #007cba; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .output { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 15px; margin: 10px 0; font-family: monospace; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+        .critical { background: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .success { background: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .warning { background: #fff3cd; border-color: #ffeaa7; color: #856404; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 3px; width: 200px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug Login Flow - Step by Step Analysis</h1>
+        <p><strong>This tool will test each step of the login process individually to find the exact failure point.</strong></p>
+        
+        <div class="section">
+            <h2>1. Check Prerequisites</h2>
+            <button onclick="checkPrerequisites()">Check All Prerequisites</button>
+            <div id="prereqOutput" class="output">Click button to check prerequisites...</div>
+        </div>
+        
+        <div class="section">
+            <h2>2. Test Individual User Lookup</h2>
+            <input type="email" id="lookupEmail" placeholder="Email to test" value="dustin.t.arnold215059@gmail.com">
+            <button onclick="testUserLookup()">Test User Lookup</button>
+            <div id="lookupOutput" class="output">Enter email and click button...</div>
+        </div>
+        
+        <div class="section">
+            <h2>3. Test Password Verification</h2>
+            <input type="email" id="verifyEmail" placeholder="Email" value="dustin.t.arnold215059@gmail.com">
+            <input type="password" id="verifyPassword" placeholder="Password" value="">
+            <button onclick="testPasswordVerification()">Test Password Verification</button>
+            <div id="verifyOutput" class="output">Enter credentials and click button...</div>
+        </div>
+        
+        <div class="section">
+            <h2>4. Test Full Authentication Flow</h2>
+            <input type="email" id="authEmail" placeholder="Email" value="dustin.t.arnold215059@gmail.com">
+            <input type="password" id="authPassword" placeholder="Password" value="">
+            <button onclick="testFullAuthentication()">Test Full Authentication</button>
+            <div id="authOutput" class="output">Enter credentials and click button...</div>
+        </div>
+        
+        <div class="section">
+            <h2>5. Test User Portal Login Method</h2>
+            <input type="email" id="portalEmail" placeholder="Email" value="dustin.t.arnold215059@gmail.com">
+            <input type="password" id="portalPassword" placeholder="Password" value="">
+            <button onclick="testPortalLogin()">Test Portal Login</button>
+            <div id="portalOutput" class="output">Enter credentials and click button...</div>
+        </div>
+        
+        <div class="section">
+            <h2>6. Inspect User Data Structure</h2>
+            <button onclick="inspectUserData()">Inspect All User Data</button>
+            <div id="inspectOutput" class="output">Click button to inspect users...</div>
+        </div>
+    </div>
+
+    <!-- Load the EXACT same scripts as user portal in EXACT same order -->
+    <script src="js/enhanced-error-handler.js"></script>
+    <script src="js/portal-session-manager.js"></script>
+    <script src="js/secure-session.js"></script>
+    <script src="js/api-client.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+    <script>
+        setTimeout(() => {
+            if (typeof dcodeIO !== 'undefined' && dcodeIO.bcrypt && !window.bcrypt) {
+                window.bcrypt = dcodeIO.bcrypt;
+                console.log('🔒 Created window.bcrypt reference to dcodeIO.bcrypt');
+            }
+        }, 100);
+    </script>
+    <script src="js/secure-tokens.js"></script>
+    <script src="js/auth-security.js"></script>
+    <script src="js/secure-init.js"></script>
+    <script src="js/data-persistence-fixed.js"></script>
+    <script src="js/shared-data.js"></script>
+
+    <script>
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            element.textContent += `[${timestamp}] ${icon} ${message}\n`;
+            console.log(`[${timestamp}] ${icon} ${message}`);
+            
+            // Add CSS class based on type
+            if (type === 'error') element.classList.add('critical');
+            if (type === 'success') element.classList.add('success');
+            if (type === 'warning') element.classList.add('warning');
+        }
+        
+        function clearOutput(elementId) {
+            const element = document.getElementById(elementId);
+            element.textContent = '';
+            element.className = 'output'; // Reset CSS classes
+        }
+        
+        function checkPrerequisites() {
+            clearOutput('prereqOutput');
+            log('prereqOutput', 'Checking all prerequisites for login...', 'info');
+            
+            // Check bcrypt availability
+            log('prereqOutput', '1. Checking bcrypt availability...', 'info');
+            if (typeof dcodeIO !== 'undefined' && dcodeIO.bcrypt) {
+                log('prereqOutput', '   ✓ dcodeIO.bcrypt is available', 'success');
+                log('prereqOutput', '   ✓ dcodeIO.bcrypt.compareSync: ' + typeof dcodeIO.bcrypt.compareSync, 'success');
+            } else {
+                log('prereqOutput', '   ✗ dcodeIO.bcrypt is NOT available', 'error');
+            }
+            
+            if (typeof window.bcrypt !== 'undefined' && window.bcrypt) {
+                log('prereqOutput', '   ✓ window.bcrypt is available', 'success');
+                log('prereqOutput', '   ✓ window.bcrypt.compareSync: ' + typeof window.bcrypt.compareSync, 'success');
+            } else {
+                log('prereqOutput', '   ✗ window.bcrypt is NOT available', 'error');
+            }
+            
+            // Check required functions
+            log('prereqOutput', '2. Checking required functions...', 'info');
+            const requiredFunctions = [
+                'window.getUsers',
+                'window.addUser', 
+                'window.authenticateUser',
+                'window.verifyPassword',
+                'window.secureSession'
+            ];
+            
+            requiredFunctions.forEach(funcName => {
+                const func = eval(funcName.replace('window.', 'window.') || funcName);
+                if (typeof func === 'function' || typeof func === 'object') {
+                    log('prereqOutput', `   ✓ ${funcName}: ${typeof func}`, 'success');
+                } else {
+                    log('prereqOutput', `   ✗ ${funcName}: ${typeof func}`, 'error');
+                }
+            });
+            
+            // Check localStorage data
+            log('prereqOutput', '3. Checking stored user data...', 'info');
+            const massageUsers = localStorage.getItem('massageUsers');
+            if (massageUsers) {
+                try {
+                    const users = JSON.parse(massageUsers);
+                    log('prereqOutput', `   ✓ Found ${users.length} users in localStorage`, 'success');
+                } catch (e) {
+                    log('prereqOutput', '   ✗ Invalid JSON in localStorage massageUsers', 'error');
+                }
+            } else {
+                log('prereqOutput', '   ✗ No massageUsers found in localStorage', 'error');
+            }
+            
+            log('prereqOutput', 'Prerequisites check complete.', 'info');
+        }
+        
+        async function testUserLookup() {
+            const email = document.getElementById('lookupEmail').value;
+            clearOutput('lookupOutput');
+            log('lookupOutput', `Testing user lookup for: ${email}`, 'info');
+            
+            try {
+                // Test window.getUsers
+                if (window.getUsers) {
+                    log('lookupOutput', 'Calling window.getUsers()...', 'info');
+                    const getUsersResult = window.getUsers();
+                    const users = getUsersResult && typeof getUsersResult.then === 'function' 
+                        ? await getUsersResult 
+                        : getUsersResult;
+                    
+                    log('lookupOutput', `Found ${users ? users.length : 0} total users`, 'info');
+                    
+                    if (users && users.length > 0) {
+                        const user = users.find(u => u.email === email);
+                        if (user) {
+                            log('lookupOutput', `✓ User found: ${user.name}`, 'success');
+                            log('lookupOutput', `   - ID: ${user.id}`, 'info');
+                            log('lookupOutput', `   - Email: ${user.email}`, 'info');
+                            log('lookupOutput', `   - Has passwordHash: ${!!user.passwordHash}`, user.passwordHash ? 'success' : 'error');
+                            if (user.passwordHash) {
+                                log('lookupOutput', `   - Password hash format: ${user.passwordHash.substring(0, 10)}...`, 'info');
+                                log('lookupOutput', `   - Is bcrypt hash: ${user.passwordHash.startsWith('$2a$')}`, user.passwordHash.startsWith('$2a$') ? 'success' : 'warning');
+                            }
+                        } else {
+                            log('lookupOutput', `✗ User NOT found with email: ${email}`, 'error');
+                            log('lookupOutput', 'Available emails:', 'info');
+                            users.forEach((u, i) => {
+                                log('lookupOutput', `   ${i + 1}. ${u.email}`, 'info');
+                            });
+                        }
+                    } else {
+                        log('lookupOutput', '✗ No users returned from getUsers()', 'error');
+                    }
+                } else {
+                    log('lookupOutput', '✗ window.getUsers not available', 'error');
+                }
+            } catch (error) {
+                log('lookupOutput', `✗ Error during user lookup: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testPasswordVerification() {
+            const email = document.getElementById('verifyEmail').value;
+            const password = document.getElementById('verifyPassword').value;
+            clearOutput('verifyOutput');
+            
+            if (!password) {
+                log('verifyOutput', '✗ Please enter a password to test', 'error');
+                return;
+            }
+            
+            log('verifyOutput', `Testing password verification for: ${email}`, 'info');
+            
+            try {
+                // First, get the user
+                const getUsersResult = window.getUsers();
+                const users = getUsersResult && typeof getUsersResult.then === 'function' 
+                    ? await getUsersResult 
+                    : getUsersResult;
+                
+                const user = users ? users.find(u => u.email === email) : null;
+                
+                if (!user) {
+                    log('verifyOutput', `✗ User not found: ${email}`, 'error');
+                    return;
+                }
+                
+                log('verifyOutput', `✓ User found: ${user.name}`, 'success');
+                
+                if (!user.passwordHash) {
+                    log('verifyOutput', '✗ User has no passwordHash', 'error');
+                    return;
+                }
+                
+                log('verifyOutput', `Password hash: ${user.passwordHash.substring(0, 20)}...`, 'info');
+                
+                // Test bcrypt directly
+                log('verifyOutput', 'Testing bcrypt verification directly...', 'info');
+                
+                if (typeof dcodeIO !== 'undefined' && dcodeIO.bcrypt) {
+                    try {
+                        const directResult = dcodeIO.bcrypt.compareSync(password, user.passwordHash);
+                        log('verifyOutput', `dcodeIO.bcrypt.compareSync result: ${directResult}`, directResult ? 'success' : 'error');
+                    } catch (bcryptError) {
+                        log('verifyOutput', `dcodeIO.bcrypt.compareSync error: ${bcryptError.message}`, 'error');
+                    }
+                } else {
+                    log('verifyOutput', '✗ dcodeIO.bcrypt not available for direct test', 'error');
+                }
+                
+                // Test window.verifyPassword
+                log('verifyOutput', 'Testing window.verifyPassword...', 'info');
+                
+                if (window.verifyPassword) {
+                    try {
+                        const verifyResult = window.verifyPassword(password, user.passwordHash);
+                        log('verifyOutput', `window.verifyPassword result: ${verifyResult}`, verifyResult ? 'success' : 'error');
+                    } catch (verifyError) {
+                        log('verifyOutput', `window.verifyPassword error: ${verifyError.message}`, 'error');
+                    }
+                } else {
+                    log('verifyOutput', '✗ window.verifyPassword not available', 'error');
+                }
+                
+            } catch (error) {
+                log('verifyOutput', `✗ Error during password verification: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testFullAuthentication() {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            clearOutput('authOutput');
+            
+            if (!password) {
+                log('authOutput', '✗ Please enter a password to test', 'error');
+                return;
+            }
+            
+            log('authOutput', `Testing full authentication for: ${email}`, 'info');
+            
+            try {
+                if (window.authenticateUser) {
+                    log('authOutput', 'Calling window.authenticateUser...', 'info');
+                    
+                    const authResult = window.authenticateUser(email, password);
+                    const finalResult = authResult && typeof authResult.then === 'function' 
+                        ? await authResult 
+                        : authResult;
+                    
+                    if (finalResult) {
+                        log('authOutput', '✓ Authentication successful!', 'success');
+                        log('authOutput', `Authenticated user: ${JSON.stringify(finalResult, null, 2)}`, 'success');
+                    } else {
+                        log('authOutput', '✗ Authentication failed', 'error');
+                    }
+                } else {
+                    log('authOutput', '✗ window.authenticateUser not available', 'error');
+                }
+            } catch (error) {
+                log('authOutput', `✗ Error during authentication: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testPortalLogin() {
+            const email = document.getElementById('portalEmail').value;
+            const password = document.getElementById('portalPassword').value;
+            clearOutput('portalOutput');
+            
+            if (!password) {
+                log('portalOutput', '✗ Please enter a password to test', 'error');
+                return;
+            }
+            
+            log('portalOutput', `Testing user portal login method for: ${email}`, 'info');
+            
+            try {
+                if (window.secureSession) {
+                    log('portalOutput', 'Calling window.secureSession.login...', 'info');
+                    
+                    const loginResult = await window.secureSession.login(email, password);
+                    
+                    log('portalOutput', `Login result: ${JSON.stringify(loginResult, null, 2)}`, 'info');
+                    
+                    if (loginResult && loginResult.success) {
+                        log('portalOutput', '✓ Portal login successful!', 'success');
+                        log('portalOutput', `User data: ${JSON.stringify(loginResult.user, null, 2)}`, 'success');
+                    } else {
+                        log('portalOutput', `✗ Portal login failed: ${loginResult?.error || 'Unknown error'}`, 'error');
+                    }
+                } else {
+                    log('portalOutput', '✗ window.secureSession not available', 'error');
+                }
+            } catch (error) {
+                log('portalOutput', `✗ Error during portal login: ${error.message}`, 'error');
+                log('portalOutput', `Stack trace: ${error.stack}`, 'error');
+            }
+        }
+        
+        async function inspectUserData() {
+            clearOutput('inspectOutput');
+            log('inspectOutput', 'Inspecting all user data structures...', 'info');
+            
+            // Check localStorage
+            const massageUsers = localStorage.getItem('massageUsers');
+            if (massageUsers) {
+                try {
+                    const users = JSON.parse(massageUsers);
+                    log('inspectOutput', `localStorage contains ${users.length} users:`, 'info');
+                    users.forEach((user, index) => {
+                        log('inspectOutput', `\nUser ${index + 1}:`, 'info');
+                        log('inspectOutput', `  Name: ${user.name}`, 'info');
+                        log('inspectOutput', `  Email: ${user.email}`, 'info');
+                        log('inspectOutput', `  ID: ${user.id}`, 'info');
+                        log('inspectOutput', `  Has password: ${!!user.password}`, user.password ? 'warning' : 'info');
+                        log('inspectOutput', `  Has passwordHash: ${!!user.passwordHash}`, user.passwordHash ? 'success' : 'error');
+                        if (user.passwordHash) {
+                            log('inspectOutput', `  Hash format: ${user.passwordHash.substring(0, 15)}...`, 'info');
+                            log('inspectOutput', `  Is bcrypt: ${user.passwordHash.startsWith('$2a$')}`, user.passwordHash.startsWith('$2a$') ? 'success' : 'warning');
+                        }
+                        log('inspectOutput', `  Role: ${user.role || 'undefined'}`, 'info');
+                        log('inspectOutput', `  Created: ${user.createdAt || 'undefined'}`, 'info');
+                    });
+                } catch (e) {
+                    log('inspectOutput', `✗ Error parsing localStorage: ${e.message}`, 'error');
+                }
+            } else {
+                log('inspectOutput', '✗ No massageUsers in localStorage', 'error');
+            }
+        }
+        
+        // Auto-run prerequisites check on load
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                checkPrerequisites();
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
