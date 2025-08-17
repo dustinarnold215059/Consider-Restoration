@@ -1417,11 +1417,14 @@
             
             // Use cookie session manager instead of localStorage
             let user = null;
-            if (window.CookieSessionManager) {
-                user = window.CookieSessionManager.getCurrentUser();
-                console.log('📅 CookieSessionManager result:', user ? `${user.name} (${user.email})` : 'No user');
+            if (window.getCurrentUser) {
+                user = window.getCurrentUser();
+                console.log('📅 Session manager result:', user ? `${user.name} (${user.email})` : 'No user');
+            } else if (window.universalSession) {
+                user = window.universalSession.getCurrentUser();
+                console.log('📅 Universal session result:', user ? `${user.name} (${user.email})` : 'No user');
             } else {
-                console.log('📅 CookieSessionManager not available');
+                console.log('📅 No session manager available');
             }
             
             const nameField = document.getElementById('clientName');
@@ -1500,8 +1503,10 @@
         // Check if user should skip login modal (already logged in)
         function shouldSkipLoginModal() {
             let currentUser = null;
-            if (window.CookieSessionManager) {
-                currentUser = window.CookieSessionManager.getCurrentUser();
+            if (window.getCurrentUser) {
+                currentUser = window.getCurrentUser();
+            } else if (window.universalSession) {
+                currentUser = window.universalSession.getCurrentUser();
             }
             console.log('🔍 Checking login status:', { hasCurrentUser: !!currentUser });
             
@@ -2349,9 +2354,11 @@
                     // Simple demo authentication
                     const authenticatedUser = window.authenticateUser ? window.authenticateUser(email, password) : null;
                     if (authenticatedUser) {
-                        // Store user in CookieSessionManager for consistency
-                        if (window.CookieSessionManager) {
-                            window.CookieSessionManager.login(authenticatedUser);
+                        // Store user in session manager for consistency
+                        if (window.loginUser) {
+                            window.loginUser(authenticatedUser);
+                        } else if (window.universalSession) {
+                            window.universalSession.login(authenticatedUser);
                         }
                         
                         // Dispatch authentication event for auto-population

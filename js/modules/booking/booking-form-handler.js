@@ -337,7 +337,11 @@ class BookingFormHandler {
     }
 
     showAuthenticationModal() {
-        const modal = document.getElementById('authModal');
+        // Try different modal IDs that might exist
+        let modal = document.getElementById('authModal') || 
+                   document.getElementById('loginModal') || 
+                   document.getElementById('emergencyLoginModal');
+        
         if (modal) {
             modal.style.display = 'block';
             modal.classList.add('show');
@@ -347,8 +351,15 @@ class BookingFormHandler {
             
             console.log('📝 Authentication modal shown');
         } else {
-            console.error('📝 Auth modal not found');
-            this.showErrorMessage('Please log in to complete your booking.');
+            // If no modal found, try to trigger the emergency modal system
+            console.log('📝 No auth modal found, trying emergency modal system...');
+            if (typeof showModalDirect === 'function') {
+                showModalDirect();
+                console.log('📝 Emergency modal system triggered');
+            } else {
+                console.error('📝 No modal system available');
+                this.showErrorMessage('Please log in to complete your booking.');
+            }
         }
     }
 
