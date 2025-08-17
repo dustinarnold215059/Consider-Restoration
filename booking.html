@@ -12,10 +12,10 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="manifest" href="./manifest.json">
     <!-- <script src="js/logger.js"></script> -->
-    <script src="js/cookie-session-manager.js"></script>
-    <!-- <script src="js/portal-session-manager.js"></script> -->
+    <script src="js/portal-session-manager.js"></script>
+    <script src="js/secure-session.js"></script>
+    <!-- <script src="js/cookie-session-manager.js"></script> -->
     <!-- DISABLED old session restoration on booking page -->
-    <!-- <script src="js/secure-session.js"></script> -->
     <!-- <script src="js/advanced-cache.js"></script> DISABLED - not deployed to Vercel -->
     <!-- <script src="js/code-quality-monitor.js"></script> DISABLED - not deployed to Vercel -->
     <script src="js/accessibility-enhancer.js"></script>
@@ -1418,11 +1418,11 @@
             
             // Use cookie session manager instead of localStorage
             let user = null;
-            if (window.CookieSessionManager) {
-                user = window.CookieSessionManager.getCurrentUser();
-                console.log('📅 CookieSessionManager result:', user ? `${user.name} (${user.email})` : 'No user');
+            if (window.getCurrentUser) {
+                user = window.getCurrentUser();
+                console.log('📅 Session manager result:', user ? `${user.name} (${user.email})` : 'No user');
             } else {
-                console.log('📅 CookieSessionManager not available');
+                console.log('📅 Session manager not available');
             }
             
             const nameField = document.getElementById('clientName');
@@ -1501,8 +1501,8 @@
         // Check if user should skip login modal (already logged in)
         function shouldSkipLoginModal() {
             let currentUser = null;
-            if (window.CookieSessionManager) {
-                currentUser = window.CookieSessionManager.getCurrentUser();
+            if (window.getCurrentUser) {
+                currentUser = window.getCurrentUser();
             }
             console.log('🔍 Checking login status:', { hasCurrentUser: !!currentUser });
             
@@ -2350,9 +2350,9 @@
                     // Simple demo authentication
                     const authenticatedUser = window.authenticateUser ? window.authenticateUser(email, password) : null;
                     if (authenticatedUser) {
-                        // Store user in CookieSessionManager for consistency
-                        if (window.CookieSessionManager) {
-                            window.CookieSessionManager.login(authenticatedUser);
+                        // Store user in session manager for consistency
+                        if (window.loginUser) {
+                            window.loginUser(authenticatedUser);
                         }
                         
                         // Dispatch authentication event for auto-population

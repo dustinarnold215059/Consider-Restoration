@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 async function checkExistingSession() {
-    // Wait for UniversalSession to be available
+    // Wait for UniversalSession to be available  
     let attempts = 0;
     while (!window.universalSession && attempts < 50) {
         await new Promise(resolve => setTimeout(resolve, 100));
