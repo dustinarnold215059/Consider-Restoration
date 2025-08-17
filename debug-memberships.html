@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Memberships</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        .membership { border: 1px solid #ccc; margin: 10px 0; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Debug Membership Data</h1>
+    <button onclick="debugMemberships()">Show All Membership Data</button>
+    <button onclick="clearData()">Clear All Memberships</button>
+    <button onclick="addSampleData()">Add Sample Data</button>
+    
+    <div id="output"></div>
+
+    <script src="js/shared-data.js"></script>
+    <script>
+        function debugMemberships() {
+            const memberships = window.getMemberships ? window.getMemberships() : [];
+            const output = document.getElementById('output');
+            
+            output.innerHTML = `
+                <h2>Total Memberships: ${memberships.length}</h2>
+                <h3>Raw Data:</h3>
+                <pre>${JSON.stringify(memberships, null, 2)}</pre>
+                
+                <h3>Individual Memberships:</h3>
+                ${memberships.map((membership, index) => `
+                    <div class="membership">
+                        <h4>Membership ${index + 1}</h4>
+                        <p><strong>ID:</strong> ${membership.id || 'undefined'}</p>
+                        <p><strong>User ID:</strong> ${membership.userId || 'undefined'}</p>
+                        <p><strong>Plan:</strong> ${membership.plan || 'undefined'}</p>
+                        <p><strong>Type Name:</strong> ${membership.typeName || 'undefined'}</p>
+                        <p><strong>Price:</strong> ${membership.price || 'undefined'}</p>
+                        <p><strong>Status:</strong> ${membership.status || 'undefined'}</p>
+                        <p><strong>All Fields:</strong></p>
+                        <pre>${JSON.stringify(membership, null, 2)}</pre>
+                    </div>
+                `).join('')}
+            `;
+        }
+        
+        function clearData() {
+            window.sharedMemberships = [];
+            localStorage.removeItem('massageMemberships');
+            document.getElementById('output').innerHTML = '<p style="color: red;">All memberships cleared!</p>';
+        }
+        
+        function addSampleData() {
+            window.sharedMemberships = [
+                {
+                    id: 1,
+                    userId: 1,
+                    typeName: 'wellness',
+                    price: 75,
+                    status: 'active',
+                    startDate: '2025-01-01',
+                    endDate: '2025-12-31',
+                    autoRenew: true,
+                    nextBillingDate: '2025-02-01'
+                },
+                {
+                    id: 2,
+                    userId: 2,
+                    typeName: 'restoration-plus',
+                    price: 140,
+                    status: 'active',
+                    startDate: '2025-01-15',
+                    endDate: '2026-01-15',
+                    autoRenew: false,
+                    nextBillingDate: '2025-02-15'
+                }
+            ];
+            
+            localStorage.setItem('massageMemberships', JSON.stringify(window.sharedMemberships));
+            document.getElementById('output').innerHTML = '<p style="color: green;">Sample data added! Now check the admin panel.</p>';
+        }
+    </script>
+</body>
+</html>

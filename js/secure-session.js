@@ -165,7 +165,7 @@ class SecureSessionManager {
             
             console.log('🔒 About to call simulateServerLogin...');
             // In production, this would call your authentication API
-            const response = this.simulateServerLogin(email, password);
+            const response = await this.simulateServerLogin(email, password);
             console.log('🔒 simulateServerLogin returned:', response);
             
             if (response && response.success) {
@@ -213,7 +213,7 @@ class SecureSessionManager {
     
     // Simulate server-side authentication
     // In production, replace with actual API call
-    simulateServerLogin(email, password) {
+    async simulateServerLogin(email, password) {
         console.log('🔒 simulateServerLogin called with:', email);
         // Secure admin account
         const ADMIN_EMAIL = 'considerrestoration@gmail.com';
@@ -237,8 +237,20 @@ class SecureSessionManager {
         // Regular user authentication (existing system)
         else if (email && password && password.length > 0) {
             console.log('🔒 Regular user authentication path');
-            // Check against existing user system
-            const users = window.getUsers ? window.getUsers() : [];
+            // Check against existing user system (handle async)
+            let users = [];
+            if (window.getUsers) {
+                const getUsersResult = window.getUsers();
+                users = getUsersResult && typeof getUsersResult.then === 'function' 
+                    ? await getUsersResult 
+                    : getUsersResult;
+            }
+            
+            if (!users || !Array.isArray(users)) {
+                console.log('🔒 No valid user array available');
+                return { success: false, error: 'User system not available' };
+            }
+            
             console.log('🔒 Found users:', users.length);
             const user = users.find(u => u.email === email);
             console.log('🔒 Found user:', user);

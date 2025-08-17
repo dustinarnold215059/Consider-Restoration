@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Portal Authentication Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #007cba; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #005a87; }
+        .output { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 15px; margin: 10px 0; font-family: monospace; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 3px; width: 200px; }
+        .success { background: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        h2 { margin-top: 0; color: #333; }
+        h3 { color: #555; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 User Portal Authentication Debug Tool</h1>
+        
+        <div class="section">
+            <h2>1. Test User Registration</h2>
+            <input type="text" id="regName" placeholder="Name" value="Debug User">
+            <input type="email" id="regEmail" placeholder="Email" value="debug@test.com">
+            <input type="tel" id="regPhone" placeholder="Phone" value="(555) 999-0000">
+            <input type="password" id="regPassword" placeholder="Password" value="debugpass123">
+            <button onclick="testRegistration()">Register User</button>
+            <div id="regOutput" class="output">Registration output will appear here...</div>
+        </div>
+        
+        <div class="section">
+            <h2>2. Test User Login</h2>
+            <input type="email" id="loginEmail" placeholder="Email" value="debug@test.com">
+            <input type="password" id="loginPassword" placeholder="Password" value="debugpass123">
+            <button onclick="testLogin()">Test Login</button>
+            <div id="loginOutput" class="output">Login output will appear here...</div>
+        </div>
+        
+        <div class="section">
+            <h2>3. Inspect User Data</h2>
+            <button onclick="showAllUsers()">Show All Users</button>
+            <button onclick="showUserStorage()">Show localStorage</button>
+            <button onclick="testPasswordHashing()">Test Password Hashing</button>
+            <div id="dataOutput" class="output">User data will appear here...</div>
+        </div>
+        
+        <div class="section">
+            <h2>4. Test Authentication Components</h2>
+            <button onclick="testAuthComponents()">Test Auth Components</button>
+            <button onclick="testBcryptAvailability()">Test bcrypt</button>
+            <button onclick="clearAllData()">Clear All Data</button>
+            <div id="componentOutput" class="output">Component test output will appear here...</div>
+        </div>
+    </div>
+
+    <!-- Load the EXACT same scripts as user portal (SAME ORDER) -->
+    <script src="js/enhanced-error-handler.js"></script>
+    <script src="js/portal-session-manager.js"></script>
+    <script src="js/secure-session.js"></script>
+    <script src="js/api-client.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+    <script>
+        // Create compatibility wrapper for bcrypt (same as user portal)
+        setTimeout(() => {
+            if (typeof dcodeIO !== 'undefined' && dcodeIO.bcrypt && !window.bcrypt) {
+                window.bcrypt = dcodeIO.bcrypt;
+                console.log('🔒 Created window.bcrypt reference to dcodeIO.bcrypt');
+            }
+        }, 100);
+    </script>
+    <script src="js/secure-tokens.js"></script>
+    <script src="js/auth-security.js"></script>
+    <script src="js/secure-init.js"></script>
+    <script src="js/data-persistence-fixed.js"></script>
+    <script src="js/shared-data.js"></script>
+
+    <script>
+        function log(elementId, message) {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            element.textContent += `[${timestamp}] ${message}\n`;
+            console.log(`[${timestamp}] ${message}`);
+        }
+        
+        async function testRegistration() {
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const phone = document.getElementById('regPhone').value;
+            const password = document.getElementById('regPassword').value;
+            
+            const regOutput = document.getElementById('regOutput');
+            regOutput.textContent = '';
+            
+            log('regOutput', '🎉 Starting registration test...');
+            log('regOutput', `Input: name="${name}", email="${email}", phone="${phone}", password="${password}"`);
+            log('regOutput', `🔍 Available functions:`);
+            log('regOutput', `  - window.addUser: ${typeof window.addUser}`);
+            log('regOutput', `  - window.getUsers: ${typeof window.getUsers}`);
+            log('regOutput', `  - window.authenticateUser: ${typeof window.authenticateUser}`);
+            log('regOutput', `  - dcodeIO.bcrypt: ${typeof dcodeIO !== 'undefined' ? typeof dcodeIO.bcrypt : 'undefined'}`);
+            log('regOutput', `  - window.bcrypt: ${typeof window.bcrypt}`);
+            
+            try {
+                // Use exact same logic as user portal
+                const userData = { 
+                    name: name, 
+                    email: email, 
+                    phone: phone, 
+                    password: password
+                };
+                
+                log('regOutput', '📋 User data object: ' + JSON.stringify(userData, null, 2));
+                
+                if (window.addUser) {
+                    log('regOutput', '⏳ Calling addUser (may be async)...');
+                    
+                    // Handle both sync and async versions
+                    const addUserResult = window.addUser(userData);
+                    const savedUser = addUserResult && typeof addUserResult.then === 'function' 
+                        ? await addUserResult 
+                        : addUserResult;
+                    
+                    log('regOutput', '✅ User saved: ' + JSON.stringify(savedUser, null, 2));
+                    
+                    if (savedUser && savedUser.passwordHash) {
+                        log('regOutput', '🔒 Password hash created: ' + savedUser.passwordHash.substring(0, 20) + '...');
+                        log('regOutput', '🔍 Hash type: ' + (savedUser.passwordHash.startsWith('$2a$') ? 'bcrypt' : 'other'));
+                    } else if (savedUser && savedUser.password) {
+                        log('regOutput', '⚠️ WARNING: Plain password still present!');
+                    } else if (!savedUser) {
+                        log('regOutput', '❌ WARNING: No user returned from addUser!');
+                    }
+                    
+                    // Auto-update login fields
+                    document.getElementById('loginEmail').value = email;
+                    document.getElementById('loginPassword').value = password;
+                    
+                } else {
+                    log('regOutput', '❌ window.addUser not available');
+                }
+            } catch (error) {
+                log('regOutput', '❌ Registration error: ' + error.message);
+                log('regOutput', '❌ Stack trace: ' + error.stack);
+            }
+        }
+        
+        async function testLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            const loginOutput = document.getElementById('loginOutput');
+            loginOutput.textContent = '';
+            
+            log('loginOutput', '🔒 Starting login test...');
+            log('loginOutput', `Input: email="${email}", password="${password}"`);
+            log('loginOutput', `🔍 window.authenticateUser function type: ${typeof window.authenticateUser}`);
+            
+            try {
+                if (window.authenticateUser) {
+                    log('loginOutput', '⏳ Calling authenticateUser (may be async)...');
+                    
+                    // Handle both sync and async versions
+                    const authResult = window.authenticateUser(email, password);
+                    const finalResult = authResult && typeof authResult.then === 'function' 
+                        ? await authResult 
+                        : authResult;
+                    
+                    if (finalResult) {
+                        log('loginOutput', '✅ Authentication successful: ' + JSON.stringify(finalResult, null, 2));
+                    } else {
+                        log('loginOutput', '❌ Authentication failed: Invalid credentials');
+                        
+                        // Let's debug why it failed
+                        log('loginOutput', '🔍 Debugging authentication failure...');
+                        
+                        // Check if user exists
+                        if (window.getUsers) {
+                            const getUsersResult = window.getUsers();
+                            const users = getUsersResult && typeof getUsersResult.then === 'function' 
+                                ? await getUsersResult 
+                                : getUsersResult;
+                            
+                            const user = users ? users.find(u => u.email === email || u.username === email) : null;
+                            if (user) {
+                                log('loginOutput', '🔍 User found: ' + JSON.stringify(user, null, 2));
+                                
+                                // Test password verification manually
+                                if (window.verifyPassword && user.passwordHash) {
+                                    const passwordCheck = window.verifyPassword(password, user.passwordHash);
+                                    log('loginOutput', `🔍 Manual password check: ${passwordCheck}`);
+                                } else {
+                                    log('loginOutput', '🔍 Cannot verify password - verifyPassword function or passwordHash missing');
+                                }
+                            } else {
+                                log('loginOutput', '🔍 User not found in system');
+                            }
+                        }
+                    }
+                } else {
+                    log('loginOutput', '❌ window.authenticateUser not available');
+                }
+            } catch (error) {
+                log('loginOutput', '❌ Login error: ' + error.message);
+                log('loginOutput', '❌ Stack trace: ' + error.stack);
+            }
+        }
+        
+        async function showAllUsers() {
+            const dataOutput = document.getElementById('dataOutput');
+            dataOutput.textContent = '';
+            
+            log('dataOutput', '👥 All users in memory:');
+            log('dataOutput', `🔍 window.getUsers function type: ${typeof window.getUsers}`);
+            
+            try {
+                if (window.getUsers) {
+                    log('dataOutput', '⏳ Calling getUsers (may be async)...');
+                    
+                    // Handle both sync and async versions
+                    const getUsersResult = window.getUsers();
+                    const users = getUsersResult && typeof getUsersResult.then === 'function' 
+                        ? await getUsersResult 
+                        : getUsersResult;
+                    
+                    log('dataOutput', `Found ${users ? users.length : 0} users:`);
+                    if (users && users.length > 0) {
+                        users.forEach((user, index) => {
+                            log('dataOutput', `User ${index + 1}: ${JSON.stringify(user, null, 2)}`);
+                        });
+                    } else {
+                        log('dataOutput', '❌ No users found or invalid response');
+                    }
+                } else {
+                    log('dataOutput', '❌ window.getUsers not available');
+                }
+            } catch (error) {
+                log('dataOutput', '❌ Error getting users: ' + error.message);
+                log('dataOutput', '❌ Stack trace: ' + error.stack);
+            }
+        }
+        
+        function showUserStorage() {
+            const dataOutput = document.getElementById('dataOutput');
+            dataOutput.textContent = '';
+            
+            log('dataOutput', '💾 localStorage data:');
+            
+            try {
+                const storedUsers = localStorage.getItem('massageUsers');
+                if (storedUsers) {
+                    const parsed = JSON.parse(storedUsers);
+                    log('dataOutput', `Found ${parsed.length} users in localStorage:`);
+                    parsed.forEach((user, index) => {
+                        log('dataOutput', `Stored User ${index + 1}: ${JSON.stringify(user, null, 2)}`);
+                    });
+                } else {
+                    log('dataOutput', 'No user data found in localStorage');
+                }
+                
+                // Also check other relevant storage keys
+                const otherKeys = ['currentUser', 'sessionToken', 'isLoggedIn', 'user_session_data'];
+                otherKeys.forEach(key => {
+                    const value = localStorage.getItem(key);
+                    if (value) {
+                        log('dataOutput', `${key}: ${value}`);
+                    }
+                });
+                
+            } catch (error) {
+                log('dataOutput', '❌ Error reading localStorage: ' + error.message);
+            }
+        }
+        
+        function testPasswordHashing() {
+            const dataOutput = document.getElementById('dataOutput');
+            dataOutput.textContent = '';
+            
+            log('dataOutput', '🔒 Testing password hashing...');
+            
+            const testPassword = 'testpass123';
+            
+            try {
+                if (typeof dcodeIO !== 'undefined' && dcodeIO.bcrypt) {
+                    log('dataOutput', '✅ dcodeIO.bcrypt is available');
+                    
+                    const salt = dcodeIO.bcrypt.genSaltSync(12);
+                    const hash = dcodeIO.bcrypt.hashSync(testPassword, salt);
+                    
+                    log('dataOutput', `Salt: ${salt}`);
+                    log('dataOutput', `Hash: ${hash}`);
+                    
+                    // Test verification
+                    const verification = dcodeIO.bcrypt.compareSync(testPassword, hash);
+                    log('dataOutput', `Verification test: ${verification}`);
+                    
+                } else {
+                    log('dataOutput', '❌ dcodeIO.bcrypt not available');
+                }
+                
+                if (typeof window.bcrypt !== 'undefined' && window.bcrypt) {
+                    log('dataOutput', '✅ window.bcrypt is available');
+                } else {
+                    log('dataOutput', '❌ window.bcrypt not available');
+                }
+                
+            } catch (error) {
+                log('dataOutput', '❌ Password hashing error: ' + error.message);
+            }
+        }
+        
+        function testAuthComponents() {
+            const componentOutput = document.getElementById('componentOutput');
+            componentOutput.textContent = '';
+            
+            log('componentOutput', '🔧 Testing authentication components...');
+            
+            // Test all available functions
+            const authFunctions = [
+                'window.addUser',
+                'window.getUsers', 
+                'window.authenticateUser',
+                'window.verifyPassword',
+                'window.validateSession',
+                'window.secureLogout',
+                'window.simpleHash'
+            ];
+            
+            authFunctions.forEach(funcName => {
+                const func = eval(funcName);
+                log('componentOutput', `${funcName}: ${typeof func}`);
+            });
+            
+            // Test session managers
+            const sessionManagers = [
+                'window.secureSession',
+                'window.universalSession', 
+                'window.CookieSessionManager',
+                'window.dataPersistenceFixed'
+            ];
+            
+            log('componentOutput', '\nSession managers:');
+            sessionManagers.forEach(managerName => {
+                const manager = eval(managerName);
+                log('componentOutput', `${managerName}: ${typeof manager}`);
+            });
+        }
+        
+        function testBcryptAvailability() {
+            const componentOutput = document.getElementById('componentOutput');
+            componentOutput.textContent = '';
+            
+            log('componentOutput', '🔒 Testing bcrypt availability...');
+            
+            // Check all possible bcrypt references
+            log('componentOutput', `typeof dcodeIO: ${typeof dcodeIO}`);
+            if (typeof dcodeIO !== 'undefined') {
+                log('componentOutput', `typeof dcodeIO.bcrypt: ${typeof dcodeIO.bcrypt}`);
+            }
+            log('componentOutput', `typeof window.bcrypt: ${typeof window.bcrypt}`);
+            log('componentOutput', `typeof bcrypt: ${typeof bcrypt}`);
+            
+            // Test if the script loaded
+            const bcryptScript = document.querySelector('script[src*="bcrypt"]');
+            log('componentOutput', `bcrypt script element: ${bcryptScript ? 'found' : 'not found'}`);
+            
+            if (bcryptScript) {
+                log('componentOutput', `bcrypt script src: ${bcryptScript.src}`);
+            }
+        }
+        
+        function clearAllData() {
+            localStorage.clear();
+            log('componentOutput', '🧹 All localStorage cleared');
+            
+            // Also clear any global variables
+            if (window.sharedUsers) {
+                window.sharedUsers.length = 0;
+                log('componentOutput', '🧹 window.sharedUsers cleared');
+            }
+        }
+        
+        // Auto-run diagnostics after everything loads
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                testAuthComponents();
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

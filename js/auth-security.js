@@ -73,13 +73,24 @@ function verifyPassword(password, hash) {
 }
 
 // Enhanced authentication check with server-side validation simulation
-function authenticateUser(email, password) {
+async function authenticateUser(email, password) {
     console.log('🔒 Authenticating user:', email);
     console.log('🔒 Password provided:', password ? '[PROVIDED]' : '[MISSING]');
     
-    // Get users from shared data
-    const allUsers = window.getUsers ? window.getUsers() : [];
-    console.log('🔒 Available users for auth:', allUsers.length);
+    // Get users from shared data (handle async)
+    let allUsers = [];
+    if (window.getUsers) {
+        const getUsersResult = window.getUsers();
+        allUsers = getUsersResult && typeof getUsersResult.then === 'function' 
+            ? await getUsersResult 
+            : getUsersResult;
+    }
+    console.log('🔒 Available users for auth:', allUsers ? allUsers.length : 0);
+    
+    if (!allUsers || !Array.isArray(allUsers)) {
+        console.log('🔒 No valid user array available');
+        return null;
+    }
     
     if (allUsers.length > 0) {
         console.log('🔒 Available usernames/emails:', allUsers.map(u => u.username || u.email));

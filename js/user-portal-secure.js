@@ -341,6 +341,12 @@ async function handleSecureRegister(event) {
     submitBtn.disabled = true;
     
     try {
+        // Skip server-side registration on Vercel (no backend deployed)
+        if (window.location.hostname.includes('vercel.app')) {
+            console.log('🔒 Skipping server registration on Vercel - using client-side only');
+            throw new Error('Server registration disabled on Vercel');
+        }
+        
         // First try server-side registration
         console.log('🔒 Trying server-side user registration...');
         
@@ -419,6 +425,12 @@ async function handleSecureRegister(event) {
 
 async function handleLogout() {
     try {
+        // Skip server-side logout on Vercel (no backend deployed)
+        if (window.location.hostname.includes('vercel.app')) {
+            console.log('🔒 Skipping server logout on Vercel - using client-side only');
+            throw new Error('Server logout disabled on Vercel');
+        }
+        
         // Try server-side logout
         const apiUrl = typeof EnvConfig !== 'undefined' ? 
             EnvConfig.getAuthUrl('logout') : 

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Membership Admin Panel</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        button { margin: 10px; padding: 10px 20px; cursor: pointer; }
+        .console { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        pre { margin: 0; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>Test Membership Admin Panel Fixes</h1>
+    
+    <button onclick="addTestData()">Add Test Membership Data</button>
+    <button onclick="testMembershipFunctions()">Test Membership Functions</button>
+    <button onclick="clearData()">Clear All Data</button>
+    
+    <div id="console" class="console">
+        <pre id="output">Ready to test membership fixes...</pre>
+    </div>
+    
+    <script src="js/shared-data.js"></script>
+    <script src="js/admin.js"></script>
+    
+    <script>
+        function log(message) {
+            const output = document.getElementById('output');
+            output.textContent += '\n' + message;
+            console.log(message);
+        }
+        
+        function addTestData() {
+            log('🔧 Adding test membership data...');
+            
+            // Add test users with memberships
+            const testUsers = [
+                {
+                    id: 101,
+                    username: 'wellness.user@test.com',
+                    name: 'Sarah Johnson',
+                    email: 'wellness.user@test.com',
+                    phone: '(555) 123-4567',
+                    role: 'user',
+                    membershipType: 'wellness',
+                    membershipStatus: 'active',
+                    membershipStartDate: '2024-01-15T00:00:00Z',
+                    createdAt: '2024-01-15T00:00:00Z'
+                },
+                {
+                    id: 102,
+                    username: 'restoration.user@test.com', 
+                    name: 'Mike Rodriguez',
+                    email: 'restoration.user@test.com',
+                    phone: '(555) 234-5678',
+                    role: 'user',
+                    membershipType: 'restoration-plus',
+                    membershipStatus: 'active',
+                    membershipStartDate: '2024-02-01T00:00:00Z',
+                    createdAt: '2024-02-01T00:00:00Z'
+                },
+                {
+                    id: 103,
+                    username: 'elite.user@test.com',
+                    name: 'Jennifer Chen', 
+                    email: 'elite.user@test.com',
+                    phone: '(555) 345-6789',
+                    role: 'user',
+                    membershipType: 'therapeutic-elite',
+                    membershipStatus: 'active',
+                    membershipStartDate: '2024-03-01T00:00:00Z',
+                    createdAt: '2024-03-01T00:00:00Z'
+                }
+            ];
+            
+            // Update shared users
+            window.sharedUsers = [...window.sharedUsers, ...testUsers];
+            localStorage.setItem('massageUsers', JSON.stringify(window.sharedUsers));
+            
+            log('✅ Added 3 test users with memberships:');
+            log('   - Sarah Johnson: Wellness ($75/month)');  
+            log('   - Mike Rodriguez: Restoration Plus ($140/month)');
+            log('   - Jennifer Chen: Therapeutic Elite ($200/month)');
+            log('💰 Expected total monthly revenue: $415');
+        }
+        
+        function testMembershipFunctions() {
+            log('\n🧪 Testing membership functions...');
+            
+            // Test getMembershipDisplayName
+            log('Testing getMembershipDisplayName:');
+            log('  wellness -> ' + getMembershipDisplayName('wellness'));
+            log('  restoration-plus -> ' + getMembershipDisplayName('restoration-plus'));  
+            log('  therapeutic-elite -> ' + getMembershipDisplayName('therapeutic-elite'));
+            
+            // Test getMembershipPrice
+            log('\nTesting getMembershipPrice:');
+            log('  wellness -> $' + getMembershipPrice('wellness'));
+            log('  restoration-plus -> $' + getMembershipPrice('restoration-plus'));
+            log('  therapeutic-elite -> $' + getMembershipPrice('therapeutic-elite'));
+            
+            // Test displayMemberships function
+            log('\n📊 Testing displayMemberships...');
+            if (typeof displayMemberships === 'function') {
+                // Create mock DOM elements
+                const mockDiv = document.createElement('div');
+                mockDiv.innerHTML = `
+                    <div id="activeMemberships">0</div>
+                    <div id="autoRenewCount">0</div>
+                    <div id="monthlyRenewals">0</div>
+                    <div id="totalMembershipRevenue">$0</div>
+                    <div id="membershipsList"></div>
+                `;
+                document.body.appendChild(mockDiv);
+                
+                displayMemberships();
+                
+                log('Active Memberships: ' + document.getElementById('activeMemberships').textContent);
+                log('Total Revenue: ' + document.getElementById('totalMembershipRevenue').textContent);
+                
+                document.body.removeChild(mockDiv);
+            } else {
+                log('❌ displayMemberships function not found');
+            }
+        }
+        
+        function clearData() {
+            log('\n🧹 Clearing all test data...');
+            localStorage.removeItem('massageUsers');
+            localStorage.removeItem('massageMemberships');
+            window.sharedUsers = [];
+            window.sharedMemberships = [];
+            log('✅ All data cleared');
+        }
+    </script>
+</body>
+</html>

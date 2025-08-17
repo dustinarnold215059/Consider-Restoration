@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Persistence Issue</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #007cba; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .output { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 15px; margin: 10px 0; font-family: monospace; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 3px; width: 200px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Debug User Persistence Issue</h1>
+        
+        <div class="section">
+            <h2>1. Test User Registration and Persistence</h2>
+            <input type="text" id="testName" placeholder="Name" value="Test User">
+            <input type="email" id="testEmail" placeholder="Email" value="test@debug.com">
+            <input type="tel" id="testPhone" placeholder="Phone" value="(555) 999-0000">
+            <input type="password" id="testPassword" placeholder="Password" value="debugpass123">
+            <button onclick="testUserRegistration()">Register Test User</button>
+            <div id="regOutput" class="output">Registration output will appear here...</div>
+        </div>
+        
+        <div class="section">
+            <h2>2. Check Data Immediately After Registration</h2>
+            <button onclick="checkDataAfterReg()">Check Data Now</button>
+            <div id="checkOutput" class="output">Data check output will appear here...</div>
+        </div>
+        
+        <div class="section">
+            <h2>3. Simulate Page Reload (Check localStorage Directly)</h2>
+            <button onclick="checkLocalStorageDirectly()">Check localStorage</button>
+            <button onclick="clearLocalStorage()">Clear localStorage</button>
+            <div id="storageOutput" class="output">Storage output will appear here...</div>
+        </div>
+        
+        <div class="section">
+            <h2>4. Test Server Connection (Should Fail)</h2>
+            <button onclick="testServerConnection()">Test Server</button>
+            <div id="serverOutput" class="output">Server test output will appear here...</div>
+        </div>
+    </div>
+
+    <!-- Load the EXACT same scripts as user portal -->
+    <script src="js/enhanced-error-handler.js"></script>
+    <script src="js/portal-session-manager.js"></script>
+    <script src="js/secure-session.js"></script>
+    <script src="js/api-client.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+    <script>
+        setTimeout(() => {
+            if (typeof dcodeIO !== 'undefined' && dcodeIO.bcrypt && !window.bcrypt) {
+                window.bcrypt = dcodeIO.bcrypt;
+                console.log('🔒 Created window.bcrypt reference to dcodeIO.bcrypt');
+            }
+        }, 100);
+    </script>
+    <script src="js/secure-tokens.js"></script>
+    <script src="js/auth-security.js"></script>
+    <script src="js/secure-init.js"></script>
+    <script src="js/data-persistence-fixed.js"></script>
+    <script src="js/shared-data.js"></script>
+
+    <script>
+        function log(elementId, message) {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            element.textContent += `[${timestamp}] ${message}\n`;
+            console.log(`[${timestamp}] ${message}`);
+        }
+        
+        async function testUserRegistration() {
+            const name = document.getElementById('testName').value;
+            const email = document.getElementById('testEmail').value;
+            const phone = document.getElementById('testPhone').value;
+            const password = document.getElementById('testPassword').value;
+            
+            const regOutput = document.getElementById('regOutput');
+            regOutput.textContent = '';
+            
+            log('regOutput', '🎯 Testing user registration with exact same flow as user portal...');
+            log('regOutput', `Input: ${name}, ${email}, ${phone}, ${password}`);
+            
+            try {
+                // Step 1: Try server registration (should fail)
+                log('regOutput', '📡 Step 1: Trying server registration...');
+                
+                const apiUrl = 'http://localhost:3060/api/auth/register';
+                
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ name, email, phone, password })
+                    });
+                    
+                    if (response.ok) {
+                        log('regOutput', '✅ Server registration succeeded (unexpected!)');
+                        return;
+                    } else {
+                        log('regOutput', '❌ Server registration failed as expected');
+                    }
+                } catch (serverError) {
+                    log('regOutput', '❌ Server connection failed as expected: ' + serverError.message);
+                }
+                
+                // Step 2: Fallback to client-side registration
+                log('regOutput', '🔄 Step 2: Using fallback client-side registration...');
+                
+                const userData = { name, email, phone, password };
+                log('regOutput', '📋 User data: ' + JSON.stringify(userData, null, 2));
+                log('regOutput', '🔍 window.addUser type: ' + typeof window.addUser);
+                
+                if (window.addUser) {
+                    log('regOutput', '⏳ Calling window.addUser...');
+                    
+                    const addUserResult = window.addUser(userData);
+                    const newUser = addUserResult && typeof addUserResult.then === 'function' 
+                        ? await addUserResult 
+                        : addUserResult;
+                    
+                    if (newUser) {
+                        log('regOutput', '✅ Registration successful!');
+                        log('regOutput', '📊 Returned user: ' + JSON.stringify(newUser, null, 2));
+                        
+                        // Immediately check if it's in localStorage
+                        const storedUsers = localStorage.getItem('massageUsers');
+                        if (storedUsers) {
+                            const parsed = JSON.parse(storedUsers);
+                            log('regOutput', `💾 localStorage has ${parsed.length} users`);
+                            const foundUser = parsed.find(u => u.email === email);
+                            if (foundUser) {
+                                log('regOutput', '✅ User found in localStorage: ' + foundUser.name);
+                            } else {
+                                log('regOutput', '❌ User NOT found in localStorage!');
+                            }
+                        } else {
+                            log('regOutput', '❌ No massageUsers in localStorage!');
+                        }
+                    } else {
+                        log('regOutput', '❌ Registration failed - no user returned');
+                    }
+                } else {
+                    log('regOutput', '❌ window.addUser not available');
+                }
+                
+            } catch (error) {
+                log('regOutput', '❌ Registration error: ' + error.message);
+                log('regOutput', '❌ Stack: ' + error.stack);
+            }
+        }
+        
+        async function checkDataAfterReg() {
+            const checkOutput = document.getElementById('checkOutput');
+            checkOutput.textContent = '';
+            
+            log('checkOutput', '🔍 Checking data after registration...');
+            
+            // Check window.getUsers
+            if (window.getUsers) {
+                log('checkOutput', '⏳ Calling window.getUsers...');
+                
+                const getUsersResult = window.getUsers();
+                const users = getUsersResult && typeof getUsersResult.then === 'function' 
+                    ? await getUsersResult 
+                    : getUsersResult;
+                
+                log('checkOutput', `👥 Found ${users ? users.length : 0} users in memory`);
+                if (users && users.length > 0) {
+                    users.forEach((user, index) => {
+                        log('checkOutput', `User ${index + 1}: ${user.name} (${user.email})`);
+                    });
+                }
+            } else {
+                log('checkOutput', '❌ window.getUsers not available');
+            }
+            
+            // Check localStorage directly
+            const storedUsers = localStorage.getItem('massageUsers');
+            if (storedUsers) {
+                const parsed = JSON.parse(storedUsers);
+                log('checkOutput', `💾 localStorage has ${parsed.length} users`);
+                parsed.forEach((user, index) => {
+                    log('checkOutput', `Stored ${index + 1}: ${user.name} (${user.email})`);
+                });
+            } else {
+                log('checkOutput', '💾 No users in localStorage');
+            }
+        }
+        
+        function checkLocalStorageDirectly() {
+            const storageOutput = document.getElementById('storageOutput');
+            storageOutput.textContent = '';
+            
+            log('storageOutput', '💾 Checking localStorage directly...');
+            
+            // List all localStorage keys
+            log('storageOutput', `Total localStorage keys: ${localStorage.length}`);
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                
+                if (key === 'massageUsers') {
+                    try {
+                        const parsed = JSON.parse(value);
+                        log('storageOutput', `${key}: ${parsed.length} users`);
+                        parsed.forEach((user, index) => {
+                            log('storageOutput', `  ${index + 1}. ${user.name} (${user.email})`);
+                        });
+                    } catch (e) {
+                        log('storageOutput', `${key}: Invalid JSON - ${value}`);
+                    }
+                } else {
+                    log('storageOutput', `${key}: ${value.substring(0, 50)}${value.length > 50 ? '...' : ''}`);
+                }
+            }
+        }
+        
+        function clearLocalStorage() {
+            localStorage.clear();
+            log('storageOutput', '🧹 localStorage cleared');
+        }
+        
+        async function testServerConnection() {
+            const serverOutput = document.getElementById('serverOutput');
+            serverOutput.textContent = '';
+            
+            log('serverOutput', '📡 Testing server connection...');
+            
+            try {
+                const response = await fetch('http://localhost:3060/health', {
+                    timeout: 3000
+                });
+                
+                if (response.ok) {
+                    log('serverOutput', '✅ Server is running (unexpected!)');
+                } else {
+                    log('serverOutput', `❌ Server responded with status: ${response.status}`);
+                }
+            } catch (error) {
+                log('serverOutput', '❌ Server connection failed (expected): ' + error.message);
+                log('serverOutput', '✅ This is correct - we should use fallback registration');
+            }
+        }
+        
+        // Auto-run diagnostics
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                log('regOutput', '🚀 Debug tool ready. Scripts loaded.');
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

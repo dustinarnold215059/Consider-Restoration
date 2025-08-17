@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Force Refresh Admin Data</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        button { background: #007cba; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; margin: 10px 5px; font-size: 14px; }
+        button:hover { background: #005a87; }
+        .danger { background: #dc3545; }
+        .danger:hover { background: #c82333; }
+        .success { background: #28a745; }
+        .success:hover { background: #218838; }
+        .output { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 15px; margin: 15px 0; font-family: monospace; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+        .stat-card { background: #007cba; color: white; padding: 15px; border-radius: 5px; text-align: center; }
+        .stat-number { font-size: 24px; font-weight: bold; }
+        .stat-label { font-size: 12px; margin-top: 5px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { padding: 8px 12px; border: 1px solid #dee2e6; text-align: left; }
+        th { background: #f8f9fa; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Admin Membership Data Debugger</h1>
+        <p>This tool helps debug and test the membership management fixes.</p>
+        
+        <div class="controls">
+            <button onclick="clearAllData()" class="danger">Clear All Data</button>
+            <button onclick="loadTestData()" class="success">Load Test Membership Data</button>
+            <button onclick="checkCurrentData()">Check Current Data</button>
+            <button onclick="testMembershipFunctions()">Test Functions</button>
+            <button onclick="openAdminPanel()">Open Admin Panel</button>
+        </div>
+        
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-number" id="userCount">0</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="membershipCount">0</div>
+                <div class="stat-label">Users with Memberships</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="revenueEstimate">$0</div>
+                <div class="stat-label">Estimated Revenue</div>
+            </div>
+        </div>
+        
+        <div id="output" class="output">Ready to debug membership data...</div>
+        
+        <div id="membershipTable"></div>
+    </div>
+
+    <script>
+        function log(message) {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            output.textContent += `[${timestamp}] ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function clearAllData() {
+            log('🧹 Clearing all localStorage data...');
+            localStorage.clear();
+            log('✅ All data cleared');
+            updateStats();
+        }
+        
+        function loadTestData() {
+            log('📊 Loading test membership data...');
+            
+            const testUsers = [
+                {
+                    id: 1,
+                    username: 'gecko215059@gmail.com',
+                    passwordHash: '$2a$12$2ed57c08dd45bfd9fc3c9d5cae22a0950090af3529a67030709b72c9169e05d2',
+                    name: 'User Account',
+                    email: 'gecko215059@gmail.com',
+                    phone: '',
+                    role: 'user',
+                    totalAppointments: 0,
+                    lastVisit: null,
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: 101,
+                    username: 'wellness.test@example.com',
+                    passwordHash: '$2a$12$sample.hash.for.testing.purposes.only',
+                    name: 'Sarah Johnson',
+                    email: 'wellness.test@example.com',
+                    phone: '(555) 123-4567',
+                    role: 'user',
+                    membershipType: 'wellness',
+                    membershipStatus: 'active',
+                    membershipStartDate: '2024-01-15T00:00:00Z',
+                    totalAppointments: 3,
+                    lastVisit: '2024-08-10T00:00:00Z',
+                    createdAt: '2024-01-15T00:00:00Z'
+                },
+                {
+                    id: 102,
+                    username: 'restoration.test@example.com',
+                    passwordHash: '$2a$12$sample.hash.for.testing.purposes.only',
+                    name: 'Mike Rodriguez',
+                    email: 'restoration.test@example.com',
+                    phone: '(555) 234-5678',
+                    role: 'user',
+                    membershipType: 'restoration-plus',
+                    membershipStatus: 'active',
+                    membershipStartDate: '2024-02-01T00:00:00Z',
+                    totalAppointments: 5,
+                    lastVisit: '2024-08-12T00:00:00Z',
+                    createdAt: '2024-02-01T00:00:00Z'
+                },
+                {
+                    id: 103,
+                    username: 'elite.test@example.com',
+                    passwordHash: '$2a$12$sample.hash.for.testing.purposes.only',
+                    name: 'Jennifer Chen',
+                    email: 'elite.test@example.com',
+                    phone: '(555) 345-6789',
+                    role: 'user',
+                    membershipType: 'therapeutic-elite',
+                    membershipStatus: 'active',
+                    membershipStartDate: '2024-03-01T00:00:00Z',
+                    totalAppointments: 8,
+                    lastVisit: '2024-08-14T00:00:00Z',
+                    createdAt: '2024-03-01T00:00:00Z'
+                }
+            ];
+            
+            localStorage.setItem('massageUsers', JSON.stringify(testUsers));
+            log('✅ Loaded 4 users (3 with memberships):');
+            log('   - Sarah Johnson: Wellness ($75/month)');
+            log('   - Mike Rodriguez: Restoration Plus ($140/month)');
+            log('   - Jennifer Chen: Therapeutic Elite ($200/month)');
+            log('💰 Expected total revenue: $415');
+            
+            updateStats();
+            displayMembershipTable();
+        }
+        
+        function checkCurrentData() {
+            log('🔍 Checking current localStorage data...');
+            
+            const users = JSON.parse(localStorage.getItem('massageUsers') || '[]');
+            const memberships = JSON.parse(localStorage.getItem('massageMemberships') || '[]');
+            
+            log(`Found ${users.length} users in localStorage`);
+            log(`Found ${memberships.length} membership records in localStorage`);
+            
+            const usersWithMemberships = users.filter(u => u.membershipType && u.membershipType !== 'none');
+            log(`Found ${usersWithMemberships.length} users with memberships:`);
+            
+            usersWithMemberships.forEach(user => {
+                log(`   - ${user.name}: ${user.membershipType} (${user.membershipStatus || 'active'})`);
+            });
+            
+            updateStats();
+            displayMembershipTable();
+        }
+        
+        function testMembershipFunctions() {
+            log('🧪 Testing membership functions...');
+            
+            // Test pricing functions
+            const membershipPrices = {
+                'wellness': 75,
+                'restoration-plus': 140,
+                'therapeutic-elite': 200
+            };
+            
+            const membershipNames = {
+                'wellness': 'Wellness Member',
+                'restoration-plus': 'Restoration Plus',
+                'therapeutic-elite': 'Therapeutic Elite'
+            };
+            
+            Object.keys(membershipPrices).forEach(type => {
+                log(`${type} -> "${membershipNames[type]}" ($${membershipPrices[type]}/month)`);
+            });
+        }
+        
+        function updateStats() {
+            const users = JSON.parse(localStorage.getItem('massageUsers') || '[]');
+            const usersWithMemberships = users.filter(u => u.membershipType && u.membershipType !== 'none');
+            
+            const membershipPrices = {
+                'wellness': 75,
+                'restoration-plus': 140,
+                'therapeutic-elite': 200
+            };
+            
+            let totalRevenue = 0;
+            usersWithMemberships.forEach(user => {
+                totalRevenue += membershipPrices[user.membershipType] || 0;
+            });
+            
+            document.getElementById('userCount').textContent = users.length;
+            document.getElementById('membershipCount').textContent = usersWithMemberships.length;
+            document.getElementById('revenueEstimate').textContent = `$${totalRevenue}`;
+            document.getElementById('stats').style.display = 'grid';
+        }
+        
+        function displayMembershipTable() {
+            const users = JSON.parse(localStorage.getItem('massageUsers') || '[]');
+            const usersWithMemberships = users.filter(u => u.membershipType && u.membershipType !== 'none');
+            
+            const membershipPrices = {
+                'wellness': 75,
+                'restoration-plus': 140,
+                'therapeutic-elite': 200
+            };
+            
+            const membershipNames = {
+                'wellness': 'Wellness Member',
+                'restoration-plus': 'Restoration Plus',
+                'therapeutic-elite': 'Therapeutic Elite'
+            };
+            
+            if (usersWithMemberships.length === 0) {
+                document.getElementById('membershipTable').innerHTML = '<p><em>No users with memberships found.</em></p>';
+                return;
+            }
+            
+            let tableHTML = `
+                <h3>Current Membership Data</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Plan</th>
+                            <th>Cost</th>
+                            <th>Status</th>
+                            <th>Start Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            usersWithMemberships.forEach(user => {
+                const planName = membershipNames[user.membershipType] || user.membershipType;
+                const price = membershipPrices[user.membershipType] || 0;
+                const startDate = user.membershipStartDate ? new Date(user.membershipStartDate).toLocaleDateString() : 'N/A';
+                
+                tableHTML += `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>${user.name}</td>
+                        <td>${planName}</td>
+                        <td>$${price}/month</td>
+                        <td>${user.membershipStatus || 'active'}</td>
+                        <td>${startDate}</td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+            
+            document.getElementById('membershipTable').innerHTML = tableHTML;
+        }
+        
+        function openAdminPanel() {
+            log('🚀 Opening admin panel...');
+            window.open('/admin.html', '_blank');
+        }
+        
+        // Auto-check on load
+        window.addEventListener('load', function() {
+            log('🔧 Membership debugger loaded');
+            checkCurrentData();
+        });
+    </script>
+</body>
+</html>

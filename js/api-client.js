@@ -140,9 +140,9 @@ class APIClient {
         this.setToken(null);
         localStorage.removeItem('currentUser');
         
-        // Clear any cached data
+        // Clear session data but preserve user accounts
         localStorage.removeItem('massageAppointments');
-        localStorage.removeItem('massageUsers');
+        // DO NOT clear massageUsers - this contains all registered accounts
         sessionStorage.clear();
     }
 

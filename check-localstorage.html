@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check localStorage</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .output { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 15px; margin: 10px 0; font-family: monospace; white-space: pre-wrap; }
+        button { background: #007cba; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 localStorage Debug Tool</h1>
+    
+    <button onclick="showMassageUsers()">Show massageUsers</button>
+    <button onclick="clearMassageUsers()">Clear massageUsers</button>
+    <button onclick="showAllLocalStorage()">Show All localStorage</button>
+    <button onclick="clearAllLocalStorage()">Clear All localStorage</button>
+    
+    <div id="output" class="output">Click a button to check localStorage...</div>
+
+    <script>
+        function log(message) {
+            document.getElementById('output').textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
+            console.log(message);
+        }
+        
+        function showMassageUsers() {
+            document.getElementById('output').textContent = '';
+            
+            const users = localStorage.getItem('massageUsers');
+            if (users) {
+                try {
+                    const parsed = JSON.parse(users);
+                    log(`Found ${parsed.length} users in localStorage:`);
+                    parsed.forEach((user, index) => {
+                        log(`\nUser ${index + 1}:`);
+                        log(JSON.stringify(user, null, 2));
+                    });
+                } catch (e) {
+                    log('Error parsing users: ' + e.message);
+                }
+            } else {
+                log('No massageUsers found in localStorage');
+            }
+        }
+        
+        function clearMassageUsers() {
+            localStorage.removeItem('massageUsers');
+            log('massageUsers cleared from localStorage');
+        }
+        
+        function showAllLocalStorage() {
+            document.getElementById('output').textContent = '';
+            
+            log('All localStorage items:');
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                log(`\n${key}:`);
+                
+                if (key === 'massageUsers' || key === 'massageAppointments') {
+                    try {
+                        const parsed = JSON.parse(value);
+                        log(JSON.stringify(parsed, null, 2));
+                    } catch (e) {
+                        log(value);
+                    }
+                } else {
+                    log(value);
+                }
+            }
+        }
+        
+        function clearAllLocalStorage() {
+            const confirmed = confirm('Are you sure you want to clear ALL localStorage? This will remove all user data and appointments.');
+            if (confirmed) {
+                localStorage.clear();
+                log('All localStorage cleared');
+            }
+        }
+    </script>
+</body>
+</html>
