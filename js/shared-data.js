@@ -17,7 +17,7 @@ function clearAppointmentData() {
 // Clear appointment data immediately - DISABLED to allow appointments to persist
 // clearAppointmentData(); // This was clearing appointments on every page load!
 
-// Force cleanup of insecure user data on page load
+// Force cleanup of insecure user data on page load - DISABLED
 function forceSecurityCleanup() {
     try {
         const savedUsers = localStorage.getItem('massageUsers');
@@ -31,9 +31,10 @@ function forceSecurityCleanup() {
             );
             
             if (hasInsecureUsers) {
-                console.log('🔒 Found insecure user data in localStorage, cleaning up...');
-                localStorage.removeItem('massageUsers');
-                console.log('🔒 Insecure user data cleared, will use secure defaults');
+                console.log('🔒 Found users with insecure passwords, but preserving accounts...');
+                console.log('🔒 Individual password migration will happen during login');
+                // DO NOT DELETE ALL USERS - this was causing accounts to disappear
+                // localStorage.removeItem('massageUsers');
             }
         }
     } catch (e) {
@@ -41,8 +42,8 @@ function forceSecurityCleanup() {
     }
 }
 
-// Run security cleanup immediately
-forceSecurityCleanup();
+// Security cleanup disabled - was deleting all user accounts
+// forceSecurityCleanup();
 
 // Initialize shared users array - passwords now properly hashed with bcrypt
 window.sharedUsers = [
