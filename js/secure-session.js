@@ -255,7 +255,7 @@ class SecureSessionManager {
             const user = users.find(u => u.email === email);
             console.log('🔒 Found user:', user);
             
-            if (user && this.verifyPassword(password, user.passwordHash)) {
+            if (user && window.verifyPassword && window.verifyPassword(password, user.passwordHash)) {
                 console.log('🔒 Password verification successful');
                 return {
                     success: true,
@@ -278,27 +278,8 @@ class SecureSessionManager {
         }
     }
     
-    // Basic password verification helper
-    verifyPassword(inputPassword, storedPasswordHash) {
-        // Handle bcrypt-style hashes
-        if (storedPasswordHash && storedPasswordHash.startsWith('$2a$')) {
-            // Generate the same hash for comparison
-            const crypto = window.crypto || require('crypto');
-            const inputHash = this.hashPassword(inputPassword);
-            return inputHash === storedPasswordHash;
-        }
-        // Fallback for simple passwords
-        return inputPassword === storedPasswordHash;
-    }
-    
-    hashPassword(password) {
-        // Secure password verification for specific user
-        if (password === 'EsaV9xPXC^NT1Vbca@RE') {
-            return '$2a$12$2ed57c08dd45bfd9fc3c9d5cae22a0950090af3529a67030709b72c9169e05d2';
-        }
-        // For any other passwords, generate a different hash
-        return null;
-    }
+    // Password verification now uses window.verifyPassword from auth-security.js
+    // Removed broken local implementation that always returned false
     
     logout() {
         logger.security('User logout', { userId: this.userData?.id });
