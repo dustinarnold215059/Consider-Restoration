@@ -360,7 +360,10 @@ window.dataPersistenceFixed = new DataPersistenceManagerFixed();
 // Backward compatibility alias
 window.dataPersistence = window.dataPersistenceFixed;
 
-// Enhanced global functions with immediate availability
+// Enhanced global functions with immediate availability - DISABLED to prevent conflicts
+// These functions are overridden by shared-data.js which loads after this script
+// Keeping them commented to avoid conflicts with shared-data.js
+/*
 window.getUsers = async function() {
     try {
         if (!window.dataPersistenceFixed.isReady()) {
@@ -390,7 +393,10 @@ window.addUser = async function(userData) {
         return null;
     }
 };
+*/
 
+// Also disable updateUser to prevent conflicts
+/*
 window.updateUser = async function(userId, updates) {
     try {
         return await window.dataPersistenceFixed.updateUser(userId, updates);
@@ -399,6 +405,7 @@ window.updateUser = async function(userId, updates) {
         return null;
     }
 };
+*/
 
 window.getAppointments = async function(params = {}) {
     try {

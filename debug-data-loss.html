@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Data Loss Issue</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #007cba; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .output { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 15px; margin: 10px 0; font-family: monospace; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+        .critical { background: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .success { background: #d4edda; border-color: #c3e6cb; color: #155724; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 3px; width: 200px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug Data Loss Issue</h1>
+        <p><strong>Instructions:</strong> Open this page, register a test user, then navigate to another page and back to see when data disappears.</p>
+        
+        <div class="section">
+            <h2>1. Monitor localStorage in Real-Time</h2>
+            <button onclick="startMonitoring()">Start Monitoring</button>
+            <button onclick="stopMonitoring()">Stop Monitoring</button>
+            <button onclick="clearLog()">Clear Log</button>
+            <div id="monitorOutput" class="output">Click "Start Monitoring" to begin...</div>
+        </div>
+        
+        <div class="section">
+            <h2>2. Quick User Registration Test</h2>
+            <input type="text" id="testName" placeholder="Name" value="Debug User">
+            <input type="email" id="testEmail" placeholder="Email" value="debug@test.com">
+            <input type="password" id="testPassword" placeholder="Password" value="test123">
+            <button onclick="quickRegisterUser()">Register Test User</button>
+            <div id="regOutput" class="output">Registration output will appear here...</div>
+        </div>
+        
+        <div class="section">
+            <h2>3. Check Data State</h2>
+            <button onclick="checkDataState()">Check Current State</button>
+            <button onclick="simulatePageReload()">Simulate Page Reload</button>
+            <div id="stateOutput" class="output">Data state will appear here...</div>
+        </div>
+        
+        <div class="section">
+            <h2>4. Navigation Test</h2>
+            <button onclick="goToHomePage()">Go to Home Page</button>
+            <button onclick="goToUserPortal()">Go to User Portal</button>
+            <button onclick="goToBookingPage()">Go to Booking Page</button>
+            <div id="navOutput" class="output">Navigation output will appear here...</div>
+        </div>
+    </div>
+
+    <!-- Load the EXACT same scripts as user portal -->
+    <script src="js/enhanced-error-handler.js"></script>
+    <script src="js/portal-session-manager.js"></script>
+    <script src="js/secure-session.js"></script>
+    <script src="js/api-client.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+    <script>
+        setTimeout(() => {
+            if (typeof dcodeIO !== 'undefined' && dcodeIO.bcrypt && !window.bcrypt) {
+                window.bcrypt = dcodeIO.bcrypt;
+                console.log('🔒 Created window.bcrypt reference to dcodeIO.bcrypt');
+            }
+        }, 100);
+    </script>
+    <script src="js/secure-tokens.js"></script>
+    <script src="js/auth-security.js"></script>
+    <script src="js/secure-init.js"></script>
+    <script src="js/data-persistence-fixed.js"></script>
+    <script src="js/shared-data.js"></script>
+
+    <script>
+        let monitoringInterval = null;
+        let lastStorageState = {};
+        
+        function log(elementId, message) {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            element.textContent += `[${timestamp}] ${message}\n`;
+            console.log(`[${timestamp}] ${message}`);
+        }
+        
+        function startMonitoring() {
+            if (monitoringInterval) return;
+            
+            log('monitorOutput', '🔍 Starting localStorage monitoring...');
+            
+            // Capture initial state
+            lastStorageState = captureStorageState();
+            log('monitorOutput', `📊 Initial state: ${lastStorageState.massageUsers ? lastStorageState.massageUsers.length : 0} users`);
+            
+            monitoringInterval = setInterval(() => {
+                const currentState = captureStorageState();
+                
+                // Check for changes
+                if (JSON.stringify(currentState) !== JSON.stringify(lastStorageState)) {
+                    log('monitorOutput', '🚨 STORAGE CHANGE DETECTED!');
+                    
+                    // Check specific changes
+                    if (currentState.massageUsers !== lastStorageState.massageUsers) {
+                        const oldCount = lastStorageState.massageUsers ? JSON.parse(lastStorageState.massageUsers).length : 0;
+                        const newCount = currentState.massageUsers ? JSON.parse(currentState.massageUsers).length : 0;
+                        
+                        if (newCount < oldCount) {
+                            log('monitorOutput', `❌ USERS LOST! ${oldCount} → ${newCount}`);
+                            log('monitorOutput', '🔍 Stack trace:');
+                            console.trace('Users were deleted');
+                        } else if (newCount > oldCount) {
+                            log('monitorOutput', `✅ Users added: ${oldCount} → ${newCount}`);
+                        }
+                    }
+                    
+                    lastStorageState = currentState;
+                }
+            }, 500); // Check every 500ms
+            
+            log('monitorOutput', '✅ Monitoring started');
+        }
+        
+        function stopMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+                log('monitorOutput', '⏹️ Monitoring stopped');
+            }
+        }
+        
+        function clearLog() {
+            document.getElementById('monitorOutput').textContent = '';
+        }
+        
+        function captureStorageState() {
+            return {
+                massageUsers: localStorage.getItem('massageUsers'),
+                currentUser: localStorage.getItem('currentUser'),
+                userSession: localStorage.getItem('userSession'),
+                isLoggedIn: localStorage.getItem('isLoggedIn'),
+                sessionToken: localStorage.getItem('sessionToken')
+            };
+        }
+        
+        async function quickRegisterUser() {
+            const name = document.getElementById('testName').value;
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+            
+            const regOutput = document.getElementById('regOutput');
+            regOutput.textContent = '';
+            
+            log('regOutput', '🚀 Quick user registration test...');
+            log('regOutput', `Input: ${name}, ${email}, ${password}`);
+            
+            try {
+                // Before registration - check state
+                const beforeState = captureStorageState();
+                const beforeCount = beforeState.massageUsers ? JSON.parse(beforeState.massageUsers).length : 0;
+                log('regOutput', `📊 Before registration: ${beforeCount} users`);
+                
+                // Register user
+                const userData = { name, email, password };
+                
+                if (window.addUser) {
+                    log('regOutput', '⏳ Calling window.addUser...');
+                    
+                    const addUserResult = window.addUser(userData);
+                    const newUser = addUserResult && typeof addUserResult.then === 'function' 
+                        ? await addUserResult 
+                        : addUserResult;
+                    
+                    if (newUser) {
+                        log('regOutput', '✅ User registration successful!');
+                        log('regOutput', `👤 New user: ${newUser.name} (${newUser.email})`);
+                        
+                        // After registration - check state
+                        setTimeout(() => {
+                            const afterState = captureStorageState();
+                            const afterCount = afterState.massageUsers ? JSON.parse(afterState.massageUsers).length : 0;
+                            log('regOutput', `📊 After registration: ${afterCount} users`);
+                            
+                            if (afterCount > beforeCount) {
+                                log('regOutput', '✅ User successfully saved to localStorage');
+                            } else {
+                                log('regOutput', '❌ WARNING: User may not have been saved properly');
+                            }
+                        }, 1000);
+                        
+                    } else {
+                        log('regOutput', '❌ Registration failed - no user returned');
+                    }
+                } else {
+                    log('regOutput', '❌ window.addUser not available');
+                }
+                
+            } catch (error) {
+                log('regOutput', '❌ Registration error: ' + error.message);
+            }
+        }
+        
+        function checkDataState() {
+            const stateOutput = document.getElementById('stateOutput');
+            stateOutput.textContent = '';
+            
+            log('stateOutput', '🔍 Checking current data state...');
+            
+            // Check localStorage directly
+            const massageUsers = localStorage.getItem('massageUsers');
+            if (massageUsers) {
+                try {
+                    const users = JSON.parse(massageUsers);
+                    log('stateOutput', `💾 localStorage: ${users.length} users`);
+                    users.forEach((user, index) => {
+                        log('stateOutput', `  ${index + 1}. ${user.name} (${user.email})`);
+                    });
+                } catch (e) {
+                    log('stateOutput', '💾 localStorage: Invalid JSON data');
+                }
+            } else {
+                log('stateOutput', '💾 localStorage: No massageUsers found');
+            }
+            
+            // Check window.sharedUsers
+            if (window.sharedUsers) {
+                log('stateOutput', `🔗 window.sharedUsers: ${window.sharedUsers.length} users`);
+                window.sharedUsers.forEach((user, index) => {
+                    log('stateOutput', `  ${index + 1}. ${user.name} (${user.email})`);
+                });
+            } else {
+                log('stateOutput', '🔗 window.sharedUsers: Not available');
+            }
+            
+            // Check available functions
+            log('stateOutput', '🔧 Available functions:');
+            log('stateOutput', `  - window.addUser: ${typeof window.addUser}`);
+            log('stateOutput', `  - window.getUsers: ${typeof window.getUsers}`);
+            log('stateOutput', `  - window.authenticateUser: ${typeof window.authenticateUser}`);
+        }
+        
+        function simulatePageReload() {
+            log('stateOutput', '🔄 Simulating page reload...');
+            log('stateOutput', '📊 Data before reload:');
+            checkDataState();
+            
+            setTimeout(() => {
+                log('stateOutput', '🔄 Reloading page...');
+                window.location.reload();
+            }, 2000);
+        }
+        
+        function goToHomePage() {
+            log('navOutput', '🏠 Navigating to home page...');
+            log('navOutput', '📊 Data before navigation:');
+            
+            const massageUsers = localStorage.getItem('massageUsers');
+            const userCount = massageUsers ? JSON.parse(massageUsers).length : 0;
+            log('navOutput', `Current users: ${userCount}`);
+            
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1000);
+        }
+        
+        function goToUserPortal() {
+            log('navOutput', '👤 Navigating to user portal...');
+            log('navOutput', '📊 Data before navigation:');
+            
+            const massageUsers = localStorage.getItem('massageUsers');
+            const userCount = massageUsers ? JSON.parse(massageUsers).length : 0;
+            log('navOutput', `Current users: ${userCount}`);
+            
+            setTimeout(() => {
+                window.location.href = 'user-portal.html';
+            }, 1000);
+        }
+        
+        function goToBookingPage() {
+            log('navOutput', '📅 Navigating to booking page...');
+            log('navOutput', '📊 Data before navigation:');
+            
+            const massageUsers = localStorage.getItem('massageUsers');
+            const userCount = massageUsers ? JSON.parse(massageUsers).length : 0;
+            log('navOutput', `Current users: ${userCount}`);
+            
+            setTimeout(() => {
+                window.location.href = 'booking.html';
+            }, 1000);
+        }
+        
+        // Page load monitoring
+        window.addEventListener('load', function() {
+            log('monitorOutput', '📄 Page loaded');
+            checkDataState();
+        });
+        
+        // Page unload monitoring
+        window.addEventListener('beforeunload', function() {
+            console.log('📄 Page about to unload');
+            const massageUsers = localStorage.getItem('massageUsers');
+            const userCount = massageUsers ? JSON.parse(massageUsers).length : 0;
+            console.log(`📊 Users at unload: ${userCount}`);
+        });
+        
+        // Monitor for any localStorage changes from other scripts
+        const originalSetItem = localStorage.setItem;
+        const originalRemoveItem = localStorage.removeItem;
+        const originalClear = localStorage.clear;
+        
+        localStorage.setItem = function(key, value) {
+            if (key === 'massageUsers') {
+                console.log('🔍 localStorage.setItem called for massageUsers');
+                console.trace('setItem stack trace');
+            }
+            return originalSetItem.apply(this, arguments);
+        };
+        
+        localStorage.removeItem = function(key) {
+            if (key === 'massageUsers') {
+                console.log('🚨 localStorage.removeItem called for massageUsers');
+                console.trace('removeItem stack trace');
+            }
+            return originalRemoveItem.apply(this, arguments);
+        };
+        
+        localStorage.clear = function() {
+            console.log('🚨 localStorage.clear called');
+            console.trace('clear stack trace');
+            return originalClear.apply(this, arguments);
+        };
+    </script>
+</body>
+</html>
