@@ -542,10 +542,19 @@
     
     <script src="js/enhanced-error-handler.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
-    <!-- DISABLED session/auth scripts on booking page -->
-    <!-- <script src="js/secure-tokens.js" defer></script> -->
-    <!-- <script src="js/auth-security.js?v=20250813b" defer></script> -->
-    <!-- <script src="js/secure-init.js" defer></script> -->
+    <script>
+        // Create compatibility wrapper for bcrypt (same as user portal)
+        setTimeout(() => {
+            if (typeof dcodeIO !== 'undefined' && dcodeIO.bcrypt && !window.bcrypt) {
+                window.bcrypt = dcodeIO.bcrypt;
+                console.log('🔒 Created window.bcrypt reference to dcodeIO.bcrypt');
+            }
+        }, 100);
+    </script>
+    <!-- ENABLED auth scripts needed for user registration/login sync -->
+    <script src="js/secure-tokens.js" defer></script>
+    <script src="js/auth-security.js" defer></script>
+    <script src="js/secure-init.js" defer></script>
     <script src="js/api-client.js" defer></script>
     <script src="js/data-persistence-fixed.js" defer></script>
     <script src="js/shared-data.js" defer></script>
