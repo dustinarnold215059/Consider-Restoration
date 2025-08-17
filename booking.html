@@ -12,7 +12,8 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="manifest" href="./manifest.json">
     <!-- <script src="js/logger.js"></script> -->
-    <script src="js/portal-session-manager.js"></script>
+    <script src="js/cookie-session-manager.js"></script>
+    <!-- <script src="js/portal-session-manager.js"></script> -->
     <!-- DISABLED old session restoration on booking page -->
     <!-- <script src="js/secure-session.js"></script> -->
     <!-- <script src="js/advanced-cache.js"></script> DISABLED - not deployed to Vercel -->
@@ -1417,14 +1418,11 @@
             
             // Use cookie session manager instead of localStorage
             let user = null;
-            if (window.getCurrentUser) {
-                user = window.getCurrentUser();
-                console.log('📅 Session manager result:', user ? `${user.name} (${user.email})` : 'No user');
-            } else if (window.universalSession) {
-                user = window.universalSession.getCurrentUser();
-                console.log('📅 Universal session result:', user ? `${user.name} (${user.email})` : 'No user');
+            if (window.CookieSessionManager) {
+                user = window.CookieSessionManager.getCurrentUser();
+                console.log('📅 CookieSessionManager result:', user ? `${user.name} (${user.email})` : 'No user');
             } else {
-                console.log('📅 No session manager available');
+                console.log('📅 CookieSessionManager not available');
             }
             
             const nameField = document.getElementById('clientName');
@@ -1503,10 +1501,8 @@
         // Check if user should skip login modal (already logged in)
         function shouldSkipLoginModal() {
             let currentUser = null;
-            if (window.getCurrentUser) {
-                currentUser = window.getCurrentUser();
-            } else if (window.universalSession) {
-                currentUser = window.universalSession.getCurrentUser();
+            if (window.CookieSessionManager) {
+                currentUser = window.CookieSessionManager.getCurrentUser();
             }
             console.log('🔍 Checking login status:', { hasCurrentUser: !!currentUser });
             
@@ -2354,11 +2350,9 @@
                     // Simple demo authentication
                     const authenticatedUser = window.authenticateUser ? window.authenticateUser(email, password) : null;
                     if (authenticatedUser) {
-                        // Store user in session manager for consistency
-                        if (window.loginUser) {
-                            window.loginUser(authenticatedUser);
-                        } else if (window.universalSession) {
-                            window.universalSession.login(authenticatedUser);
+                        // Store user in CookieSessionManager for consistency
+                        if (window.CookieSessionManager) {
+                            window.CookieSessionManager.login(authenticatedUser);
                         }
                         
                         // Dispatch authentication event for auto-population
@@ -3905,10 +3899,10 @@
     <!-- <script src="js/cookie-session-manager.js"></script> -->
     <!-- <script src="js/navigation-handler.js"></script> -->
     
-    <!-- Modular Booking System -->
-    <script src="js/modules/booking/booking-form-handler.js" defer></script>
+    <!-- Modular Booking System DISABLED - conflicts with inline booking system -->
+    <!-- <script src="js/modules/booking/booking-form-handler.js" defer></script> -->
     <!-- <script src="js/modules/booking/booking-ui-manager.js" defer></script> Disabled - conflicts with inline time blocking logic -->
-    <script src="js/booking-modular.js" defer></script>
+    <!-- <script src="js/booking-modular.js" defer></script> -->
 
     <!-- Service Worker Registration -->
     <script>
