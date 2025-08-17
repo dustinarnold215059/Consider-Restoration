@@ -3317,37 +3317,25 @@
                 return;
             }
             
-            // Create new user with secure password hash
-            let passwordHash;
-            try {
-                if (typeof dcodeIO !== 'undefined' && dcodeIO.bcrypt) {
-                    // Generate secure bcrypt hash
-                    const salt = dcodeIO.bcrypt.genSaltSync(12);
-                    passwordHash = dcodeIO.bcrypt.hashSync(password, salt);
-                    console.log('🔒 Generated secure bcrypt hash for new user');
-                } else {
-                    // Fallback to simpleHash (INSECURE)
-                    console.warn('🔒 bcrypt.js not available, using insecure fallback');
-                    passwordHash = simpleHash(password);
-                }
-            } catch (error) {
-                console.error('🔒 Password hashing error:', error);
-                passwordHash = simpleHash(password); // Fallback
-            }
-
-            const newUserData = {
-                username: email,
-                passwordHash: passwordHash, // Use hashed password instead of plaintext
-                name: name,
-                email: email,
-                phone: phone,
-                role: 'user',
-                totalAppointments: 1,
-                lastVisit: new Date().toISOString(),
-                preferences: ''
+            // Use same registration logic as user portal - pass plain password, let system handle hashing
+            const userData = { 
+                name: name, 
+                email: email, 
+                phone: phone, 
+                password: password,  // Plain password, system will hash it
+                username: email,     // Add username field
+                role: 'user'         // Add role field
             };
             
-            const savedUser = saveUser(newUserData);
+            console.log('🎉 Creating user with same logic as user portal:', { name, email, phone });
+            
+            const savedUser = window.addUser ? window.addUser(userData) : null;
+            
+            if (!savedUser) {
+                alert('❌ Registration failed. User system not available.');
+                return;
+            }
+            
             console.log('✅ New user added to shared data:', savedUser);
             
             // Create user session with security token

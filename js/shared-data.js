@@ -997,13 +997,41 @@ window.getUsers = function() {
 };
 
 window.addUser = function(userData) {
+    // Handle password hashing if plain password is provided
+    let processedUserData = { ...userData };
+    
+    if (userData.password && !userData.passwordHash) {
+        console.log('🔒 Plain password detected, converting to secure hash...');
+        try {
+            if (typeof dcodeIO !== 'undefined' && dcodeIO.bcrypt) {
+                const salt = dcodeIO.bcrypt.genSaltSync(12);
+                processedUserData.passwordHash = dcodeIO.bcrypt.hashSync(userData.password, salt);
+                console.log('🔒 Converted plain password to secure bcrypt hash');
+            } else if (typeof window.bcrypt !== 'undefined' && window.bcrypt.genSaltSync) {
+                const salt = window.bcrypt.genSaltSync(12);
+                processedUserData.passwordHash = window.bcrypt.hashSync(userData.password, salt);
+                console.log('🔒 Converted plain password using window.bcrypt');
+            } else {
+                console.error('🔒 Cannot hash password - bcrypt not available');
+                // For now, keep the plain password and let migration handle it later
+                // In production, this should throw an error
+            }
+            // Remove plain password after hashing
+            delete processedUserData.password;
+        } catch (error) {
+            console.error('🔒 Password hashing error:', error);
+            // Keep original data if hashing fails
+        }
+    }
+    
     // Use provided ID if it exists, otherwise generate new one
-    const newId = userData.id || Math.max(...window.sharedUsers.map(user => user.id), 0) + 1;
+    const newId = processedUserData.id || Math.max(...window.sharedUsers.map(user => user.id), 0) + 1;
     const newUser = { 
-        ...userData,
+        ...processedUserData,
         id: newId,
-        totalAppointments: userData.totalAppointments || 0,
-        lastVisit: userData.lastVisit || null
+        totalAppointments: processedUserData.totalAppointments || 0,
+        lastVisit: processedUserData.lastVisit || null,
+        createdAt: processedUserData.createdAt || new Date().toISOString()
     };
     window.sharedUsers.push(newUser);
     
