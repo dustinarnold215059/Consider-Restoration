@@ -1158,6 +1158,19 @@
             document.body.appendChild(emergencyModal);
             document.body.style.overflow = 'hidden';
             
+            // Force the modal to be visible with timeout to ensure it stays
+            setTimeout(() => {
+                const modal = document.getElementById('emergencyLoginModal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    modal.style.visibility = 'visible';
+                    modal.style.opacity = '1';
+                    console.log('🔧 Force-displayed emergency modal');
+                } else {
+                    console.error('❌ Emergency modal not found in DOM');
+                }
+            }, 100);
+            
             console.log('✅ Emergency modal injected and should be visible');
             console.log('📊 Modal element:', emergencyModal);
             console.log('📊 Modal display style:', window.getComputedStyle(emergencyModal).display);
